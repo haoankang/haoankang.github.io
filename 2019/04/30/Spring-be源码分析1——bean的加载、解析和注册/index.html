@@ -96,16 +96,18 @@
 
 
 
-  <meta name="description" content="技术、点滴">
-<meta property="og:type" content="website">
-<meta property="og:title" content="天蓝的个人笔记">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="##1. 解析Spring源码WWW原则  what—— spring现在已经算是java开发的基石了，核心是IOC和AOP. why—— 1.既然作为基石，需要更加彻底的了解并掌握它，工作中可能用不到太细节的东西，但出了问题 就不好找原因，因此解析源码可以了解一些底层细节；2. Spring作为一个基础框架，可以 通过阅读源码的方式来入门源码解析的门槛，提升自己的各方面能力； how—— 源码太">
+<meta name="keywords" content="spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring源码分析1——bean的加载、解析和注册">
+<meta property="og:url" content="http://yoursite.com/2019/04/30/Spring-be源码分析1——bean的加载、解析和注册/index.html">
 <meta property="og:site_name" content="天蓝的个人笔记">
-<meta property="og:description" content="技术、点滴">
+<meta property="og:description" content="##1. 解析Spring源码WWW原则  what—— spring现在已经算是java开发的基石了，核心是IOC和AOP. why—— 1.既然作为基石，需要更加彻底的了解并掌握它，工作中可能用不到太细节的东西，但出了问题 就不好找原因，因此解析源码可以了解一些底层细节；2. Spring作为一个基础框架，可以 通过阅读源码的方式来入门源码解析的门槛，提升自己的各方面能力； how—— 源码太">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-04-30T06:34:47.152Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="天蓝的个人笔记">
-<meta name="twitter:description" content="技术、点滴">
+<meta name="twitter:title" content="Spring源码分析1——bean的加载、解析和注册">
+<meta name="twitter:description" content="##1. 解析Spring源码WWW原则  what—— spring现在已经算是java开发的基石了，核心是IOC和AOP. why—— 1.既然作为基石，需要更加彻底的了解并掌握它，工作中可能用不到太细节的东西，但出了问题 就不好找原因，因此解析源码可以了解一些底层细节；2. Spring作为一个基础框架，可以 通过阅读源码的方式来入门源码解析的门槛，提升自己的各方面能力； how—— 源码太">
 
 
 
@@ -113,7 +115,7 @@
 
   
   
-  <link rel="canonical" href="http://yoursite.com/">
+  <link rel="canonical" href="http://yoursite.com/2019/04/30/Spring-be源码分析1——bean的加载、解析和注册/">
 
 
 
@@ -123,7 +125,7 @@
   };
 </script>
 
-  <title>天蓝的个人笔记</title>
+  <title>Spring源码分析1——bean的加载、解析和注册 | 天蓝的个人笔记</title>
   
 
 
@@ -171,8 +173,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -210,7 +211,7 @@
         
         
           
-          <li class="menu-item menu-item-home menu-item-active">
+          <li class="menu-item menu-item-home">
 
     
     
@@ -272,9 +273,9 @@
           
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -306,10 +307,8 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/04/30/Spring-be源码分析1——bean的加载、解析和注册/" class="post-title-link" itemprop="url">Spring源码分析1——bean的加载、解析和注册</a>
+          <h1 class="post-title" itemprop="name headline">Spring源码分析1——bean的加载、解析和注册
+
               
             
           </h1>
@@ -373,9 +372,7 @@
       
 
       
-        
-          
-            <p>##1. 解析Spring源码WWW原则</p>
+        <p>##1. 解析Spring源码WWW原则</p>
 <ul>
 <li>what—— spring现在已经算是java开发的基石了，核心是IOC和AOP.</li>
 <li>why—— 1.既然作为基石，需要更加彻底的了解并掌握它，工作中可能用不到太细节的东西，但出了问题<br> 就不好找原因，因此解析源码可以了解一些底层细节；2. Spring作为一个基础框架，可以<br> 通过阅读源码的方式来入门源码解析的门槛，提升自己的各方面能力；</li>
@@ -435,8 +432,6 @@
    认到 META-INF/Spring.schemas 文件巾找到 systemid 所对应的 XSD 文件并加载。两者其实最终的加载
    文件路径都是org.springframework.beans.factory.xml包下.
 </code></pre>
-          
-        
       
     </div>
 
@@ -457,362 +452,36 @@
 
     <footer class="post-footer">
       
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/26/Spring-Spring-5源码编译踩坑/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/04/26/Spring-Spring-5源码编译踩坑/" class="post-title-link" itemprop="url">Spring: Spring-5源码编译踩坑</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-04-26 14:57:44 / 修改时间：17:48:40" itemprop="dateCreated datePublished" datetime="2019-04-26T14:57:44+08:00">2019-04-26</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
+        <div class="post-tags">
           
-
+            <a href="/tags/spring/" rel="tag"># spring</a>
           
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>##1. cglib和objenesis的编译错误解决</p>
-<p>###问题分析：<br>    为了避免第三方class的冲突，Spring把最新的cglib和objenesis重新打包(repack)了，在spring-core模块中引用，<br>    可以看到gradle自定义的task任务cglibRepackJar和objenesisRepackJar，因此要先执行这些task任务才能编译成功；<br>    网络上有些是直接引用这些jar包，虽然也可以，但因为版本会更新相关jar包不好找，另一方面也没必要额外引入；而且即使这个<br>    问题使用引入jar包方式解决，后面编译还是会有些测试类找不到无法编译通过；</p>
-<p>###解决办法：<br>    既然知道了问题原因，解决办法也就是先执行自定义task，两种方式；</p>
-<pre><code>1. 可以使用command方式执行；
-   进入源码的根目录，例如我的是：C:\WorkSpaces\source_code\spring-framework-5.1.6.RELEASE
-   然后执行gradle cleanEclipse idea或者gradle cleanEclipse eclipse，根据自己的idea工具选择，
-   然后执行gradle cglibRepackJar和gradle objenesisRepackJar，后面编译遇到类似问题，先看gradle
-   文件，找到对应的自定义task，这样执行；
-2. 一般使用idea工具，都会自带可视化页面；例如idea可以像图1这样做：
-</code></pre><p><img src="/images/spring_1.png" alt></p>
-<pre><code>直接点击执行即可;
-</code></pre><p>##2. AspectJ编译问题解决</p>
-<p>###问题分析：<br>    问题现象是：编译提示找不到AnnotationCacheAspect等类符号，实际可以找到，发现是这样描述的：<br>    <code>public aspect AnnotationCacheAspect extends AbstractCacheAspect {…}</code><br>    像aspect不是java支持的关键字，它只是AspectJ才认识的关键字，需要ajc.exe来执行编译.</p>
-<p>###解决办法：</p>
-<pre><code>1. 下载aspect的jar包，目前版本1.9.3
-2. 建议使用java -jar xxx.jar的方式安装AspectJ，本质是解压，这种方式有可视化界面，且会自动配置classpath之类的（maybe?);
-3. 为spring-aspect工程添加Facets属性，如图2.
-</code></pre><p><img src="/images/spring_2.png" alt></p>
-<pre><code>4. 更改编译器，如图3.
-</code></pre><p> <img src="/images/spring_3.png" alt></p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
       
 
       
       
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
       
 
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/18/大数据：parquet时间c±t时间类型存储、转换、展示/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/04/18/大数据：parquet时间c±t时间类型存储、转换、展示/" class="post-title-link" itemprop="url">大数据：parquet时间类型存储、转换、展示</a>
-              
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
+              <a href="/2019/04/26/Spring-Spring-5源码编译踩坑/" rel="next" title="Spring: Spring-5源码编译踩坑">
+                <i class="fa fa-chevron-left"></i> Spring: Spring-5源码编译踩坑
+              </a>
             
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
             
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-04-18 14:21:07 / 修改时间：14:28:49" itemprop="dateCreated datePublished" datetime="2019-04-18T14:21:07+08:00">2019-04-18</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/big-data/" itemprop="url" rel="index"><span itemprop="name">big data</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-            <h2 id="parquet时间类型存储、转换、读取"><a href="#parquet时间类型存储、转换、读取" class="headerlink" title="parquet时间类型存储、转换、读取"></a>parquet时间类型存储、转换、读取</h2><ol>
-<li>hive表转parquet. (10.100.2.100:50070)<br> /user/hive/warehouse/csv2parquet</li>
-<li><p>java读取parquet并解析时间类型.</p>
-</li>
-<li><p>spark写parquet文件格式.</p>
-</li>
-<li><p>解析上面的时间类型.</p>
-</li>
-</ol>
-<h2 id="部分结论"><a href="#部分结论" class="headerlink" title="部分结论"></a>部分结论</h2><ol>
-<li>spark存储可以设置时间类型是long类型，然后正常转换得到；</li>
-<li>hive存储在parquet中的时间类型是int96，可以通过解析得到；</li>
-</ol>
-<h2 id="详细摘要"><a href="#详细摘要" class="headerlink" title="详细摘要"></a>详细摘要</h2><ol>
-<li><p>hive创建parquet文件格式的数据.<br> a. create table haoaktest(</p>
-<pre><code>    id int,
-    mytime timestamp,
-    mydate date
-) row format delimited fields terminated by &apos;,&apos;;
-</code></pre><p> b. load data local inpath ‘/home/hadoop/haoak/haoaktest.csv’ into table haoaktest;</p>
-<pre><code>注意hive的timestamp类型是&quot;yyyy-MM-dd HH:mm:ss.SSS&quot;, date类型是&quot;yyyy-MM-dd&quot;.
-</code></pre><p> c. create table csv2parquet stored as parquet</p>
-<pre><code>as select * from haoaktest;
-</code></pre><p> d. show create table csv2parquet可以看到路径和文件格式，注意文件路径是hive在hdfs上的默认目录下；</p>
-</li>
-</ol>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -822,14 +491,15 @@
   </article>
 
 
-    
-  </section>
-
-  
+  </div>
 
 
           </div>
           
+
+  
+
+
 
         </div>
         
@@ -1052,6 +722,10 @@
 
 
   
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
 
   
 
@@ -1067,6 +741,8 @@
 
   
 
+
+  
 
 
   
