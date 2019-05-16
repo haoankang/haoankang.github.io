@@ -289,6 +289,173 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/16/swagger-codegen的一些总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/05/16/swagger-codegen的一些总结/" class="post-title-link" itemprop="url">swagger-codegen的一些总结</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-16 15:08:02 / 修改时间：17:57:27" itemprop="dateCreated datePublished" datetime="2019-05-16T15:08:02+08:00">2019-05-16</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="1-swagger是什么？"><a href="#1-swagger是什么？" class="headerlink" title="1. swagger是什么？"></a>1. swagger是什么？</h2><p>  swagger是用来设计、构建、文档、合作、管理api的工具，可以生成、描述、调用和可视化Restful风格<br>的web服务，方便前后端分离；早先吾使用来描述api文档，生成文档接口页面展示，后来是先写文档，利用<br>swagger-codegen生成代码；</p>
+<h2 id="2-swagger-codegen的几种使用方式"><a href="#2-swagger-codegen的几种使用方式" class="headerlink" title="2. swagger-codegen的几种使用方式."></a>2. swagger-codegen的几种使用方式.</h2><p>  官方github地址是：<a href="https://github.com/swagger-api/swagger-codegen" target="_blank" rel="noopener">https://github.com/swagger-api/swagger-codegen</a><br>可以看到，主要有四个modules：</p>
+<ul>
+<li>swagger-generator : 用来生成swagger页面，利用相关注释描述.</li>
+<li>swagger-codegen :  利用swagger文档生成接口代码.</li>
+<li>swagger-codegen-cli : swagger-codegen的命令行可执行jar包.</li>
+<li><p>swagger-codegen-maven-plugin ： swagger-codegen的maven插件.<br>swagger-codegen-cli的基本用法，下载jar包，在命令行中如下方式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar swagger-codegen-cli-2.2.3.jar generate -i swagger-api.yml -l spring -o /java --model-package cn.com.controller.model --api-package cn.com.controller.api</span><br></pre></td></tr></table></figure>
+<p>swagger-codegen直接引入maven依赖，可以以工具类的方式生成代码.<br>swagger-codegen-maven-plugin以maven插件方式工作，这里主要介绍这种;</p>
+<h2 id="3-swagger-codegen-maven-plugin的一些坑"><a href="#3-swagger-codegen-maven-plugin的一些坑" class="headerlink" title="3. swagger-codegen-maven-plugin的一些坑."></a>3. swagger-codegen-maven-plugin的一些坑.</h2></li>
+</ul>
+<ol>
+<li><p>在pom中直接引入插件.</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">&lt;plugin&gt;</span><br><span class="line">    &lt;groupId&gt;io.swagger&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;swagger-codegen-maven-plugin&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;2.4.5&lt;/version&gt;</span><br><span class="line">    &lt;executions&gt;</span><br><span class="line">        &lt;execution&gt;</span><br><span class="line">            &lt;goals&gt;</span><br><span class="line">                &lt;goal&gt;generate&lt;/goal&gt;</span><br><span class="line">            &lt;/goals&gt;</span><br><span class="line">            &lt;configuration&gt;</span><br><span class="line">                &lt;inputSpec&gt;$&#123;project.basedir&#125;/src/main/resources/swagger-api.yml&lt;/inputSpec&gt;</span><br><span class="line">                &lt;output&gt;$&#123;project.basedir&#125;&lt;/output&gt;</span><br><span class="line">                &lt;language&gt;spring&lt;/language&gt;</span><br><span class="line">                &lt;library&gt;spring-boot&lt;/library&gt;</span><br><span class="line">                &lt;modelPackage&gt;$&#123;default.package&#125;.model&lt;/modelPackage&gt;</span><br><span class="line">                &lt;apiPackage&gt;$&#123;default.package&#125;.api&lt;/apiPackage&gt;</span><br><span class="line">                &lt;invokerPackage&gt;$&#123;default.package&#125;&lt;/invokerPackage&gt;</span><br><span class="line">                &lt;generateApiTests&gt;false&lt;/generateApiTests&gt;</span><br><span class="line">                &lt;generateModelTests&gt;false&lt;/generateModelTests&gt;</span><br><span class="line">                &lt;generateApiDocumentation&gt;true&lt;/generateApiDocumentation&gt;</span><br><span class="line">                &lt;generateModelDocumentation&gt;true&lt;/generateModelDocumentation&gt;</span><br><span class="line">                &lt;generateSupportingFiles&gt;true&lt;/generateSupportingFiles&gt;</span><br><span class="line">                &lt;configOptions&gt;</span><br><span class="line">                    &lt;interfaceOnly&gt;false&lt;/interfaceOnly&gt;</span><br><span class="line">                    &lt;dateLibrary&gt;joda&lt;/dateLibrary&gt;</span><br><span class="line">                    &lt;java8&gt;true&lt;/java8&gt;</span><br><span class="line">                    &lt;!--&lt;sourceFolder&gt;src/gen/java/main&lt;/sourceFolder&gt;--&gt;</span><br><span class="line">                &lt;/configOptions&gt;</span><br><span class="line">            &lt;/configuration&gt;</span><br><span class="line">        &lt;/execution&gt;</span><br><span class="line">    &lt;/executions&gt;</span><br><span class="line">&lt;/plugin&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>注意需要maven中配置{default.package}变量，然后执行mvn clean compile,生成相应代码;</p>
+</li>
+<li>使用起来比较简单，主要是官方文档匮乏，可配置参数通过下述方式查询帮助：<ul>
+<li>可以直接在idea的命令行中使用”mvn swagger-codegen:help -Ddetail=true”方式;</li>
+<li>可以下载<strong>相应版本</strong>的swagger-codegen-cli.jar包，”java -jar ***.jar config-help -l spring”方式，推荐这种方式，比较方便全</li>
+</ul>
+</li>
+<li>利用好.swagger-codegen-ignore文档，例如pom.xml，因为swagger默认会自动生成覆盖pom.xml，需要在.swagger-codegen-ignore文档中添加<br>过滤，包括之后不想覆盖的ControllerApi也可以在这里添加过滤；</li>
+<li>interfaceOnly参数第一次生成时建议false，可以帮助生成swagger的辅助文件，例如/swagger-ui.html映射；之后建议true，只生成更新api.</li>
+</ol>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/30/Spring-be源码分析1——bean的加载、解析和注册/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -865,7 +1032,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-count">4</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -897,7 +1064,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">2</span>
+                      
+                    
+                    <span class="site-state-item-count">3</span>
                     <span class="site-state-item-name">标签</span>
                   
                 </div>
