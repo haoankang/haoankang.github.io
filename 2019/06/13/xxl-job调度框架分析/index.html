@@ -105,7 +105,9 @@
 <meta property="og:description" content="xxl-job调度框架分析###1. 简介  xxl-job是一个一个开源的轻量级分布式调度平台，主要优点有开发迅速、学习简单、轻量级、易扩展、开箱即用、文档丰富、维护良好；这里主要是分析源码，了解底层细节，也作为借鉴学习；  ###2. 架构设计  系统包含两部分：调度中心和执行器；将调度行为抽象形成”调度中心”公共平台xxl-job-admin，负责发起调度请求，不承担业务逻辑；执行器管理任务">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/xuxueli/xxl-job/master/doc/images/img_Qohm.png">
-<meta property="og:updated_time" content="2019-06-13T12:11:51.620Z">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/LP2xJW9158Pxde87aCfEZ8cGA1fjWC9sM4PONNStiqEYbWg4EnG4maKYYLmi14oCmd9xcJspKFaApW9HxCwSx_pd_Fze515gsuD177fLOvGqgz5J9U11Sb3215BFY-aK4WEt8WiHGh1CFKWBdoDrtqU9A8Tsx2T_qmVsgz_QYrL54wb2xepXcvFlRp-mHbrJBP4Ze2YKbKOmoRDS2sAjxqa64ZKOwxuLFvOY-0W9bjXI9fwWauPCYPLRC2ylllemYqfAI4Kql8rHy4QK7O8aSfCyn6BmQ1QxvlluqEgxn7lh20_P7u5UvFpYLlAgWXTVOfvAm2wCP5QSyQXeCtycQdJZ_Ry3DeoPXRYfpyrksbgwIhQCPSrfZ-zTKrR-N9O_O90tzDmklBok4bQCONQDhMUXpJkid-UK_pmNhD7sFQWrh1YhItuYXaAOk94a1P1mxGyJZ8B_p2KxYsO6AbrMpqAgoGkdJQEA-WC0">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/PLBRRjf047tdIq2gelOLVg8F_G6KEXGfXSZGTqWAsBKfKWg6b4iWuk8qDJPAHOqD-6EwCxj-uXUwPH61yhBQtJbppfoPoUMJSZuI3migQe-eJjX0frv0JGrd_SrIWU1f_uHR7KiF1r6Tk3uR5q7tG7c2Zacyhs7h7fGc32VWrAYbRfPj65zZhqFS0d5_4D-7BmCMzAXliNa9c_Cthz4QSYPGxh2-1iKvL22k9IhQBDL490xA40rhnxViGsb4ltyM0AXTOyCXRfMu7dtq124RbsdR80iDrEf_ICx6fckwci9mndwDmagLsGtyEH0X8G5AcQgLK-PTua4q4KbVH8_XEonnw-otJUipQXcqCSAMBM3YCvR_86MYUVcJ5ECJk5N0Ng1Tutt2PnFA-alDTsPuinBtH4Iwp4dHJ9QdO7-1rUcHWBhUf-pncVVf2mxUFj5Ou7FZIiwUIxdSEpcTIabozEmizWfAYZ0MjdmOz0JTdqBna9qlmB7jE3zv1U1zGyE1XvxGkCocsDI1LMCxiovCDD2DdTRRf9pyI5Py7ppvwfmvDxHklh2T-E5h2JLZRmaw3dGB_uQtJJon6iVwF6oNUHIyCGa6MBHXCIT15wmMn_FznEO8WYRUZsX74p0OLdYxjstw2m00">
+<meta property="og:updated_time" content="2019-06-13T12:47:09.275Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="xxl-job调度框架分析">
 <meta name="twitter:description" content="xxl-job调度框架分析###1. 简介  xxl-job是一个一个开源的轻量级分布式调度平台，主要优点有开发迅速、学习简单、轻量级、易扩展、开箱即用、文档丰富、维护良好；这里主要是分析源码，了解底层细节，也作为借鉴学习；  ###2. 架构设计  系统包含两部分：调度中心和执行器；将调度行为抽象形成”调度中心”公共平台xxl-job-admin，负责发起调度请求，不承担业务逻辑；执行器管理任务">
@@ -335,7 +337,7 @@
                 
               
 
-              <time title="创建时间：2019-06-13 20:11:15 / 修改时间：20:11:51" itemprop="dateCreated datePublished" datetime="2019-06-13T20:11:15+08:00">2019-06-13</time>
+              <time title="创建时间：2019-06-13 20:11:15 / 修改时间：20:47:09" itemprop="dateCreated datePublished" datetime="2019-06-13T20:11:15+08:00">2019-06-13</time>
             
 
             
@@ -385,10 +387,7 @@
 <p>###3. 源码分析</p>
 <p>#####1. 执行器</p>
 <blockquote>
-<p>执行器作为接入部分，先分析执行器中具体做了什么。</p><p><br>执行器中一般要加载配置XxlJobExecutor属性，然后根据不同的接入方式，调用xxlJobExecutor的start()方法;<br>start()方法中的逻辑如下图：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">start</span><br><span class="line">:将定义的JobHandler加载到ConcurrentHashMap&lt;String, IJobHandler&gt; jobHandlerRepository中;</span><br><span class="line">:如果spring-boot方式接入，创建SpringGlueFactory;</span><br><span class="line">:初始化日志路径logpath;</span><br><span class="line">:初始化admin-client的调用类AdminBiz，将对应的XxlRpcReferenceBean放到adminBizList中;</span><br><span class="line">:初始化日志清理线程，如果配置的清理时间小于3天，则不清理，否则每天定时清理;</span><br><span class="line">:初始化回调线程TriggerCallbackThread;</span><br><span class="line">:初始化执行器服务器;</span><br><span class="line">stop</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure></p>
-</blockquote>
-<blockquote>
-<p>其中逻辑比较复杂的是初始化执行器server，其步骤如下：</p>
+<p>执行器作为接入部分，先分析执行器中具体做了什么。</p><p><br>执行器中一般要加载配置XxlJobExecutor属性，然后根据不同的接入方式，调用xxlJobExecutor的start()方法;<br>start()方法中的逻辑如下图：<br><img src="http://www.plantuml.com/plantuml/svg/LP2xJW9158Pxde87aCfEZ8cGA1fjWC9sM4PONNStiqEYbWg4EnG4maKYYLmi14oCmd9xcJspKFaApW9HxCwSx_pd_Fze515gsuD177fLOvGqgz5J9U11Sb3215BFY-aK4WEt8WiHGh1CFKWBdoDrtqU9A8Tsx2T_qmVsgz_QYrL54wb2xepXcvFlRp-mHbrJBP4Ze2YKbKOmoRDS2sAjxqa64ZKOwxuLFvOY-0W9bjXI9fwWauPCYPLRC2ylllemYqfAI4Kql8rHy4QK7O8aSfCyn6BmQ1QxvlluqEgxn7lh20_P7u5UvFpYLlAgWXTVOfvAm2wCP5QSyQXeCtycQdJZ_Ry3DeoPXRYfpyrksbgwIhQCPSrfZ-zTKrR-N9O_O90tzDmklBok4bQCONQDhMUXpJkid-UK_pmNhD7sFQWrh1YhItuYXaAOk94a1P1mxGyJZ8B_p2KxYsO6AbrMpqAgoGkdJQEA-WC0"><br>其中逻辑比较复杂的是初始化执行器server，其步骤如下：</p>
 <ul>
 <li>根据一些规则得到当前执行器的地址——ip:port格式;</li>
 <li>初始化netty服务器（默认使用netty-http服务器），将执行处理器ExecutorBiz注入，安全校验;</li>
@@ -401,10 +400,7 @@
 </blockquote>
 <p>#####2. 调度中心</p>
 <blockquote>
-<p>调度中心是一个web项目，使用spring boot框架，前端采用freemarker框架，2.1.0之前的版本使用quartz的定时调度功能；</p><p><br>调度中心的启动初始化在XxlJobDynamicSchedulerConfig中：配置和启动quartz的SchedulerFactory，调用XxlJobDynamicScheduler的start()方法；<br>初始化I18n，启动执行器注册监控线程（一个执行器可以有多个实例），启动失败日志重试和告警线程，初始化rpc服务；</p><p><br>调度有两种方式：cron定时调度和手动执行调度，最终走同一个接口JobTriggerPoolHelper.trigger(..)，调度有几种方式：手动、cron、parent、失败重试和API，下面是流程图：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">start</span><br><span class="line">:选择执行线程池（快线程池和慢线程池，主要区别在于队列大小等；如果一个任务连续超时10此，则放到慢线程池中执行）;</span><br><span class="line">:判断如果传入的执行参数不为空，则覆盖之前的执行参数;</span><br><span class="line">:设置失败重试次数;</span><br><span class="line">:如果分片参数不为空，设置分片参数;</span><br><span class="line">if(分片参数为空，且路由策略是分片路由)then(true)</span><br><span class="line">:针对每个注册的执行器都执行;</span><br><span class="line">else(no)</span><br><span class="line">:根据路由策略找执行器执行;</span><br><span class="line">endif</span><br><span class="line">:执行方法processTrigger(..),先设置阻塞策略、路由策略和分片参数;</span><br><span class="line">:数据库新增执行log记录;</span><br><span class="line">:初始化TriggerParam作为rpc调用参数;</span><br><span class="line">:根据路由策略选取执行器地址;</span><br><span class="line">:调用执行器执行;</span><br><span class="line">:收集调度信息并保存用于日志查看调度备注;</span><br><span class="line">end</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure></p>
-</blockquote>
-<blockquote>
-<p>核心部分在于调用rpc执行器执行，利用java动态代理机制获取代理类执行；代理类执行实际是通过服务器客户端<br>发送请求，默认使用netty-http客户端;</p>
+<p>调度中心是一个web项目，使用spring boot框架，前端采用freemarker框架，2.1.0之前的版本使用quartz的定时调度功能；</p><p><br>调度中心的启动初始化在XxlJobDynamicSchedulerConfig中：配置和启动quartz的SchedulerFactory，调用XxlJobDynamicScheduler的start()方法；<br>初始化I18n，启动执行器注册监控线程（一个执行器可以有多个实例），启动失败日志重试和告警线程，初始化rpc服务；</p><p><br>调度有两种方式：cron定时调度和手动执行调度，最终走同一个接口JobTriggerPoolHelper.trigger(..)，调度有几种方式：手动、cron、parent、失败重试和API，下面是流程图：<br><img src="http://www.plantuml.com/plantuml/svg/PLBRRjf047tdIq2gelOLVg8F_G6KEXGfXSZGTqWAsBKfKWg6b4iWuk8qDJPAHOqD-6EwCxj-uXUwPH61yhBQtJbppfoPoUMJSZuI3migQe-eJjX0frv0JGrd_SrIWU1f_uHR7KiF1r6Tk3uR5q7tG7c2Zacyhs7h7fGc32VWrAYbRfPj65zZhqFS0d5_4D-7BmCMzAXliNa9c_Cthz4QSYPGxh2-1iKvL22k9IhQBDL490xA40rhnxViGsb4ltyM0AXTOyCXRfMu7dtq124RbsdR80iDrEf_ICx6fckwci9mndwDmagLsGtyEH0X8G5AcQgLK-PTua4q4KbVH8_XEonnw-otJUipQXcqCSAMBM3YCvR_86MYUVcJ5ECJk5N0Ng1Tutt2PnFA-alDTsPuinBtH4Iwp4dHJ9QdO7-1rUcHWBhUf-pncVVf2mxUFj5Ou7FZIiwUIxdSEpcTIabozEmizWfAYZ0MjdmOz0JTdqBna9qlmB7jE3zv1U1zGyE1XvxGkCocsDI1LMCxiovCDD2DdTRRf9pyI5Py7ppvwfmvDxHklh2T-E5h2JLZRmaw3dGB_uQtJJon6iVwF6oNUHIyCGa6MBHXCIT15wmMn_FznEO8WYRUZsX74p0OLdYxjstw2m00"><br>核心部分在于调用rpc执行器执行，利用java动态代理机制获取代理类执行；代理类执行实际是通过服务器客户端<br>发送请求，默认使用netty-http客户端;</p>
 </blockquote>
 <p>#####3. 执行器执行过程分析</p>
 <blockquote>
