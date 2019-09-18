@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="##1. zookeeper概述.1.1 zookeeper是什么？  zookeeper的由来：雅虎开发人员为了开发一个通用的无单点问题的分布式协调框架，后来发展成zookeepr.zookeeper是一种用于分布式应用程序的开源分布式协调服务，是一个典型的分布式数据一致性解决方案，分布式应用可以基于zookeeper实现如数据发布/订阅、负载均衡、命名服务、分布式协调/通知、集群管理、mast">
+<meta name="keywords" content="zookeeper">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Zookeeper系列1——概述">
+<meta property="og:url" content="http://yoursite.com/2019/08/14/Zookeeper系列1——概述/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="##1. zookeeper概述.1.1 zookeeper是什么？  zookeeper的由来：雅虎开发人员为了开发一个通用的无单点问题的分布式协调框架，后来发展成zookeepr.zookeeper是一种用于分布式应用程序的开源分布式协调服务，是一个典型的分布式数据一致性解决方案，分布式应用可以基于zookeeper实现如数据发布/订阅、负载均衡、命名服务、分布式协调/通知、集群管理、mast">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/images/zookeeper_0.png">
+<meta property="og:updated_time" content="2019-09-12T01:33:56.783Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Zookeeper系列1——概述">
+<meta name="twitter:description" content="##1. zookeeper概述.1.1 zookeeper是什么？  zookeeper的由来：雅虎开发人员为了开发一个通用的无单点问题的分布式协调框架，后来发展成zookeepr.zookeeper是一种用于分布式应用程序的开源分布式协调服务，是一个典型的分布式数据一致性解决方案，分布式应用可以基于zookeeper实现如数据发布/订阅、负载均衡、命名服务、分布式协调/通知、集群管理、mast">
+<meta name="twitter:image" content="http://yoursite.com/images/zookeeper_0.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/08/14/Zookeeper系列1——概述/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Zookeeper系列1——概述 | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/14/Zookeeper系列1——概述/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Zookeeper系列1——概述
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-14 14:36:44" itemprop="dateCreated datePublished" datetime="2019-08-14T14:36:44+08:00">2019-08-14</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-09-12 09:33:56" itemprop="dateModified" datetime="2019-09-12T09:33:56+08:00">2019-09-12</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>##1. zookeeper概述.<br>1.1 zookeeper是什么？</p>
+<blockquote>
+<p>zookeeper的由来：雅虎开发人员为了开发一个通用的无单点问题的分布式协调框架，后来发展成zookeepr.<br><br>zookeeper是一种用于分布式应用程序的开源分布式协调服务，是一个典型的分布式数据一致性解决方案，分布式应用可以基于zookeeper实现如数据发布/订阅、负载均衡、<br>命名服务、分布式协调/通知、集群管理、master选举、分布式锁和分布式队列等功能；<br><br>zookeeper可以保证如下分布式一致性特性：顺序一致性、原子性、单一视图、可靠性、实时性；</p>
+</blockquote>
+<p>1.2 zookeeper设计目标？</p>
+<blockquote>
+<p>zookeeper致力于提供一个高性能、高可用，且具有严格顺序访问（主要是写顺序）控制能力的分布式协调服务；</p>
+<ul>
+<li>简单的数据模型(共享的、树形结构的命名空间)</li>
+<li>可以构建集群(zookeeper集群)</li>
+<li>顺序访问(客户端的每个请求都会被分配全局唯一的递增编号，这个编号反映了所有事务操作的先后顺序)</li>
+<li>高性能(zookeeper将全量数据存储在内存中)</li>
+</ul>
+</blockquote>
+<p>1.3 zookeeper的数据模型和分层命名空间.</p>
+<blockquote>
+<p>zookeeper提供的命名空间类似于标准文件系统，名称由/分割的路径元素序列，命名空间中的每个节点都由路径标识。<img src="/images/zookeeper_0.png" alt></p>
+</blockquote>
+<p>1.4 zookeeper的概念.</p>
+<blockquote>
+<p>重要概念总结</p>
+<blockquote>
+<ul>
+<li>zookeeper本身就是分布式程序(只要半数节点存活就可以正常提供服务)，为了保证高可用，最好以集群形态部署；</li>
+<li>zookeeper将数据保存在内存中，保证了高吞吐量和低延迟；在读多于写时尤其高性能，因为写会导致所有服务器间同步状态；</li>
+<li>zookeeper的临时节点生命周期和会话息息相关；</li>
+<li>zookeeper底层只提供了两个功能：管理（读写）用户提交的数据、为用户程序提交数据节点监听服务；</li>
+</ul>
+</blockquote>
+</blockquote>
+<blockquote>
+<ul>
+<li>集群角色————通常分布式系统中，典型的集群模式是Master/Slave模式（主备模式，master机器处理所有写请求，Slave通过异步复制获取最新请求，提供读取服务）；<br>zookeeper引入Leader、Follower和Observer三种角色；leader提供读写服务，Follower和Observer提供读取服务，唯一区别是Observer不参与Leader选举过程，也<br>不参与写操作的“过半写成功”策略.</li>
+<li>会话————zookeeper默认对外服务端口2181，客户端启动时，会与zookeeper服务器建立一个TCP长连接，通过这个连接，客户端可以通过心跳检测与服务器保持有效会话，<br>也可以向服务器发送请求并接收参数，还可以接收来自服务器的watch事件通知.断开时在超时规定时间内重连会话仍有效.</li>
+<li>数据节点（Znode)————zookeeper中znode分为持久节点和临时节点.临时节点生命周期与客户端会话绑定,会话失效临时节点会被移除.znode上维护一个stat结构，<br>其中包括数据更改、ACL更改和时间戳的版本号，以允许缓存验证和协调更新.</li>
+<li>版本————对应znode的版本.</li>
+<li>watcher————事件监听器，zookeeper允许用户在指定节点上注册一些watcher，并且在一些特定事件触发时服务器通知感兴趣的客户端.</li>
+<li>ACL————Acess Control Lists.有5种权限：create、read、write、delete、admin.</li>
+</ul>
+</blockquote>
+<p>1.4 简单的API.</p>
+<blockquote>
+<ul>
+<li>create: 在树中的某个位置创建节点</li>
+<li>delete: 删除节点</li>
+<li>exists: 测试某个节点是否存在</li>
+<li>get data</li>
+<li>set data</li>
+<li>get children</li>
+<li>sync</li>
+</ul>
+</blockquote>
+<p>1.5 分布式一致性协议.</p>
+<blockquote>
+<ul>
+<li>2PC: 提交事务请求——》执行事务提交</li>
+<li>3PC: canCommit–&gt;preCommit–&gt;doCommit</li>
+<li>TCC: Try–&gt;Conform/cancel</li>
+<li>Paxos算法: “过半”原则，少数服从多数</li>
+<li>ZAB: zookeeper的一致性协议（Zookeeper Atomic Broadcast，zookeeper原子消息广播协议）</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/zookeeper/" rel="tag"># zookeeper</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/07/Hyper-V虚拟机网络设置/" rel="next" title="Hyper-V虚拟机网络设置">
+                <i class="fa fa-chevron-left"></i> Hyper-V虚拟机网络设置
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/29/Zookeeper系列2——详解Paxos算法和ZAB协议/" rel="prev" title="Zookeeper系列2——详解Paxos算法和ZAB协议">
+                Zookeeper系列2——详解Paxos算法和ZAB协议 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ank.hao</p>
+              <div class="site-description motion-element" itemprop="description">技术、点滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">14</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

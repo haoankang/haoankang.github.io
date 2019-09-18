@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="##1. Kafka Producer.1.1 简介.  每个producer是独立工作的，与其他producer实例间没有关联。因为上一节中我们提过，Kafka的消息是三元值，即topic-partition-message.因此，producer向某个topic发送消息，首先需要确定哪个分区，这就是分区器作用。（自定义或系统自带）.kafka默认分区器，如果消息指定key，则根据key的哈希值">
+<meta name="keywords" content="kafka">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka系列2——Producer和Consumer">
+<meta property="og:url" content="http://yoursite.com/2019/08/02/Kafka系列2——Producer和Consumer/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="##1. Kafka Producer.1.1 简介.  每个producer是独立工作的，与其他producer实例间没有关联。因为上一节中我们提过，Kafka的消息是三元值，即topic-partition-message.因此，producer向某个topic发送消息，首先需要确定哪个分区，这就是分区器作用。（自定义或系统自带）.kafka默认分区器，如果消息指定key，则根据key的哈希值">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/images/Kafka_1.png">
+<meta property="og:image" content="http://yoursite.com/images/Kafka_2.png">
+<meta property="og:updated_time" content="2019-08-06T02:47:24.551Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kafka系列2——Producer和Consumer">
+<meta name="twitter:description" content="##1. Kafka Producer.1.1 简介.  每个producer是独立工作的，与其他producer实例间没有关联。因为上一节中我们提过，Kafka的消息是三元值，即topic-partition-message.因此，producer向某个topic发送消息，首先需要确定哪个分区，这就是分区器作用。（自定义或系统自带）.kafka默认分区器，如果消息指定key，则根据key的哈希值">
+<meta name="twitter:image" content="http://yoursite.com/images/Kafka_1.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/08/02/Kafka系列2——Producer和Consumer/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Kafka系列2——Producer和Consumer | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Kafka系列2——Producer和Consumer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Kafka系列2——Producer和Consumer
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-02 14:16:45" itemprop="dateCreated datePublished" datetime="2019-08-02T14:16:45+08:00">2019-08-02</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-06 10:47:24" itemprop="dateModified" datetime="2019-08-06T10:47:24+08:00">2019-08-06</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/kafka/" itemprop="url" rel="index"><span itemprop="name">kafka</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>##1. Kafka Producer.<br>1.1 简介.</p>
+<blockquote>
+<p>每个producer是独立工作的，与其他producer实例间没有关联。因为上一节中我们提过，Kafka的消息是三元值，即topic-partition-message.因此，<br>producer向某个topic发送消息，首先需要确定哪个分区，这就是分区器作用。（自定义或系统自带）.kafka默认分区器，如果消息指定key，则根据key<br>的哈希值选择目标分区，如果没有指定key，则使用轮询方式去欸的那个目标分区.确定分区后，producer要寻找这个分区对应的leader，也就是该分区<br>leader副本所在的Kafka broker.整个producer的工作流程如下图：<br><img src="/images/Kafka_1.png" alt></p>
+</blockquote>
+<p>1.2 Java版本的producer实例.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">public class ProducerTest &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Properties properties = new Properties();</span><br><span class="line">        properties.put(&quot;bootstrap.servers&quot;,&quot;devhost30:9092&quot;);</span><br><span class="line">        properties.put(&quot;key.serializer&quot;, &quot;org.apache.kafka.common.serialization.StringSerializer&quot;);</span><br><span class="line">        properties.put(&quot;value.serializer&quot;, &quot;org.apache.kafka.common.serialization.StringSerializer&quot;);</span><br><span class="line">        properties.put(&quot;acks&quot;, &quot;-1&quot;);</span><br><span class="line">        properties.put(&quot;retries&quot;, 2);</span><br><span class="line">        properties.put(&quot;batch.size&quot;, 323840);</span><br><span class="line">        properties.put(&quot;linger.ms&quot;, 10);</span><br><span class="line">        properties.put(&quot;buffer.memory&quot;, 33554432);</span><br><span class="line">        properties.put(&quot;max.block.ms&quot;, 3000);</span><br><span class="line">        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, &quot;ank.hao.producer.partition.AnkPartitioner&quot;);</span><br><span class="line">        properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, &quot;ank.hao.producer.interceptor.AnkInterceptor&quot;);</span><br><span class="line"></span><br><span class="line">        Producer&lt;String,String&gt; producer = new KafkaProducer&lt;String, String&gt;(properties);</span><br><span class="line">//        for(int i=0;i&lt;100;i++)&#123;</span><br><span class="line">//            producer.send(new ProducerRecord&lt;String, String&gt;(&quot;first-topic&quot;, Integer.toString(i), &quot;message-&quot;+Integer.toString(i)));</span><br><span class="line">//        &#125;</span><br><span class="line">        for(int m=10;m&lt;13;m++)&#123;</span><br><span class="line">            producer.send(new ProducerRecord&lt;String, String&gt;(&quot;first-topic&quot;, Integer.toString(m), &quot;callback-&quot; + Integer.toString(m)), new Callback() &#123;</span><br><span class="line">                public void onCompletion(RecordMetadata recordMetadata, Exception e) &#123;</span><br><span class="line">                    if(e == null)&#123;</span><br><span class="line">                        //消息发送成功</span><br><span class="line">                        System.out.println(&quot;发送成功了喵：&quot;+recordMetadata.topic());</span><br><span class="line">                    &#125;else &#123;</span><br><span class="line">                        if(e instanceof RetriableException)&#123;</span><br><span class="line">                            //处理可重试瞬时异常</span><br><span class="line">                        &#125; else &#123;</span><br><span class="line">                            //处理不可重试异常</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">//        for(int m=20;m&lt;3;m++)&#123;</span><br><span class="line">//            try &#123;</span><br><span class="line">//                producer.send(new ProducerRecord&lt;String, String&gt;(&quot;first-topic&quot;, Integer.toString(m), &quot;sync-&quot; + Integer.toString(m))).get();</span><br><span class="line">//            &#125; catch (InterruptedException e) &#123;</span><br><span class="line">//                e.printStackTrace();</span><br><span class="line">//            &#125; catch (ExecutionException e) &#123;</span><br><span class="line">//                e.printStackTrace();</span><br><span class="line">//            &#125;</span><br><span class="line">//        &#125;</span><br><span class="line">        producer.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>上面示例代码中，使用了三种发送消息方式：fire and forget、异步发送、同步发送；producer的参数可在官网查询详情，其中需要 注意的是,前三个参数必须指定，<br>且bootstrap.servers需要采用主机名方式配置，不可用IP地址；其他重要参数：</p>
+<ul>
+<li>acks. 用于控制producer消息的持久性.相当于broker反馈的持久化ISR数量.0表示完全不管反馈结果继续下一个消息发送；all或-1表示会等待ISR中所有副本成功<br>写入各自本地的日志后才继续下一个；1表示leader broker将消息成功写入本地日志后继续下一个；</li>
+<li>buffer.memory. 指定producer用于缓存消息的缓冲区大小，单位字节.默认32M.</li>
+<li>compression.type. 设置producer端是否压缩消息，默认none，不压缩.</li>
+<li>retries. 失败重试次数，Kafka broker在处理写入请求时可能因为可恢复的瞬时故障（如瞬时leader选举或网络抖动）导致消息发送失败；配合使用的几个参数：<br>retry.backoff.ms，重试停顿时间，默认100ms.重试可能造成的问题：消息的重复发送和乱序.</li>
+<li>batch.size. 每次批量发送消息的大小，单位字节，默认16KB.</li>
+<li>linger.ms 和batch.size配合使用，每次发送时间延迟.默认0，即无须关心batch是否已被填满.</li>
+<li>max.request.size 控制producer端能够发送的最大消息大小，默认1MB.</li>
+<li>request.timeout.ms producer发送请求给broker后等待超时时间，默认30s.</li>
+</ul>
+</blockquote>
+<p>1.3 分区策略.</p>
+<blockquote>
+<p>Producer分区接口org.apache.kafka.clients.producer.Partitioner，默认的DefaultPartitioner机制如之前所述；如果要自定义分区策略，需要以下步骤：</p>
+<ul>
+<li>在procuer端创建一个实现Partitioner的类，主要分区策略在partition()中实现.</li>
+<li>在构造KafkaProducer中设置partitioner.class参数.</li>
+</ul>
+</blockquote>
+<p>1.4 消息序列化.</p>
+<blockquote>
+<p>序列化接口org.apache.kafka.common.serialization.Serializer<t>，默认提供十几种序列器，如StringSerializer、LongSerializer、BytesSerializer等.<br>自定义序列化步骤如下：</t></p>
+<ul>
+<li>定义数据对象格式.</li>
+<li>创建一个实现Serializer<t>的类，在serializer()中实现序列化逻辑.</t></li>
+<li>在构造KafkaProducer中设置key.serializer和value.serializer.</li>
+</ul>
+</blockquote>
+<p>1.5 拦截器.</p>
+<blockquote>
+<p>producer和consumer都有自己的拦截器链。producer拦截器使用户在消息发送前以及producer回调逻辑前有机会对消息做定制化需求.<br>自定义拦截器步骤如下：</p>
+<ul>
+<li>实现org.apache.kafka.common.Configurable.ProducerInterceptor&lt;K, V&gt;接口；</li>
+<li>在构造KafkaProducer中设置interceptor.classes.</li>
+</ul>
+</blockquote>
+<p>1.6 无消息丢失配置.</p>
+<blockquote>
+<p>其中一种方式是同步方式发送消息，但效率太低，一般使用下面方式配置.<br>producer端配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">acks=all  //最强程度持久化保证.</span><br><span class="line">retries=Integer.MAX_VALUE</span><br><span class="line">max.in.flight.requests.per.connection=1  限制producer在单个broker连接上能够发送的未响应请求数量.</span><br><span class="line">使用带有回调的send(record,callback)</span><br><span class="line">Callback逻辑中显示立即关闭producer.</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>broker端配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">unclean.leader.election.enable=false 关闭unclean leader选举，即不允许ISR中副本被选举为leader，从而避免broker端因日志水位截断造成消息丢失.</span><br><span class="line">replication.factor &gt;=3  副本数量</span><br><span class="line">min.insync.replicas &gt;1  控制消息至少被写入到ISR中多少副本才算成功.</span><br><span class="line">确保replication.factor &gt; min.insync.replicas</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>1.7 消息压缩.</p>
+<blockquote>
+<p>kafka支持的压缩算法：none, gzip, snappy, lz4, zstd.</p>
+</blockquote>
+<p>1.8 多线程处理.</p>
+<blockquote>
+<p>有两种基本使用用法：多线程蛋KafkaProducer实例，多线程多KafkaProducer实例.推荐用法：对分区不多的Kafka集群使用第一种，对拥有超多分区集群用第二种.</p>
+</blockquote>
+<p>##2. Kafka Consumer.<br>2.1 简介.</p>
+<blockquote>
+<p>消费者组概念：消费者使用一个group.id标记自己，topic的每条消息都只会被发送到每个订阅它的消费者组的一个消费者实例上.Kafka实现两种模型：</p>
+<ul>
+<li>所有consumer实例都属于同一个group——实现基于队列的模型，每条消息只会被一个consumer实例处理.</li>
+<li>consumer实例都属于不同group——实现基于发布/订阅的模型。每条消息会被所有consumer实例处理.<br><img src="/images/Kafka_2.png" alt></li>
+</ul>
+</blockquote>
+<p>2.2 Java版本的Consumer实例.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">public class ConsumerTest &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        String topic = &quot;first-topic&quot;;</span><br><span class="line">        String groupId = &quot;first-group&quot;;</span><br><span class="line"></span><br><span class="line">        Properties properties = new Properties();</span><br><span class="line">        properties.put(BOOTSTRAP_SERVERS_CONFIG, &quot;devhost30:9092&quot;);</span><br><span class="line">        properties.put(GROUP_ID_CONFIG, groupId);</span><br><span class="line">        properties.put(ENABLE_AUTO_COMMIT_CONFIG, &quot;true&quot;);</span><br><span class="line">        properties.put(AUTO_COMMIT_INTERVAL_MS_CONFIG, &quot;1000&quot;);</span><br><span class="line">        properties.put(AUTO_OFFSET_RESET_CONFIG, &quot;earliest&quot;);</span><br><span class="line">        properties.put(KEY_DESERIALIZER_CLASS_CONFIG, &quot;org.apache.kafka.common.serialization.StringDeserializer&quot;);</span><br><span class="line">        properties.put(VALUE_DESERIALIZER_CLASS_CONFIG, &quot;org.apache.kafka.common.serialization.StringDeserializer&quot;);</span><br><span class="line"></span><br><span class="line">        KafkaConsumer&lt;String, String&gt; consumer = new KafkaConsumer&lt;String, String&gt;(properties);</span><br><span class="line">        consumer.subscribe(Arrays.asList(topic));</span><br><span class="line">        try &#123;</span><br><span class="line">            while (true)&#123;</span><br><span class="line">                ConsumerRecords&lt;String,String&gt; records = consumer.poll(Duration.ofSeconds(1));</span><br><span class="line">                for(ConsumerRecord&lt;String,String&gt; record:records)&#123;</span><br><span class="line">                    System.out.printf(&quot;offset=%d, key=%s, value=%s%n&quot;, record.offset(), record.key(), record.value());</span><br><span class="line">                    System.out.println();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            consumer.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>构造一个java.util.Properties对象，至少指定bootstrap.servers、key.deserializer、value.deserializer和group.id的值，同样，bootstrap.servers<br>使用主机名，不可用IP地址；一些重要参数：</p>
+<ul>
+<li>session.timout.ms  coordinator监测失败的时间，默认10s</li>
+<li>max.poll.interval.ms  consumer处理逻辑最大时间.</li>
+<li>auto.offset.reset  指定无位移信息或位移越界时Kafka的应对策略.</li>
+<li>enable.auto.commit  指定consumer是否自动提交位移.</li>
+<li>fetch.max.bytes  指定consumer端单词获取数据的最大字节数</li>
+<li>max.poll.records  单次poll调用返回的最大消息数</li>
+<li>heartbeat.interval.ms  rebalance心跳时间间隔</li>
+<li>connections.max.idle.ms  空闲连接时间，默认9分钟</li>
+</ul>
+</blockquote>
+<p>2.3 订阅topic</p>
+<blockquote>
+<p>consumer.subscribe(..)订阅topic列表，也可以基于正则表达式订阅topic；consumer订阅是延迟生效的，订阅信息在下次poll调用时才会正式生效；</p>
+</blockquote>
+<p>2.4 消息轮询</p>
+<blockquote>
+<p>poll内部原理：采用类似于linux IO模型的poll或select等，使用一个线程同时管理多个socket连接，即同时与多个broker通信实现消息的并行读取；<br>一旦consumer订阅了topic，所有的消费逻辑包括coordinator的协调、消费者组的rebalance以及数据获取都会在主逻辑poll方法的以此调用中执行.<br>poll方法返回的任一条件：获取足够多可用数据，等待时间超过设定的超时时间.</p>
+</blockquote>
+<p>2.5 位移管理</p>
+<blockquote>
+<p>位移： 每个consumer实例都会为它消费的分区维护属于自己的位置信息来记录当前消费信息进度，被称为位移；<br><br>位移提交： consumer客户端需要定期向kafka集群汇报自己消费数据进度，这一过程被称为位移提交；<br><br><strong>consumer_offsets: 位移提交会提交到kafka一个内部topic上，这个topic就是</strong>consumer_offsets；数据格式：可以理解为一个KV格式的消息，<br>key是一个三元组：group.id+topic+分区号，value是offset的指；<br><br>位移管理： consumer会在kafka集群的所有broker中选择一个作为consumer group的协调者(coordinator)，用于实现组成员管理、消费分配方案<br>制定以及提交位移等。提交位移主要机制是通过向所属的coordinator发送位移提交请求来实现的；<br>自动提交和手动提交： 默认自动提交，auto.commit.interval.ms可以控制自动提交间隔；手动提交就是用户自行去欸的那个消息何时被真正处理完<br>并提交位移，设置enable.auto.commit=false，然后调用commitSync或commitAsync；</p>
+</blockquote>
+<p>2.6 rebalance</p>
+<blockquote>
+<p>rebalance本质上是一组协议，规定了一个consumer group是如何达成一致来分配订阅topic的所有分区的；rebalance触发条件有三个：组成员发生变更，<br>组订阅topic数发生变更，组订阅topic的分区数发生变更；</p>
+</blockquote>
+<p>2.7 解序列化</p>
+<blockquote>
+<p>consumer端的解序列化和producer端的序列化是互逆操作，同理可自定义解序列化类；</p>
+</blockquote>
+<p>2.8 多线程消费实例</p>
+<blockquote>
+<ul>
+<li>每个线程维护一个KafkaConsumer实例</li>
+<li>单KafkaConsumer实例+多worker线程</li>
+</ul>
+</blockquote>
+<p>2.9 独立consumer</p>
+<blockquote>
+<p>consumer不仅可以以consumer group形式出现，也可以独立使用，彼此独立工作互不干扰。以下情况适合使用独立consumer：</p>
+<ul>
+<li>进程自己维护分区状态，可以固定消费某些分区不用担心消费状态丢失；</li>
+<li>进程本身已经是高可用且能够自动重启恢复错误（比如yarn和mesos等容器调度框架），不需要kafka来错误检测和状态恢复；</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kafka/" rel="tag"># kafka</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/08/01/Kafka系列1——基础入门/" rel="next" title="Kafka系列1——基础入门">
+                <i class="fa fa-chevron-left"></i> Kafka系列1——基础入门
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/08/06/Kafka系列3——设计原理/" rel="prev" title="Kafka系列3——设计原理">
+                Kafka系列3——设计原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ank.hao</p>
+              <div class="site-description motion-element" itemprop="description">技术、点滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">14</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

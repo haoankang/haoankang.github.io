@@ -289,6 +289,1946 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/10/Zookeeper系列4——Zookeeper的原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/09/10/Zookeeper系列4——Zookeeper的原理/" class="post-title-link" itemprop="url">Zookeeper系列4——Zookeeper的原理</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-10 10:17:11" itemprop="dateCreated datePublished" datetime="2019-09-10T10:17:11+08:00">2019-09-10</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-09-17 17:36:47" itemprop="dateModified" datetime="2019-09-17T17:36:47+08:00">2019-09-17</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>##1. 系统模型<br>1.1 数据模型</p>
+<blockquote>
+<p>zookeeper的数据节点ZNode按层次化结构组织，形成一棵树，节点的路径类似于linux文件系统，例如/node1/node2.</p>
+</blockquote>
+<p>1.2 节点特性</p>
+<blockquote>
+<p>节点有两个维度，按照生命周期分为持久节点和临时节点，按照是否有序分为顺序节点和普通节点，组合产生了zookeeper<br>一共有四种节点类型：持久节点(PERSISTENT)、持久顺序节点(PERSISTENT_SEQUENTIAL)、临时节点(EPHEMERAL)、<br>临时顺序节点(EPHEMERAL_SEQUENTIAL),节点的属性如下图所示：<br><img src="/images/zookeeper_1.png" alt="节点属性"></p>
+</blockquote>
+<p>1.3 版本</p>
+<blockquote>
+<p>在zookeeper中，版本主要是用来做乐观锁的操作校验；下面是zookeeper更新前置校验代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">private static int checkAndIncVersion(int currentVersion, int expectedVersion, String path)</span><br><span class="line">        throws KeeperException.BadVersionException &#123;</span><br><span class="line">    if (expectedVersion != -1 &amp;&amp; expectedVersion != currentVersion) &#123;</span><br><span class="line">        throw new KeeperException.BadVersionException(path);</span><br><span class="line">    &#125;</span><br><span class="line">    return currentVersion + 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>1.4 watcher机制</p>
+<blockquote>
+<p>所有读取操作可以设置Watch，也就是getData(), getChildren(), and exists();zookeeper的watch定义如下：<br>watch事件是一次性触发器，发送给设置watch的客户端，当设置watch的数据发生更改时发生。重点是三个要点：一次性<br>触发、发送给客户端、watch是谁触发（data watches和child watches）；与此相关的有两个类：WatchedEvent和<br>WatcherEvent，后者实际上是前者的简化用于传输，主要包含三个信息：连接状态、触发事件类型、路径；</p>
+</blockquote>
+<blockquote>
+<p>watch的触发事件分为下面几个：</p>
+<ul>
+<li>NodeCreated: Enabled with a call to exists.</li>
+<li>NodeDeleted: Enabled with a call to exists, getData, and getChildren.</li>
+<li>NodeDataChanged: Enabled with a call to exists and getData.</li>
+<li>NodeChildrenChanged: Enabled with a call to getChildren.</li>
+<li>ChildWatchRemoved: Watcher which was added with a call to getChildren.</li>
+<li>DataWatchRemoved: Watcher which was added with a call to exists or getData.</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>工作机制.<br><br>zookeeper的watcher机制，总的来说分为三个阶段：客户端注册Watcher、服务端处理Watcher、客户端回调Watcher；</p>
+<blockquote>
+<ul>
+<li>客户端注册watcher：客户端watcher经过包装构成了一个WatchRegistration对象，标记request，但最终打包packet发消息时<br>并没有携带此对象（包含两个字段：watcher和clientpath，可以理解成一个映射表），响应成功后，将WatchRegistration对象<br>放到对应的ZKWatchManager中进行管理；</li>
+<li>服务端处理watcher——完成watcher注册：服务端接收到请求后，判断是否有watcher，如果有则将当前的ContextCnxn传递给getData<br>逻辑，因为继承了Watcher，可以看作是一个Watcher，数据节点的节点路径和ContextCnxn最终会被存储在WatchManager<br>的watchTable和watch2Paths中. </li>
+<li>服务端处理watcher——watcher触发：上一步可以看出，实际上相当于服务端也维护了一个映射表，这里注册的是getData()<br>方法，当调用setData(..)或delete(..)时会触发，服务端这类操作会在最后调用dataWatches.triggerWatch(path,event)<br>方法；无论是dataWatches或childWatches，触发执行逻辑是一样的：封装WatchedEvent，查询Watcher，调用process()<br>触发Watcher（组装发送一个通知给客户端）；以上步骤，所以真正的客户端触发回调和业务逻辑执行都在客户端；</li>
+<li>客户端回调Watcher：客户端收到请求后判断这是一个watcher通知，再按照下面逻辑执行：反序列化，处理chrootpath，<br>还原WatchedEvent，回调Watcher. 以上回调过程，注意回调是放到队列中串行执行的；</li>
+</ul>
+</blockquote>
+</blockquote>
+<p>1.5 ACL</p>
+<blockquote>
+<p>ACL(Access control list), Zookeeper的权限模式有三个部分：模式、授权对象和权限，通常使用<br>“scheme:id:permission”来标识一个有效的ACL信息.权限模式常用的有四种：IP、Digest、World、Super；<br>权限有五种：create、read、delete、write、admin.<br><br>自定义权限控制器：实现接口org.apache.zookeeper.server.auth.AuthenticationProvider，再配置<br>authProvider.1=<strong>.</strong>.**（实现接口的类）</p>
+</blockquote>
+<p>##2. 序列化与协议.<br>2.1 zookeeper的序列化协议是jute. 序列化和反序列化步骤如下：</p>
+<blockquote>
+<ul>
+<li>实体类需要实现Record接口的serialize和deserialize方法;</li>
+<li>构建一个序列化器BinaryOutputArchive;</li>
+<li>序列化；</li>
+<li>反序列化；</li>
+</ul>
+</blockquote>
+<p>2.2 zookeeper有自己的通信协议.</p>
+<blockquote>
+<ul>
+<li>为了高效，zookeeper的协议尽可能简洁，包含三部分：length、请求头/响应头、请求体/响应体；请求头包含最<br>基本信息：xid和type，每个操作对应不同的请求体，格式相对固定；响应头包含每个响应最基本信息：xid、zxid和<br>err，不同响应类型对应不同响应体；</li>
+</ul>
+</blockquote>
+<p>##3. 客户端.<br>3.1 客户端核心几个类：</p>
+<blockquote>
+<ul>
+<li>Zookeeper实例：客户端入口；</li>
+<li>ClientWatchManager：客户端watcher管理器；</li>
+<li>HostProvider：客户端地址列表管理器；</li>
+<li>ClientCnxn：客户端核心线程，内部两个线程，SendThread是I/O线程，负责客户端和服务端的所有网络通信，<br>EventThread是事件线程，负责对服务端事件进行处理；<br><img src="/images/zookeeper_2.png" alt="客户端整体结构"></li>
+</ul>
+</blockquote>
+<p>3.2 会话创建过程.</p>
+<blockquote>
+<ol>
+<li>初始化zookeeper对象；</li>
+<li>设置会话默认Watcher；</li>
+<li>构造服务器地址列表管理器HostProvider；</li>
+<li>创建并初始化客户端网络连接器ClientCnxn；</li>
+<li>初始化SendThread和EventThread；以上是初始化阶段；</li>
+<li>启动SendThread和EventThread；</li>
+<li>根据服务器地址列表获取一个地址；</li>
+<li>创建TCP连接,ClientCnxnSocket；</li>
+<li>构造ConnectRequest请求；</li>
+<li>发送请求；以上是会话创建阶段；</li>
+<li>接收服务端响应；</li>
+<li>处理Response；</li>
+<li>连接成功，生成事件：SyncConnected-None；</li>
+<li>查询watcher，处理事件；</li>
+</ol>
+</blockquote>
+<p>3.3 服务器地址列表</p>
+<blockquote>
+<p>创建客户端时，会传入地址列表，通过ConnectStringParser解析器解析：解析chrooPath和保存地址列表；<br>chrooPath就是为每个会话设定单独的根目录（命名空间），例如写入的地址列表是”host1:2181,host2:2181,host3:2181/hak”，<br>当前会话根目录就是/hak；zookeeper获取地址策略类似于Round Robin，先随机打乱组成一个环，以后就顺序<br>遍历这个环，也可以实现自己的路由策略；</p>
+</blockquote>
+<p>3.4 ClientCnxn：网络I/O</p>
+<blockquote>
+<p>ClientCnxn是客户端核心类，内部定义了很多重要的类如：Packet、SendThread和EventThread及其对象用于管理；<br>其中Packet是每次请求的包装类，细节可见源码；还有比较重要的变量是outgoingQueue和pendingQueue，前者是<br>发送请求队列，后者是服务端的响应等待队列；ClientCnxnSocket定义了底层Socket通信接口；</p>
+</blockquote>
+<p>##4. 会话<br>4.1 Zookeeper的连接和会话就是客户端通过实例化Zookeeper对象来实现客户端与服务端创建并保持TCP长连接的过程；</p>
+<blockquote>
+<p>会话状态有Connecting、Connected和Close.</p>
+</blockquote>
+<p>4.2 会话创建</p>
+<blockquote>
+<p>会话Session包含四个属性：SessionId（根据机器标识和当前时间根据一定算法得出），TimeOut、TickTime、isClosing；</p>
+</blockquote>
+<p>##5. 服务器启动<br>5.1 服务器的整体架构如下图：<br><img src="/images/zookeeper_3.png" alt="服务器整体架构"></p>
+<p>5.2 单机版服务器启动流程<br><img src="/images/zookeeper_4.png" alt></p>
+<p>5.3 集群版服务器启动流程<br><img src="/images/zookeeper_5.png" alt></p>
+<p>5.4 集群版Leader和Follower服务器启动期交互过程<br><img src="/images/zookeeper_6.png" alt></p>
+<p>##6. Leader选举<br>6.1 选举是按照投票来选举的，这里先明确投票的内容：</p>
+<blockquote>
+<ul>
+<li>id: 被推举的leader的SID值；</li>
+<li>zxid: 被推举的leader的事务id；</li>
+<li>electionEpoch: 逻辑时钟，用来判断多个投票是否在同一选举周期内；自增序列；</li>
+<li>peerEpoch: 被选举的leader的epoch；</li>
+<li>state: 当前服务器状态:LOOKING\LEADING\FOLLOWING\OBSERVING；</li>
+</ul>
+</blockquote>
+<p>6.2 leader选举流程：两台机器可以互联时，每台试图找到一个leader，于是开始leader选举，过程如下：</p>
+<blockquote>
+<ul>
+<li>每个server会发出一个投票，第一次投票通常都是投自己；</li>
+<li>接收来自各个服务器的投票；</li>
+<li>处理投票：zxid-&gt;id比较选出leader，再次发出投票；</li>
+<li>统计投票；</li>
+<li>改变服务器状态；</li>
+</ul>
+</blockquote>
+<p>##7. 服务器角色<br>zookeeper服务器角色有：Leader、Follower、Observer；其中Observer可以没有，需要指定时在服务器列表中配置，<br>如server.xx=ip:port1:port2:observer；zookeeper的服务器采用责任链模式处理请求；集群间通信消息类型分为<br>四类：数据同步，服务器初始化，请求处理，会话管理；</p>
+<blockquote>
+<ul>
+<li>leader的主要工作：事务请求的唯一调度和处理者，保证集群事务处理的顺序性；集群内部各服务器的调度者；</li>
+<li>follower的工作：处理客户端非事务请求，转发事务请求给leader；参与事务请求的投票；参与leader选举投票；</li>
+<li>observer的工作：observer工作原理和follower一致，唯一不同的是observer不参与任何形式的投票；observer<br>通常用于不影响集群事务处理能力的前提下提升集群的非事务处理能力；</li>
+</ul>
+</blockquote>
+<p>##8. 请求处理<br>zookeeper服务器对会话请求处理，大体有以下阶段：请求接收、会话创建、预处理、事务处理、事务应用和会话响应；</p>
+<blockquote>
+<p>zookeeper的请求主要分为事务请求和非事务请求；需要注意的是：事务请求由leader处理，当follower或<br>observer接收到事务请求时，会在预处理器中转发给leader处理；事务请求例如setData()，主要流程：sync<br>–&gt;proposal–&gt;commit，也就是二阶段提交；非事务请求例如getData()等，要注意watch监听事件的处理；</p>
+</blockquote>
+<p>##9. 数据与存储<br>在zookeeper中，数据存储分为两部分：内存数据存储和磁盘数据存储.</p>
+<p>9.1 内存数据</p>
+<blockquote>
+<p>zookeeper的数据模型是一棵树，DataTree和DataNode，DataTree中有个核心变量:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> /**</span><br><span class="line"> * This hashtable provides a fast lookup to the datanodes. The tree is the</span><br><span class="line"> * source of truth and is where all the locking occurs</span><br><span class="line"> */</span><br><span class="line">private final ConcurrentHashMap&lt;String, DataNode&gt; nodes =</span><br><span class="line">    new ConcurrentHashMap&lt;String, DataNode&gt;();</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>这个map存储了zookeeper服务器上所有节点，可以说对于zookeeper数据的所有操作底层都是操作这个map，另外，<br>为了便于实时访问和及时清理，DataTree还单独将临时节点保存起来：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * This hashtable lists the paths of the ephemeral nodes of a session.</span><br><span class="line"> */</span><br><span class="line">private final Map&lt;Long, HashSet&lt;String&gt;&gt; ephemerals =</span><br><span class="line">    new ConcurrentHashMap&lt;Long, HashSet&lt;String&gt;&gt;();</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>ZKDatabase中引用了DataTree作为变量，是zookeeper的内存数据库，负责管理zookeeper的所有会话、DataTree<br>存储和事务日志；ZKDatabase会定时向磁盘dump快照数据，并且在启动时，通过磁盘上的事务日志和快照数据文件<br>恢复成一个完整的内存数据库；</p>
+</blockquote>
+<p>9.2 事务日志</p>
+<blockquote>
+<p>事务日志存储：存储路径配置参数dataLogDir目录，事务日志文件名后缀是该日志的第一条zxid；<br>事务日志格式：事务操作时间、客户端会话ID、CXID、ZXID、操作类型、节点路径、节点数据内容；<br>日志截断：当非leader机器上记录的事务ID比leader的大，就需要将非leader机器上记录的大于leader的<br>日志文件；</p>
+</blockquote>
+<p>9.3 数据快照</p>
+<blockquote>
+<p>存储路径dataDir目录，文件名类似于事务日志文件；</p>
+</blockquote>
+<p>9.4 初始化</p>
+<blockquote>
+<p>服务器启动之后，会根据自身配置文件zoo.cfg初始化，数据初始化阶段将存储在磁盘上的数据文件加载到zookeeper<br>服务器内存中；这一阶段会获取该服务器最后的事务ID，用于投票选举leader；</p>
+</blockquote>
+<p>9.5 数据同步</p>
+<blockquote>
+<p>leader选举完成后，需要数据同步leader于learner；数据同步开始时，leader会先获取learner服务器状态，<br>主要是currentEpoch和lastZxid；然后开始数据同步初始化：首先从内存数据库中提取出事务请求对应的提议缓存<br>队列：proposals，同时完成对以下三个zxid的初始化：</p>
+<ul>
+<li>peerLastZxid: 该learner服务器最后处理的zxid；</li>
+<li>minCommitedLog: leader服务器提议缓存队列中的最小zxid；</li>
+<li>maxCommitedLog: leader服务器提议缓存队列中的最大zxid；<br>然后根据三个值的比较，选择合适的数据同步方式：直接差异化同步（DIFF同步）、先回滚再差异化同步（TRUNC+<br>DIFF同步）、仅回滚同步(TRUNC同步)和全量同步（SNAP同步）。</li>
+</ul>
+</blockquote>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/Zookeeper系列3——Zookeeper的使用r的使用和典型应用场景/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/30/Zookeeper系列3——Zookeeper的使用r的使用和典型应用场景/" class="post-title-link" itemprop="url">Zookeeper系列3——Zookeeper的使用r的使用和典型应用场景</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-30 10:55:01" itemprop="dateCreated datePublished" datetime="2019-08-30T10:55:01+08:00">2019-08-30</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-09-05 14:58:53" itemprop="dateModified" datetime="2019-09-05T14:58:53+08:00">2019-09-05</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="1-部署和运行"><a href="#1-部署和运行" class="headerlink" title="1.部署和运行"></a>1.部署和运行</h2><p>zookeeper运行有两种模式，集群模式和单机模式，也可以伪集群，核心是配置config/zoo.cfg，修改client.port和server.*，<br>配置datapath和datalogpath，在datapath目录下新建文件myid用来确认机器编号；可以修改启动文件，来启用JMX；</p>
+<h2 id="2-对接、使用方式"><a href="#2-对接、使用方式" class="headerlink" title="2.对接、使用方式"></a>2.对接、使用方式</h2><p>2.1 客户端脚本</p>
+<blockquote>
+<p>服务端使用zkCli.sh，可以以脚本方式执行相关操作，如增删改查等；<br>2.2 java客户端API<br>ZooKeeper客户端API，以及监听Watcher，多次监听需要重复注册；<br>2.3 curator开源客户端<br>建议使用，封装较好，且持续更新社区活跃；maven依赖curator-framework,客户端CuratorFramework由CuratorFrameworkFactory创建，使用Fluent风格<br>编写，可以同步或异步方式.还有一个包curator-recipes中封装了常用的使用场景接口，例如：<br>事件监听–监听器对应节点NodeCache和子节点PathChildrenCache，Master选举，分布式锁，分布式计数器等实用API.</p>
+</blockquote>
+<h2 id="3-典型使用场景及实现"><a href="#3-典型使用场景及实现" class="headerlink" title="3.典型使用场景及实现"></a>3.典型使用场景及实现</h2><p>3.1 数据发布/订阅</p>
+<blockquote>
+<p>数据发布/订阅系统也就是配置中心，可以实现配置信息的集中管理和数据动态更新，发布/订阅一般两种模式，推(push)模式<br>和拉(poll)模式；zookeeper采用推拉结合的方式：客户端向服务端注册自己关注的节点，当节点发生变化，服务端会通知<br>客户端，客户端接收到通知后，再去服务端获取最新数据；</p>
+</blockquote>
+<blockquote>
+<p>zookeeper的实现方式：例如数据库切换，可以在zookeeper上选取一个节点初始化，例如/app/dataconfig，节点保存<br>数据库信息，客户端注册一个watcher监听节点数据变化，如果需要切换变化数据库配置，则利用zk修改数据，同时会自动<br>通知正在监听的客户端；</p>
+</blockquote>
+<p>3.2 负载均衡</p>
+<blockquote>
+<p>负载均衡用来对多个计算机、网络连接、CPU、磁盘驱动器及其他资源进行分配负载，以达到优化资源使用、最大化吞吐率、<br>最小化相应时间和避免过载的目的；其中比较典型的是DNS服务，zookeeper可以实现DDNS；</p>
+</blockquote>
+<blockquote>
+<p>实现方式：创建一个节点进行域名配置，例如/DDNS/app1/server1.com.cn，在这个子节点中写入对应的ip列表，需要RPC<br>时，先从相应节点获取ip列表，自己解析，同时还可以注册监听ip列表变化；</p>
+</blockquote>
+<p>3.3 命名服务</p>
+<blockquote>
+<p>命名服务是分布式系统最基本的公共服务之一，通过使用命名服务，客户端可以根据指定名字获取资源的实体、服务地址和<br>提供者的信息等；核心思想是在分布式环境中，上层应用需要一个全局唯一的id；UUID的缺点是长度过长且业务意义不明；</p>
+</blockquote>
+<blockquote>
+<p>实现方式：zookeeper的API创建顺序节点时会返回这个节点的完整名字，利用zookeeper的顺序节点ID唯一实现命名服务；</p>
+</blockquote>
+<p>3.4 分布式协调/通知</p>
+<blockquote>
+<p>对于一个部署在多台机器上的应用来说，需要一个协调者，控制例如事务处理等，可以解耦从而增强扩展性；</p>
+</blockquote>
+<blockquote>
+<p>实现方式：zookeeper的数据一致性读写和监听可以很方便的实现；分布式系统机器间通信方式有三种类型：心跳检测、<br>工作进度汇报和系统调度；</p>
+</blockquote>
+<p>3.5 分布式锁</p>
+<blockquote>
+<p>分为排他锁和共享锁.</p>
+</blockquote>
+<blockquote>
+<p>排他锁的实现：获取锁————创建一个节点/exclusive_lock，相关业务例如业务一需要一个排他锁，则在此节点下创建临时<br>子节点/exclusive_lock/business_1，利用节点的zookeeper多个机器创建同一节点只有一个创建成功的节点特性，<br>创建成功则获取锁，同时创建失败的监听此节点；释放锁————获取锁的客户端自己删除节点，或者客户端断开连接zookeeper<br>服务端会删除临时节点，监听此节点的客户端会收到通知，执行获取锁的逻辑；</p>
+</blockquote>
+<blockquote>
+<p>共享锁的实现：共享锁又称为读锁，如果事务T1对对象O加了共享锁，则当前事务只能对O进行读操作，其他事务也只能对O<br>加共享锁，直到O对象上的所有共享锁全部释放；定义锁————创建一个节点/shared_lock，事务加锁时可以按照下面格式<br>/shared_lock/business_2/host1-W|R-001，区别读和写；获取锁————需要获取共享锁时，所有客户端都在/shared_lock下创建临时<br>子节点，并且注册监听/shared_lock/business_2的所有子节点；读请求：判断比自己序列小的节点是否有写锁，如果有则等待；<br>写请求：判断是否有比自己序列小的节点；释放锁————和排他锁的释放逻辑一样；</p>
+</blockquote>
+<blockquote>
+<p>共享锁的羊群效应：因为获取共享锁的节点需要监听/shared_lock/business_2节点的所有子节点，例如当一个节点释放<br>锁之后，需要通知大量的其他等待客户端，并且其他客户端需要拉取所有子节点列表判断自己是否可以获取锁；短时间如果<br>有多个节点是否锁，就会引起大量的客户端Watch通知，这就是羊群效应；产生的根本原因是：没有找准客户端的关注点；</p>
+</blockquote>
+<blockquote>
+<p>共享锁的改进：理解了羊群效应产生的根本原因，可以如下改进：读共享锁只监听比自己小的写锁节点，写共享锁只监听比<br>自己小的节点；</p>
+</blockquote>
+<p>3.6 其他应用场景：集群管理、Master选举和分布式队列等.</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/29/Zookeeper系列2——详解Paxos算法和ZAB协议/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/29/Zookeeper系列2——详解Paxos算法和ZAB协议/" class="post-title-link" itemprop="url">Zookeeper系列2——详解Paxos算法和ZAB协议</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-29 13:59:24" itemprop="dateCreated datePublished" datetime="2019-08-29T13:59:24+08:00">2019-08-29</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-09-18 15:16:22" itemprop="dateModified" datetime="2019-09-18T15:16:22+08:00">2019-09-18</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Paxos算法"><a href="#Paxos算法" class="headerlink" title="Paxos算法."></a>Paxos算法.</h2><p>paxos算法目的是构建一个分布式一致性状态机；</p>
+<p>这里有几个概念要整理清楚：paxos算法中的三个角色proposal、acceptor和learner，每个进程可能不止一个角色；即<br>假如有A进程，那么A可能有proposal和acceptor两个角色，那么A的proposal会和A的acceptor相互通信；假设系统已经<br>可以产生一个全局时钟的概念来确保提案编号的顺序性；</p>
+<p>算法过程：类似于二阶段提交，有两个阶段：</p>
+<blockquote>
+<p>perpare阶段：(a) Proposer选择一个提案编号N，然后向半数以上的Acceptor发送编号为N的Prepare请求。</p>
+</blockquote>
+<blockquote>
+<p>(b) 如果一个Acceptor收到一个编号为N的Prepare请求，如果小于它已经响应过的请求，则拒绝，不回应或<br>回复error。若N大于该Acceptor已经响应过的所有Prepare请求的编号（maxN），那么它就会将它已经接受过<br>（已经经过第二阶段accept的提案）的编号最大的提案（如果有的话，如果还没有的accept提案的话返回<br>{pok，null，null}）作为响应反馈给Proposer，同时该Acceptor承诺不再接受任何编号小于N的提案。</p>
+</blockquote>
+<blockquote>
+<p>accept阶段：(a) 如果一个Proposer收到半数以上Acceptor对其发出的编号为N的Prepare请求的响应，那么它<br>就会发送一个针对[N,V]提案的Accept请求给半数以上的Acceptor。注意：V就是收到的响应中编号最大的提案的<br>value（某个acceptor响应的它已经通过的{acceptN，acceptV}），如果响应中不包含任何提案，那么V就由<br>Proposer自己决定。</p>
+</blockquote>
+<blockquote>
+<p>(b) 如果Acceptor收到一个针对编号为N的提案的Accept请求，只要该Acceptor没有对编号大于N的Prepare<br>请求做出过响应，它就接受该提案。如果N小于Acceptor以及响应的prepare请求，则拒绝，不回应或回复error<br>（当proposer没有收到过半的回应，那么他会重新进入第一阶段，递增提案号，重新提出prepare请求）。</p>
+</blockquote>
+<p>以上是paxos算法过程，这里自己整理不好语言，借鉴于网络；个人感觉是逻辑比较清晰的说明了；这是算法核心，通常<br>会有一些优化，例如选取主proposal保证算法活性，即完整算法过程只进行一次，之后就类似于master-slave模式了；</p>
+<h2 id="ZAB协议"><a href="#ZAB协议" class="headerlink" title="ZAB协议."></a>ZAB协议.</h2><p>ZAB协议目的是构建一个高可用的分布式数据主备系统；</p>
+<p>ZAB协议有两种模式：崩溃恢复和消息广播，也就是两个过程，进一步分为三个阶段：发现、同步和广播；</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/14/Zookeeper系列1——概述/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/14/Zookeeper系列1——概述/" class="post-title-link" itemprop="url">Zookeeper系列1——概述</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-14 14:36:44" itemprop="dateCreated datePublished" datetime="2019-08-14T14:36:44+08:00">2019-08-14</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-09-12 09:33:56" itemprop="dateModified" datetime="2019-09-12T09:33:56+08:00">2019-09-12</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>##1. zookeeper概述.<br>1.1 zookeeper是什么？</p>
+<blockquote>
+<p>zookeeper的由来：雅虎开发人员为了开发一个通用的无单点问题的分布式协调框架，后来发展成zookeepr.<br><br>zookeeper是一种用于分布式应用程序的开源分布式协调服务，是一个典型的分布式数据一致性解决方案，分布式应用可以基于zookeeper实现如数据发布/订阅、负载均衡、<br>命名服务、分布式协调/通知、集群管理、master选举、分布式锁和分布式队列等功能；<br><br>zookeeper可以保证如下分布式一致性特性：顺序一致性、原子性、单一视图、可靠性、实时性；</p>
+</blockquote>
+<p>1.2 zookeeper设计目标？</p>
+<blockquote>
+<p>zookeeper致力于提供一个高性能、高可用，且具有严格顺序访问（主要是写顺序）控制能力的分布式协调服务；</p>
+<ul>
+<li>简单的数据模型(共享的、树形结构的命名空间)</li>
+<li>可以构建集群(zookeeper集群)</li>
+<li>顺序访问(客户端的每个请求都会被分配全局唯一的递增编号，这个编号反映了所有事务操作的先后顺序)</li>
+<li>高性能(zookeeper将全量数据存储在内存中)</li>
+</ul>
+</blockquote>
+<p>1.3 zookeeper的数据模型和分层命名空间.</p>
+<blockquote>
+<p>zookeeper提供的命名空间类似于标准文件系统，名称由/分割的路径元素序列，命名空间中的每个节点都由路径标识。<img src="/images/zookeeper_0.png" alt></p>
+</blockquote>
+<p>1.4 zookeeper的概念.</p>
+<blockquote>
+<p>重要概念总结</p>
+<blockquote>
+<ul>
+<li>zookeeper本身就是分布式程序(只要半数节点存活就可以正常提供服务)，为了保证高可用，最好以集群形态部署；</li>
+<li>zookeeper将数据保存在内存中，保证了高吞吐量和低延迟；在读多于写时尤其高性能，因为写会导致所有服务器间同步状态；</li>
+<li>zookeeper的临时节点生命周期和会话息息相关；</li>
+<li>zookeeper底层只提供了两个功能：管理（读写）用户提交的数据、为用户程序提交数据节点监听服务；</li>
+</ul>
+</blockquote>
+</blockquote>
+<blockquote>
+<ul>
+<li>集群角色————通常分布式系统中，典型的集群模式是Master/Slave模式（主备模式，master机器处理所有写请求，Slave通过异步复制获取最新请求，提供读取服务）；<br>zookeeper引入Leader、Follower和Observer三种角色；leader提供读写服务，Follower和Observer提供读取服务，唯一区别是Observer不参与Leader选举过程，也<br>不参与写操作的“过半写成功”策略.</li>
+<li>会话————zookeeper默认对外服务端口2181，客户端启动时，会与zookeeper服务器建立一个TCP长连接，通过这个连接，客户端可以通过心跳检测与服务器保持有效会话，<br>也可以向服务器发送请求并接收参数，还可以接收来自服务器的watch事件通知.断开时在超时规定时间内重连会话仍有效.</li>
+<li>数据节点（Znode)————zookeeper中znode分为持久节点和临时节点.临时节点生命周期与客户端会话绑定,会话失效临时节点会被移除.znode上维护一个stat结构，<br>其中包括数据更改、ACL更改和时间戳的版本号，以允许缓存验证和协调更新.</li>
+<li>版本————对应znode的版本.</li>
+<li>watcher————事件监听器，zookeeper允许用户在指定节点上注册一些watcher，并且在一些特定事件触发时服务器通知感兴趣的客户端.</li>
+<li>ACL————Acess Control Lists.有5种权限：create、read、write、delete、admin.</li>
+</ul>
+</blockquote>
+<p>1.4 简单的API.</p>
+<blockquote>
+<ul>
+<li>create: 在树中的某个位置创建节点</li>
+<li>delete: 删除节点</li>
+<li>exists: 测试某个节点是否存在</li>
+<li>get data</li>
+<li>set data</li>
+<li>get children</li>
+<li>sync</li>
+</ul>
+</blockquote>
+<p>1.5 分布式一致性协议.</p>
+<blockquote>
+<ul>
+<li>2PC: 提交事务请求——》执行事务提交</li>
+<li>3PC: canCommit–&gt;preCommit–&gt;doCommit</li>
+<li>TCC: Try–&gt;Conform/cancel</li>
+<li>Paxos算法: “过半”原则，少数服从多数</li>
+<li>ZAB: zookeeper的一致性协议（Zookeeper Atomic Broadcast，zookeeper原子消息广播协议）</li>
+</ul>
+</blockquote>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/07/Hyper-V虚拟机网络设置/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/07/Hyper-V虚拟机网络设置/" class="post-title-link" itemprop="url">Hyper-V虚拟机网络设置</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-07 11:23:18 / 修改时间：12:58:43" itemprop="dateCreated datePublished" datetime="2019-08-07T11:23:18+08:00">2019-08-07</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/虚拟机/" itemprop="url" rel="index"><span itemprop="name">虚拟机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Hyper-V虚拟机网络设置"><a href="#Hyper-V虚拟机网络设置" class="headerlink" title="Hyper-V虚拟机网络设置"></a>Hyper-V虚拟机网络设置</h2><p>1.需求</p>
+<blockquote>
+<ul>
+<li>无论物理机的网络环境怎么变化，都需要保持虚拟机的IP地址不变，保证我本机使用xshell等终端访问始终用同一个IP地址，或者在安装了其他软件后，访问虚拟机的IP地址保持不变。</li>
+<li>物理机可访问虚拟机，虚拟机可访问网络都行。重点保证本机可访问虚拟机，以及虚拟机之间能互相访问。</li>
+<li>无论物理机的网络环境怎么变化，虚拟机可以连接到外网。</li>
+</ul>
+</blockquote>
+<p>2.检查 </p>
+<blockquote>
+<p>Hyper-V的网卡配置使用“虚拟交换机管理器”配置，创建虚拟交换机时，“外部”简单但是虚拟机ip地址会经常变，“内部”即常说的NAT网络，<br>可以配置固定ip，这里重点说这种方式；开始前需要检查：目前windows的NAT虚拟网络只能支持一个，因此在开始创建NAT网络前需要先<br>检查是否已存在NAT网络。检查可以直接查看网络适配器列表，看看是否由多个Hyper-V网络适配器，只允许一个Hyper-V默认交换机和即将<br>要使用的，其他的即使显示不可用的也要删除，删除方法之一是：在设备管理器中删除网络适配器；</p>
+</blockquote>
+<p>3.配置Hyper-V网络适配器并固定IP</p>
+<blockquote>
+<ul>
+<li>新建虚拟机.(略)</li>
+<li>创建一个内部方式的虚拟交换机，取名假设test</li>
+<li>在虚拟机的网络适配器上配置刚新建的test；</li>
+<li>设置虚拟交换机test的IP；<img src="/images/vm_1.png" alt></li>
+<li>修改虚拟机IP； <img src="/images/vm_2.png" alt></li>
+<li>重启虚拟机网路：systemctl restart network，查看IP：ip addr show；</li>
+</ul>
+</blockquote>
+<ol start="4">
+<li><p>连接外网</p>
+<blockquote>
+<p>前面介绍，Hyper-V有个默认交换机，通过这个交换机就可以连接外网且无须额外配置；需要将这个默认交换机配置到新建的虚拟机中，<br>且注意先后顺序，必须先配置默认的test适配器才能绑定固定IP；配置默认交换机前需要关闭虚拟机，最终配置如下图：<br><img src="/images/vm_3.png" alt></p>
+</blockquote>
+</li>
+<li><p>扩展</p>
+<blockquote>
+<p>如果需要配置多个虚拟机脸网，如上步骤，核心配置test适配器固定IP，使用默认交换机联网；xshell使用test网络适配器中配置的静态IP.</p>
+</blockquote>
+</li>
+</ol>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/06/Kafka系列3——设计原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/06/Kafka系列3——设计原理/" class="post-title-link" itemprop="url">Kafka系列3——设计原理</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-06 10:48:03" itemprop="dateCreated datePublished" datetime="2019-08-06T10:48:03+08:00">2019-08-06</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-08 17:55:52" itemprop="dateModified" datetime="2019-08-08T17:55:52+08:00">2019-08-08</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/kafka/" itemprop="url" rel="index"><span itemprop="name">kafka</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Kafka设计原理"><a href="#Kafka设计原理" class="headerlink" title="Kafka设计原理"></a>Kafka设计原理</h1><p>##1 broker端设计架构<br>1.1 消息设计</p>
+<blockquote>
+<p>kafka经历过三个消息格式版本，V0、V1、V2；目前新版本用的是V2格式；<br><br>kafka消息集合和消息层次的概念：无论哪个版本kafka，消息层次分为两层：消息集合和消息，一个消息集合包含若干个日志项，每个日志项都封装了实际的消息和一组元数据信息，<br>kafka日志文件就是由一系列消息集合日志项构成。kafka不会在消息层面上直接操作，总是在消息集合上进行写入操作；<br><br>V2之前版本使用的是日志项，V2版本使用消息批次，可以理解为同一个东西。<img src="/images/Kafka_3.png" alt> <img src="/images/Kafka_4.png" alt><br>V0、V1、V2消息格式对比：<img src="/images/Kafka_5.png" alt> <img src="/images/Kafka_6.png" alt> <img src="/images/Kafka_7.png" alt><br>综上，V2版本格式比之前复杂许多，单个消息占用磁盘空间也增加了；但考虑到使用场景，大数据量时V2版本优秀许多；</p>
+</blockquote>
+<p>1.2 集群管理</p>
+<blockquote>
+<p>kafka依赖zookeeper实现分布式的消息引擎集群环境，支持自动化的服务发现和成员管理。<br><br>理解zookeeper路径有助于理解kafka:</p>
+<ul>
+<li>/brokers: 保存了kafka集群的所有信息，包括每台broker的注册信息，集群上所有topic信息等；</li>
+<li>/controller: 保存了kafka controller组件的注册信息，同时也负责controller的动态选举；</li>
+<li>/admin: 保存管理脚本的输出结果，比如删除topic，对分区进行重分配等操作；</li>
+<li>/isr_change_notification: 保存ISR列表发生变化的分区列表。controller会注册一个监听器实时监控该节点下子节点的变更；</li>
+<li>/config: 保存了kafka集群下各种资源的定制化配置信息；</li>
+<li>/cluster: 保存kafka集群的简要信息；</li>
+<li>/controller_epoch: 保存controller组件的版本号，用来隔离无效的controller请求；</li>
+</ul>
+</blockquote>
+<p>1.3 副本与ISR设计</p>
+<blockquote>
+<p>一个kafka分区本质上是一个备份日志，利用多份相同备份共同提供冗余机制来保持系统高可用性，这些备份在kafka中被称为副本，kafka把分区所有副本均匀分配到<br>所有broker上，并从中挑选一个作为leader副本对外提供服务，其他被称为follower副本，只能被动向leader请求数据，保持与leader同步；ISR就是kafka集群动态<br>维护的一组同步副本集合，每个topic分区都有自己的ISR列表，leader副本总是包含在ISR中；<br><br>1.3.1 follower副本同步————比较重要的几个位移信息：起始位移，高水印值（HW），日志末端位移（LEO）；HW指向消息，LEO指向下一个待写入消息<br><br>1.3.2 ISR设计————ISR是一个动态列表，follower与leader不同步主要是如下原因：请求速度追不上，进程卡住，新创建的副本；老版本用消息数量位移来判断是否同步，<br>新版本用时间，参数replica.lag.time.max.ms，默认10s，检测机制：如果一个follower副本落后leader的时间持续性地超过这个参数值，那么判断为不同步；</p>
+</blockquote>
+<p>1.4 水印和leader epoch</p>
+<blockquote>
+<p>前面介绍了HW和LEO，HW是消费者可以读取到的消息位移，LEO可以理解为生产者生产的最新消息位移；<br><br>1.4.1 LEO更新机制：kafka设计了两套follower副本LEO属性，一套LEO值保持在follower副本所在的broker缓存上，另一套保存在leader副本所在的broker缓存上；</p>
+<ul>
+<li>follower副本端的follower副本LEO何时更新：follower副本端的LEO值就是其底层日志的LEO值，也就是说每当新写入一条消息，其LEO值就会被更新(类似于LEO += 1)。<br>当follower发送FETCH请求后，leader将数据返回给follower，此时follower开始向底层log写数据，从而自动地更新LEO值。</li>
+<li>leader副本端的follower副本LEO何时更新：leader副本端的follower副本LEO更新发生在leader处理follower FETCH请求时，一旦leader收到请求，首先会从自己log<br>中读取相应数据，在给follower返回数据前会先比较FETCH参数更新follower的LEO；</li>
+<li>leader副本更新leader的LEO：leader写log时会自动更新自己的LEO；</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>1.4.2 HW更新机制：</p>
+<ul>
+<li>follower副本的HW更新：发生在更新LEO之后，具体算法是比较当前LEO值与FETCH响应中leader的HW值，取两者的小者作为follower的新HW值；</li>
+<li>leader副本的HW更新：以下4种情况leader会尝试更新分区HW值————1.副本成为leader时；2.broker出现崩溃导致副本被踢出ISR时；3.producer向leader写入消息时，<br>4.leader处理follower FETCH请求时；如何更新？leader保存了分区所有的LEO，尝试确定分区HW时，会选出所有满足条件的副本（满足条件之一：处于ISR中，副本LEO落后于<br>leader LEO时长不大于replica.lag.time.max.ms），比较它们的LEO，选择最小的LEO作为HW值；</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>1.4.3 kafka备份原理<br>基于水印的更新原理是利用HW值来决定副本备份进度，而HW值更新需要另外一轮FETCH请求才能完成，一次数据写入需要两轮fetch完成同步；因此本质上有缺陷，可能引起备份数据丢失或者备份数据不一致；<br><img src="/images/Kafka_8.png" alt="基于水印更新过程"><br>因此在0.11.0.0版本中引入leader epoch值解决问题；leader端开辟一段内存区域专门保存leader的epoch信息，定时写入一个检查点文件中（持久化）；leader eopch实际上<br>是一对值(epoch,offset)，epoch表示leader的版本号，从0开始，offset相当于LEO；</p>
+</blockquote>
+<p>1.5 日志存储设计</p>
+<blockquote>
+<p>kafka的日志设计都是以分区为单位，每个分区有自己的日志（分区日志）；每个分区日志都是由若干组日志段文件+索引文件组成；<br><br>创建topic时，kafka为每个分区在文件系统中创建一个对应的子目录，名字是<topic>-&lt;分区号&gt;.kafka的每个日志段文件是由上限大小的，由broker参数log.segment.bytes控制，<br>默认1GB；日志段文件填满记录后，kafka会自动创建一组新的日志段文件和索引文件（日志切分）；kafka正在写入的分区日志段文件成为当前激活日志段或当前日志段.active log segment.<br><br>每个分区除了日志文件，还有位移索引文件和时间戳索引文件，按照规律升序排列，属于稀疏索引，利用升序规律，kafka可以二分查找搜寻索引，时间复杂度O(lgN).索引保存的是相对位移，<br>索引文件大小设置参数log.index.size.max.bytes；索引项密度参数log.index.interval.bytes.<br><br>日志清理：两种留存策略——基于时间和基于大小，日志清理对当前日志段不生效；<br><br>日志compaction. 针对topic设置，提供更细粒度化的留存策略，本质是针对K-V的消息，删除之前的消息，只保留最新的value消息；为了实现log compaction,kafka在逻辑上将<br>每个log分成log tail和log head，log head连续递增，log tail位移不连续；kafka的组件cleaner负责执行compaction；</topic></p>
+</blockquote>
+<p>1.6 通信协议</p>
+<blockquote>
+<p>Kafka的通信协议是基于TCP之上的二进制协议，这套协议所有类型的请求和响应都是结构化的，由不同的初始类型构成；broker端可配置参数用于限制broker端能处理请求的最大字节数，<br>超过阈值请求的socket连接会被强制关闭；kafka通信协议中规定的请求发送流向由3种——clients给broker发送请求、controller给其他broker发送请求、follow副本所在broker向leader<br>副本所在broker发送FETCH请求；clients与broker传输数据时，需要创建一个连向特定broker的socket长连接，单个clients通常需要连接多个broker，每个broker只需要维护一个socket；<br>kafka自带的java clients使用类似于epoll方式在当个连接上不停轮询传输数据；broker端需要确保在单个socket连接上按照发送顺序处理请求；<br><br>请求/响应结构。kafka协议提供的所有请求及响应结构体都由固定格式组成，统一构建于多种初始类型之上，初始类型由：固定长度初始类型（int8,int16,int32,int64），可变长度初始<br>类型（bytes和string），数组；所有请求和响应统一格式——Size+Request/Response.</p>
+<blockquote>
+<ul>
+<li>请求分为请求头部和请求体，请求头结构固定，由4个字段组成——api_key(int16)、api_version(int16)、correlation_id(int32)、client_id(string)；</li>
+<li>响应分为响应头部和响应体，响应头结构固定，1个字段——correlation_id，与请求头中字段对应；</li>
+<li>常见请求类型：PRODUCE请求(api_key=0)，V6版本的produce请求格式为——事务ID+acks+timeout+[topic数据]，响应结构——[response]+throttle_time_ms；FETCH请求(api_key=1)，<br>包括clients向broker发送的FETCH请求和follower给leader发送的FETCH请求，最新版本格式：replica_id+max_wait_time+min_bytes+max_bytes+isolation_level+[topics]，响应格式<br>throttle_time_ms[response]；METADATA请求，用于获取指定topic的元数据信息，格式[topics]+allow_auto_topic_creation，响应格式多变；<br>请求处理流程.<img src="/images/Kafka_9.png" alt="clients端">  <img src="/images/Kafka_10.png" alt="broker端"></li>
+</ul>
+</blockquote>
+</blockquote>
+<p>1.7 controller设计</p>
+<blockquote>
+<p>kafka集群中，某个broker会被选举为controller，用来管理和协调kafka集群，具体是管理集群中所有分区状态并执行相应管理操作。<img src="/images/Kafka_11.png" alt><br>controller管理状态，维护的状态分为两类：每台broker上的分区副本和每个分区的leader副本信息，从维度上分为副本状态和分区状态；<img src="/images/Kafka_12.png" alt><br>controller职责：更新集群元数据信息、创建topic、删除topic、分区重分配、preferred leader副本选举、topic分区扩展、broker加入集群、broker崩溃、受控关闭、controller leader选举；</p>
+</blockquote>
+<p>1.8 broker请求处理</p>
+<blockquote>
+<p>broker处理请求模式是Reactor设计模式；<img src="/images/Kafka_13.png" alt><br>processor线程数量可通过num.network.threads配置，broker会为用户配置的每组listener创建一组processor线程；processor线程一个重要任务是将socket连接上接收到的请求放入请求队列中，<br>KafkaRequestHandler线程池专门处理请求；请求队列由参数queued.max.requests控制，默认500，如果发送请求超过，发送给这个broker的请求会被阻塞；broker请求处理类似于主从Reactor多线程<br>模型；</p>
+</blockquote>
+<p>##2 producer端设计<br>2.1 producer基本数据结构.</p>
+<blockquote>
+<p>producer端与broker的主要交互是发哦是那个信息然后接收回调请求；因此如第2节的代码示例，主要数据结构是ProducerRecord和RecordMetadata.</p>
+</blockquote>
+<p>2.2 工作流程.<br><img src="/images/Kafka_14.png" alt><br>详细流程如下：</p>
+<blockquote>
+<ul>
+<li>序列化+计算目标分区；</li>
+<li>追加写入消息缓冲区；producer创建时会创建一个默认32MB的缓冲区，用于保存待发送的消息；关键参数有linger.ms、batch.size和消息批次信息(batches)，batches本质上是<br>一个HashMap，分别保存了每个topic分区下的batch队列，例如{“test-0”-&gt;[batch1,batch2],”test-1”-&gt;[batch3]}；</li>
+<li>sender线程预处理及消息发送；</li>
+<li>sender线程处理response；</li>
+</ul>
+</blockquote>
+<p>##3 consumer端设计<br>3.1 consumer group状态机. <img src="/images/Kafka_15.png" alt></p>
+<p>3.2 group管理协议. </p>
+<blockquote>
+<p>coordinator的组管理协议由两个阶段构成——组成员加入阶段和状态同步阶段。第一个阶段用于为group指定active成员并从中选出leader consumer，第二个阶段让leader consumer<br>制定分配方案并同步到其他组成员中；</p>
+</blockquote>
+<p>##4 实现精确一次处理语义<br>4.1 消息交付语义：最多一次，最少一次，精确一次；</p>
+<p>4.2 kafka如何实现精确一次处理语义：幂等性producer（PID，producer自行分配）和事务（TransactionalId，用户显示提供）</p>
+<p>本文大部分内容摘自《Apache Kafka实战》</p>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/02/Kafka系列2——Producer和Consumer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/02/Kafka系列2——Producer和Consumer/" class="post-title-link" itemprop="url">Kafka系列2——Producer和Consumer</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-02 14:16:45" itemprop="dateCreated datePublished" datetime="2019-08-02T14:16:45+08:00">2019-08-02</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-06 10:47:24" itemprop="dateModified" datetime="2019-08-06T10:47:24+08:00">2019-08-06</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/kafka/" itemprop="url" rel="index"><span itemprop="name">kafka</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>##1. Kafka Producer.<br>1.1 简介.</p>
+<blockquote>
+<p>每个producer是独立工作的，与其他producer实例间没有关联。因为上一节中我们提过，Kafka的消息是三元值，即topic-partition-message.因此，<br>producer向某个topic发送消息，首先需要确定哪个分区，这就是分区器作用。（自定义或系统自带）.kafka默认分区器，如果消息指定key，则根据key<br>的哈希值选择目标分区，如果没有指定key，则使用轮询方式去欸的那个目标分区.确定分区后，producer要寻找这个分区对应的leader，也就是该分区<br>leader副本所在的Kafka broker.整个producer的工作流程如下图：<br><img src="/images/Kafka_1.png" alt></p>
+</blockquote>
+<p>1.2 Java版本的producer实例.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">public class ProducerTest &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Properties properties = new Properties();</span><br><span class="line">        properties.put(&quot;bootstrap.servers&quot;,&quot;devhost30:9092&quot;);</span><br><span class="line">        properties.put(&quot;key.serializer&quot;, &quot;org.apache.kafka.common.serialization.StringSerializer&quot;);</span><br><span class="line">        properties.put(&quot;value.serializer&quot;, &quot;org.apache.kafka.common.serialization.StringSerializer&quot;);</span><br><span class="line">        properties.put(&quot;acks&quot;, &quot;-1&quot;);</span><br><span class="line">        properties.put(&quot;retries&quot;, 2);</span><br><span class="line">        properties.put(&quot;batch.size&quot;, 323840);</span><br><span class="line">        properties.put(&quot;linger.ms&quot;, 10);</span><br><span class="line">        properties.put(&quot;buffer.memory&quot;, 33554432);</span><br><span class="line">        properties.put(&quot;max.block.ms&quot;, 3000);</span><br><span class="line">        properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, &quot;ank.hao.producer.partition.AnkPartitioner&quot;);</span><br><span class="line">        properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, &quot;ank.hao.producer.interceptor.AnkInterceptor&quot;);</span><br><span class="line"></span><br><span class="line">        Producer&lt;String,String&gt; producer = new KafkaProducer&lt;String, String&gt;(properties);</span><br><span class="line">//        for(int i=0;i&lt;100;i++)&#123;</span><br><span class="line">//            producer.send(new ProducerRecord&lt;String, String&gt;(&quot;first-topic&quot;, Integer.toString(i), &quot;message-&quot;+Integer.toString(i)));</span><br><span class="line">//        &#125;</span><br><span class="line">        for(int m=10;m&lt;13;m++)&#123;</span><br><span class="line">            producer.send(new ProducerRecord&lt;String, String&gt;(&quot;first-topic&quot;, Integer.toString(m), &quot;callback-&quot; + Integer.toString(m)), new Callback() &#123;</span><br><span class="line">                public void onCompletion(RecordMetadata recordMetadata, Exception e) &#123;</span><br><span class="line">                    if(e == null)&#123;</span><br><span class="line">                        //消息发送成功</span><br><span class="line">                        System.out.println(&quot;发送成功了喵：&quot;+recordMetadata.topic());</span><br><span class="line">                    &#125;else &#123;</span><br><span class="line">                        if(e instanceof RetriableException)&#123;</span><br><span class="line">                            //处理可重试瞬时异常</span><br><span class="line">                        &#125; else &#123;</span><br><span class="line">                            //处理不可重试异常</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">//        for(int m=20;m&lt;3;m++)&#123;</span><br><span class="line">//            try &#123;</span><br><span class="line">//                producer.send(new ProducerRecord&lt;String, String&gt;(&quot;first-topic&quot;, Integer.toString(m), &quot;sync-&quot; + Integer.toString(m))).get();</span><br><span class="line">//            &#125; catch (InterruptedException e) &#123;</span><br><span class="line">//                e.printStackTrace();</span><br><span class="line">//            &#125; catch (ExecutionException e) &#123;</span><br><span class="line">//                e.printStackTrace();</span><br><span class="line">//            &#125;</span><br><span class="line">//        &#125;</span><br><span class="line">        producer.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>上面示例代码中，使用了三种发送消息方式：fire and forget、异步发送、同步发送；producer的参数可在官网查询详情，其中需要 注意的是,前三个参数必须指定，<br>且bootstrap.servers需要采用主机名方式配置，不可用IP地址；其他重要参数：</p>
+<ul>
+<li>acks. 用于控制producer消息的持久性.相当于broker反馈的持久化ISR数量.0表示完全不管反馈结果继续下一个消息发送；all或-1表示会等待ISR中所有副本成功<br>写入各自本地的日志后才继续下一个；1表示leader broker将消息成功写入本地日志后继续下一个；</li>
+<li>buffer.memory. 指定producer用于缓存消息的缓冲区大小，单位字节.默认32M.</li>
+<li>compression.type. 设置producer端是否压缩消息，默认none，不压缩.</li>
+<li>retries. 失败重试次数，Kafka broker在处理写入请求时可能因为可恢复的瞬时故障（如瞬时leader选举或网络抖动）导致消息发送失败；配合使用的几个参数：<br>retry.backoff.ms，重试停顿时间，默认100ms.重试可能造成的问题：消息的重复发送和乱序.</li>
+<li>batch.size. 每次批量发送消息的大小，单位字节，默认16KB.</li>
+<li>linger.ms 和batch.size配合使用，每次发送时间延迟.默认0，即无须关心batch是否已被填满.</li>
+<li>max.request.size 控制producer端能够发送的最大消息大小，默认1MB.</li>
+<li>request.timeout.ms producer发送请求给broker后等待超时时间，默认30s.</li>
+</ul>
+</blockquote>
+<p>1.3 分区策略.</p>
+<blockquote>
+<p>Producer分区接口org.apache.kafka.clients.producer.Partitioner，默认的DefaultPartitioner机制如之前所述；如果要自定义分区策略，需要以下步骤：</p>
+<ul>
+<li>在procuer端创建一个实现Partitioner的类，主要分区策略在partition()中实现.</li>
+<li>在构造KafkaProducer中设置partitioner.class参数.</li>
+</ul>
+</blockquote>
+<p>1.4 消息序列化.</p>
+<blockquote>
+<p>序列化接口org.apache.kafka.common.serialization.Serializer<t>，默认提供十几种序列器，如StringSerializer、LongSerializer、BytesSerializer等.<br>自定义序列化步骤如下：</t></p>
+<ul>
+<li>定义数据对象格式.</li>
+<li>创建一个实现Serializer<t>的类，在serializer()中实现序列化逻辑.</t></li>
+<li>在构造KafkaProducer中设置key.serializer和value.serializer.</li>
+</ul>
+</blockquote>
+<p>1.5 拦截器.</p>
+<blockquote>
+<p>producer和consumer都有自己的拦截器链。producer拦截器使用户在消息发送前以及producer回调逻辑前有机会对消息做定制化需求.<br>自定义拦截器步骤如下：</p>
+<ul>
+<li>实现org.apache.kafka.common.Configurable.ProducerInterceptor&lt;K, V&gt;接口；</li>
+<li>在构造KafkaProducer中设置interceptor.classes.</li>
+</ul>
+</blockquote>
+<p>1.6 无消息丢失配置.</p>
+<blockquote>
+<p>其中一种方式是同步方式发送消息，但效率太低，一般使用下面方式配置.<br>producer端配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">acks=all  //最强程度持久化保证.</span><br><span class="line">retries=Integer.MAX_VALUE</span><br><span class="line">max.in.flight.requests.per.connection=1  限制producer在单个broker连接上能够发送的未响应请求数量.</span><br><span class="line">使用带有回调的send(record,callback)</span><br><span class="line">Callback逻辑中显示立即关闭producer.</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>broker端配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">unclean.leader.election.enable=false 关闭unclean leader选举，即不允许ISR中副本被选举为leader，从而避免broker端因日志水位截断造成消息丢失.</span><br><span class="line">replication.factor &gt;=3  副本数量</span><br><span class="line">min.insync.replicas &gt;1  控制消息至少被写入到ISR中多少副本才算成功.</span><br><span class="line">确保replication.factor &gt; min.insync.replicas</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>1.7 消息压缩.</p>
+<blockquote>
+<p>kafka支持的压缩算法：none, gzip, snappy, lz4, zstd.</p>
+</blockquote>
+<p>1.8 多线程处理.</p>
+<blockquote>
+<p>有两种基本使用用法：多线程蛋KafkaProducer实例，多线程多KafkaProducer实例.推荐用法：对分区不多的Kafka集群使用第一种，对拥有超多分区集群用第二种.</p>
+</blockquote>
+<p>##2. Kafka Consumer.<br>2.1 简介.</p>
+<blockquote>
+<p>消费者组概念：消费者使用一个group.id标记自己，topic的每条消息都只会被发送到每个订阅它的消费者组的一个消费者实例上.Kafka实现两种模型：</p>
+<ul>
+<li>所有consumer实例都属于同一个group——实现基于队列的模型，每条消息只会被一个consumer实例处理.</li>
+<li>consumer实例都属于不同group——实现基于发布/订阅的模型。每条消息会被所有consumer实例处理.<br><img src="/images/Kafka_2.png" alt></li>
+</ul>
+</blockquote>
+<p>2.2 Java版本的Consumer实例.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">public class ConsumerTest &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        String topic = &quot;first-topic&quot;;</span><br><span class="line">        String groupId = &quot;first-group&quot;;</span><br><span class="line"></span><br><span class="line">        Properties properties = new Properties();</span><br><span class="line">        properties.put(BOOTSTRAP_SERVERS_CONFIG, &quot;devhost30:9092&quot;);</span><br><span class="line">        properties.put(GROUP_ID_CONFIG, groupId);</span><br><span class="line">        properties.put(ENABLE_AUTO_COMMIT_CONFIG, &quot;true&quot;);</span><br><span class="line">        properties.put(AUTO_COMMIT_INTERVAL_MS_CONFIG, &quot;1000&quot;);</span><br><span class="line">        properties.put(AUTO_OFFSET_RESET_CONFIG, &quot;earliest&quot;);</span><br><span class="line">        properties.put(KEY_DESERIALIZER_CLASS_CONFIG, &quot;org.apache.kafka.common.serialization.StringDeserializer&quot;);</span><br><span class="line">        properties.put(VALUE_DESERIALIZER_CLASS_CONFIG, &quot;org.apache.kafka.common.serialization.StringDeserializer&quot;);</span><br><span class="line"></span><br><span class="line">        KafkaConsumer&lt;String, String&gt; consumer = new KafkaConsumer&lt;String, String&gt;(properties);</span><br><span class="line">        consumer.subscribe(Arrays.asList(topic));</span><br><span class="line">        try &#123;</span><br><span class="line">            while (true)&#123;</span><br><span class="line">                ConsumerRecords&lt;String,String&gt; records = consumer.poll(Duration.ofSeconds(1));</span><br><span class="line">                for(ConsumerRecord&lt;String,String&gt; record:records)&#123;</span><br><span class="line">                    System.out.printf(&quot;offset=%d, key=%s, value=%s%n&quot;, record.offset(), record.key(), record.value());</span><br><span class="line">                    System.out.println();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            consumer.close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>构造一个java.util.Properties对象，至少指定bootstrap.servers、key.deserializer、value.deserializer和group.id的值，同样，bootstrap.servers<br>使用主机名，不可用IP地址；一些重要参数：</p>
+<ul>
+<li>session.timout.ms  coordinator监测失败的时间，默认10s</li>
+<li>max.poll.interval.ms  consumer处理逻辑最大时间.</li>
+<li>auto.offset.reset  指定无位移信息或位移越界时Kafka的应对策略.</li>
+<li>enable.auto.commit  指定consumer是否自动提交位移.</li>
+<li>fetch.max.bytes  指定consumer端单词获取数据的最大字节数</li>
+<li>max.poll.records  单次poll调用返回的最大消息数</li>
+<li>heartbeat.interval.ms  rebalance心跳时间间隔</li>
+<li>connections.max.idle.ms  空闲连接时间，默认9分钟</li>
+</ul>
+</blockquote>
+<p>2.3 订阅topic</p>
+<blockquote>
+<p>consumer.subscribe(..)订阅topic列表，也可以基于正则表达式订阅topic；consumer订阅是延迟生效的，订阅信息在下次poll调用时才会正式生效；</p>
+</blockquote>
+<p>2.4 消息轮询</p>
+<blockquote>
+<p>poll内部原理：采用类似于linux IO模型的poll或select等，使用一个线程同时管理多个socket连接，即同时与多个broker通信实现消息的并行读取；<br>一旦consumer订阅了topic，所有的消费逻辑包括coordinator的协调、消费者组的rebalance以及数据获取都会在主逻辑poll方法的以此调用中执行.<br>poll方法返回的任一条件：获取足够多可用数据，等待时间超过设定的超时时间.</p>
+</blockquote>
+<p>2.5 位移管理</p>
+<blockquote>
+<p>位移： 每个consumer实例都会为它消费的分区维护属于自己的位置信息来记录当前消费信息进度，被称为位移；<br><br>位移提交： consumer客户端需要定期向kafka集群汇报自己消费数据进度，这一过程被称为位移提交；<br><br><strong>consumer_offsets: 位移提交会提交到kafka一个内部topic上，这个topic就是</strong>consumer_offsets；数据格式：可以理解为一个KV格式的消息，<br>key是一个三元组：group.id+topic+分区号，value是offset的指；<br><br>位移管理： consumer会在kafka集群的所有broker中选择一个作为consumer group的协调者(coordinator)，用于实现组成员管理、消费分配方案<br>制定以及提交位移等。提交位移主要机制是通过向所属的coordinator发送位移提交请求来实现的；<br>自动提交和手动提交： 默认自动提交，auto.commit.interval.ms可以控制自动提交间隔；手动提交就是用户自行去欸的那个消息何时被真正处理完<br>并提交位移，设置enable.auto.commit=false，然后调用commitSync或commitAsync；</p>
+</blockquote>
+<p>2.6 rebalance</p>
+<blockquote>
+<p>rebalance本质上是一组协议，规定了一个consumer group是如何达成一致来分配订阅topic的所有分区的；rebalance触发条件有三个：组成员发生变更，<br>组订阅topic数发生变更，组订阅topic的分区数发生变更；</p>
+</blockquote>
+<p>2.7 解序列化</p>
+<blockquote>
+<p>consumer端的解序列化和producer端的序列化是互逆操作，同理可自定义解序列化类；</p>
+</blockquote>
+<p>2.8 多线程消费实例</p>
+<blockquote>
+<ul>
+<li>每个线程维护一个KafkaConsumer实例</li>
+<li>单KafkaConsumer实例+多worker线程</li>
+</ul>
+</blockquote>
+<p>2.9 独立consumer</p>
+<blockquote>
+<p>consumer不仅可以以consumer group形式出现，也可以独立使用，彼此独立工作互不干扰。以下情况适合使用独立consumer：</p>
+<ul>
+<li>进程自己维护分区状态，可以固定消费某些分区不用担心消费状态丢失；</li>
+<li>进程本身已经是高可用且能够自动重启恢复错误（比如yarn和mesos等容器调度框架），不需要kafka来错误检测和状态恢复；</li>
+</ul>
+</blockquote>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/01/Kafka系列1——基础入门/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/2019/08/01/Kafka系列1——基础入门/" class="post-title-link" itemprop="url">Kafka系列1——基础入门</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-08-01 17:23:53" itemprop="dateCreated datePublished" datetime="2019-08-01T17:23:53+08:00">2019-08-01</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-08-05 12:22:53" itemprop="dateModified" datetime="2019-08-05T12:22:53+08:00">2019-08-05</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/kafka/" itemprop="url" rel="index"><span itemprop="name">kafka</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>Kafka的核心功能：高性能的消息发送和高性能的消息消费；</p>
+<p>##1. 快速入门.<br>1.1 官网下载压缩包，例如kafka_2.12-2.3.0.tgz，其中2.12代表scala版本，2.3.0代表kafka版本.解压;<br>1.2 启动服务器：kafka用zookeeper做分布式协调服务，因此需要先启动zookeeper，使用解压包bin目录下<br>对应平台的命令，例如windows:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties</span><br></pre></td></tr></table></figure></p>
+<p>然后另开终端启动kafka服务器，例如windows：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\bin\windows\kafka-server-start.bat .\config\server.properties</span><br></pre></td></tr></table></figure></p>
+<p>1.3 创建topic：kafka的topic用于消息的发送和接收，另开一个终端，执行命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\bin\windows\kafka-topics.bat --create --zookeeper localhost:2181 --topic test --partitions 1 --replication-factor 1</span><br></pre></td></tr></table></figure></p>
+<p>查看topic状态：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.\bin\windows\kafka-topics.bat --describe --zookeeper localhost:2181 --topic test</span><br></pre></td></tr></table></figure></p>
+<p>1.4 发送消息和接收消息.<br><br>另开两个终端，分别用于发送和接收消息，便于观察：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">producer: </span><br><span class="line">  .\bin\windows\kafka-console-producer.bat --broker-list localhost:9092 --topic test</span><br><span class="line">consumer:</span><br><span class="line">  .\bin\windows\kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic test --from-beginning</span><br></pre></td></tr></table></figure></p>
+<p>##2. 概述.<br>2.1 kafka是一个消息引擎，消息引擎设计时要考虑两大要素：消息设计（xml、json、二进制..)<br>和传输协议设计（AMQP、Webservice+SOAP、MSMQ..)；消息引擎范型：是一个基于网络的架构范型，<br>描述了消息引擎系统的两个不同的子部分是如何互联和交互的；常见的消息引擎范型有：消息队列模型和<br>发布/订阅模型.两者区别是同一条消息是否会被多个消费者消费；kafka同时支持两种范型，利用group的概念.</p>
+<p>2.2 Java消息服务，Java Message Service(JMS)，是一套API规范，提供了很多接口用于实现分布式<br>系统间的消息传递，JMS同时支持两种消息引擎模型；目前主流的完全支持JMS规范的消息引擎有：ActiveMQ、<br>RabbitMQ、Kafka等.</p>
+<p>2.3 Kafka设计解决的4个方面问题(特点).</p>
+<blockquote>
+<p>2.3.1 吞吐量/延迟. kafka是如何做到高吞吐量和低延迟的？<br><br>  a. kafka的写入操作很快。kafka持久化所有数据到磁盘，每次写入只是把数据写入到操作系统的<br>页缓存中（页缓存是内存中分配的，写入很快；kafka不必与底层文件系统打交道），且写入操作采用<br>追加写入(append)的方式，避免了磁盘随机写操作.因此kafka只能在日志末尾追加写入新消息，且不允许<br>修改已写入的消息. <br><br>  b. kafka的消费端在读取消息时，首先会从OS的页缓存中读取，如果命中则直接把消息经页缓存发送到<br>网络的socket上。（这个过程利用linux平台的sendfile系统调用做到的，就是零拷贝，Java的FileChannel.transferTo方法实现）<br>而且由于大量使用页缓存，所以读取消息很大可能直接命中缓存，不用“穿透”到底层磁盘获取消息，从而极大提升吞吐量.<br><br>  c. 总结.</p>
+<blockquote>
+<ul>
+<li>大量使用操作系统页缓存，内存操作速度快且命中率高.</li>
+<li>kafka不直接参与物理I/O操作，交由操作系统完成.</li>
+<li>采用追加写入方式，避免了缓慢的随机读写操作.</li>
+<li>使用以sendfile为代表的零拷贝技术加强网络间的数据传输效率.</li>
+</ul>
+</blockquote>
+<p>2.3.2 消息持久化.<br><br> 解耦消息发送和消息消费；实现灵活的消息处理.</p>
+<p>2.3.3 负载均衡和故障转移.<br><br> kafka通过zookeeper做分布式协调服务实现相应功能.</p>
+<p>2.3.4 伸缩性.<br><br> kafka服务器上状态统一由Zookeeper保管，扩展很方便.</p>
+</blockquote>
+<p>2.4 kafka的基本术语和概念.</p>
+<blockquote>
+<p>2.4.1 kafka的核心结构：生产者发送消息给kafka服务器；消费者从kafka服务器读取消息；kafka服务器依托zookeeper集群进行<br>服务的协调管理.</p>
+<p>2.4.2 消息.目前消息格式由三个版本，定义了消息的格式.<br>2.4.3 topic和partition. topic是一个逻辑概念，代表一类消息，通过它实现两种消息引擎模型；kafka采用了topic-partition-message<br>的三级结构来分散负载.partition也没有太多业务含义，只是单纯为了提升吞吐量.<br><br>2.4.4 offset. kafka的消息是一个三元组&lt;topic,partition,offset&gt;.<br><br>2.4.5 replica. 实现高可靠性依靠冗余机制，就是副本（replica）.<br><br>2.4.6 leader和follower. 和传统主备不同，只有leader对外提供服务，follower只是被动追随leader状态，保持与leader<br>同步，存在的唯一价值是leader的候补.<br>2.4.7 ISR. in-sync replica.与leader replica保持同步的replica集合.kafka承诺只要ISR集合中至少存在一个replica，<br>那些“已提交”状态的消息就不会丢失.</p>
+</blockquote>
+<p>2.5 kafka的典型应用场景.</p>
+<ul>
+<li>消息传输.</li>
+<li>网站行为日志追踪.</li>
+<li>审计数据收集.</li>
+<li>日志收集.</li>
+<li>Event Sourcing. 使用事件序列来表示状态变更.</li>
+<li>流式处理.<br>##3. 线上环境规划.<br>3.1 集群环境规划.<blockquote>
+<p>3.1.1 操作系统选型.<br><br>单论与kafka的相适性，Linux比windows系统更适合部署.主要两个原因：I/O模型的使用和数据网络传输效率；kafka的clients底层网络库采用了Java<br>的Selector机制，这种机制在windows平台上使用select模型实现，在linux平台上使用epoll模型实现，通常epoll比select模型更好。</p>
+<p>3.1.2 磁盘规划.<br><br>因为kafka的写入机制是顺序IO写，因此SSD和普通磁盘性能差距不大；RAID比JBOD的优势在于天然的负载均衡和冗余机制，<br>但这在kafka框架层面已经提供；因此性价比方面JBOD(一堆普通磁盘)更好.</p>
+<p>3.1.3 磁盘容量规划.<br><br>磁盘容量规划和多个因素有关：新增消息数、消息留存事件、平均消息大小、副本数、是否启用压缩.</p>
+<p>3.1.4 内存规划.<br><br>建议：尽量分配更多内存给操作系统的页缓存；不要为broker设置过大的堆内存；页缓存大小至少要大于一个日志段的大小。<br>3.1.5 CPU规划.<br><br>建议使用多核心系统，CPU核心数最好大于8；如果启用消息压缩，需要更多cpu资源。<br>3.1.6 带宽规划.<br><br>假设用户网络带宽1Gb/s，业务目标是每天用1小时处理1TB业务消息。分析：单台broker的带宽资源假设可以达到70%，则实际带宽1Gb/s*0.7=710Mb/s，<br>为了预防突发流量，再截取1/3，则710Mb/s/3=240Mb/s，因此单台broker的带宽估算为240Mb/s；1小时处理1TB业务消息，即每秒需要处理292MB左右的数据，也就是每秒2336Mb数据，<br>至少需要2336/240=10台broker机器，如果副本数2，则需要20台broker机器.</p>
+</blockquote>
+</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/21/pring-boot与quartz集成的一些问题记录/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -640,725 +2580,13 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/16/swagger-codegen的一些总结/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/05/16/swagger-codegen的一些总结/" class="post-title-link" itemprop="url">swagger-codegen的一些总结</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-05-16 15:08:02 / 修改时间：17:57:27" itemprop="dateCreated datePublished" datetime="2019-05-16T15:08:02+08:00">2019-05-16</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="1-swagger是什么？"><a href="#1-swagger是什么？" class="headerlink" title="1. swagger是什么？"></a>1. swagger是什么？</h2><p>  swagger是用来设计、构建、文档、合作、管理api的工具，可以生成、描述、调用和可视化Restful风格<br>的web服务，方便前后端分离；早先吾使用来描述api文档，生成文档接口页面展示，后来是先写文档，利用<br>swagger-codegen生成代码；</p>
-<h2 id="2-swagger-codegen的几种使用方式"><a href="#2-swagger-codegen的几种使用方式" class="headerlink" title="2. swagger-codegen的几种使用方式."></a>2. swagger-codegen的几种使用方式.</h2><p>  官方github地址是：<a href="https://github.com/swagger-api/swagger-codegen" target="_blank" rel="noopener">https://github.com/swagger-api/swagger-codegen</a><br>可以看到，主要有四个modules：</p>
-<ul>
-<li>swagger-generator : 用来生成swagger页面，利用相关注释描述.</li>
-<li>swagger-codegen :  利用swagger文档生成接口代码.</li>
-<li>swagger-codegen-cli : swagger-codegen的命令行可执行jar包.</li>
-<li><p>swagger-codegen-maven-plugin ： swagger-codegen的maven插件.<br>swagger-codegen-cli的基本用法，下载jar包，在命令行中如下方式：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar swagger-codegen-cli-2.2.3.jar generate -i swagger-api.yml -l spring -o /java --model-package cn.com.controller.model --api-package cn.com.controller.api</span><br></pre></td></tr></table></figure>
-<p>swagger-codegen直接引入maven依赖，可以以工具类的方式生成代码.<br>swagger-codegen-maven-plugin以maven插件方式工作，这里主要介绍这种;</p>
-<h2 id="3-swagger-codegen-maven-plugin的一些坑"><a href="#3-swagger-codegen-maven-plugin的一些坑" class="headerlink" title="3. swagger-codegen-maven-plugin的一些坑."></a>3. swagger-codegen-maven-plugin的一些坑.</h2></li>
-</ul>
-<ol>
-<li><p>在pom中直接引入插件.</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">&lt;plugin&gt;</span><br><span class="line">    &lt;groupId&gt;io.swagger&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;swagger-codegen-maven-plugin&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;2.4.5&lt;/version&gt;</span><br><span class="line">    &lt;executions&gt;</span><br><span class="line">        &lt;execution&gt;</span><br><span class="line">            &lt;goals&gt;</span><br><span class="line">                &lt;goal&gt;generate&lt;/goal&gt;</span><br><span class="line">            &lt;/goals&gt;</span><br><span class="line">            &lt;configuration&gt;</span><br><span class="line">                &lt;inputSpec&gt;$&#123;project.basedir&#125;/src/main/resources/swagger-api.yml&lt;/inputSpec&gt;</span><br><span class="line">                &lt;output&gt;$&#123;project.basedir&#125;&lt;/output&gt;</span><br><span class="line">                &lt;language&gt;spring&lt;/language&gt;</span><br><span class="line">                &lt;library&gt;spring-boot&lt;/library&gt;</span><br><span class="line">                &lt;modelPackage&gt;$&#123;default.package&#125;.model&lt;/modelPackage&gt;</span><br><span class="line">                &lt;apiPackage&gt;$&#123;default.package&#125;.api&lt;/apiPackage&gt;</span><br><span class="line">                &lt;invokerPackage&gt;$&#123;default.package&#125;&lt;/invokerPackage&gt;</span><br><span class="line">                &lt;generateApiTests&gt;false&lt;/generateApiTests&gt;</span><br><span class="line">                &lt;generateModelTests&gt;false&lt;/generateModelTests&gt;</span><br><span class="line">                &lt;generateApiDocumentation&gt;true&lt;/generateApiDocumentation&gt;</span><br><span class="line">                &lt;generateModelDocumentation&gt;true&lt;/generateModelDocumentation&gt;</span><br><span class="line">                &lt;generateSupportingFiles&gt;true&lt;/generateSupportingFiles&gt;</span><br><span class="line">                &lt;configOptions&gt;</span><br><span class="line">                    &lt;interfaceOnly&gt;false&lt;/interfaceOnly&gt;</span><br><span class="line">                    &lt;dateLibrary&gt;joda&lt;/dateLibrary&gt;</span><br><span class="line">                    &lt;java8&gt;true&lt;/java8&gt;</span><br><span class="line">                    &lt;!--&lt;sourceFolder&gt;src/gen/java/main&lt;/sourceFolder&gt;--&gt;</span><br><span class="line">                &lt;/configOptions&gt;</span><br><span class="line">            &lt;/configuration&gt;</span><br><span class="line">        &lt;/execution&gt;</span><br><span class="line">    &lt;/executions&gt;</span><br><span class="line">&lt;/plugin&gt;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>注意需要maven中配置{default.package}变量，然后执行mvn clean compile,生成相应代码;</p>
-</li>
-<li>使用起来比较简单，主要是官方文档匮乏，可配置参数通过下述方式查询帮助：<ul>
-<li>可以直接在idea的命令行中使用”mvn swagger-codegen:help -Ddetail=true”方式;</li>
-<li>可以下载<strong>相应版本</strong>的swagger-codegen-cli.jar包，”java -jar ***.jar config-help -l spring”方式，推荐这种方式，比较方便全</li>
-</ul>
-</li>
-<li>利用好.swagger-codegen-ignore文档，例如pom.xml，因为swagger默认会自动生成覆盖pom.xml，需要在.swagger-codegen-ignore文档中添加<br>过滤，包括之后不想覆盖的ControllerApi也可以在这里添加过滤；</li>
-<li>interfaceOnly参数第一次生成时建议false，可以帮助生成swagger的辅助文件，例如/swagger-ui.html映射；之后建议true，只生成更新api.</li>
-</ol>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/30/Spring-be源码分析1——bean的加载、解析和注册/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/04/30/Spring-be源码分析1——bean的加载、解析和注册/" class="post-title-link" itemprop="url">Spring源码分析1——bean的加载、解析和注册</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-04-30 14:32:06 / 修改时间：14:34:47" itemprop="dateCreated datePublished" datetime="2019-04-30T14:32:06+08:00">2019-04-30</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>##1. 解析Spring源码WWW原则</p>
-<ul>
-<li>what—— spring现在已经算是java开发的基石了，核心是IOC和AOP.</li>
-<li>why—— 1.既然作为基石，需要更加彻底的了解并掌握它，工作中可能用不到太细节的东西，但出了问题<br> 就不好找原因，因此解析源码可以了解一些底层细节；2. Spring作为一个基础框架，可以<br> 通过阅读源码的方式来入门源码解析的门槛，提升自己的各方面能力；</li>
-<li>how—— 源码太多有60w行，但不需要全部去从头到尾阅读，也没必要；这里作为个人阅读的<br>方法：1. 根据实际使用作为入口，来解析主要功能和必要的细节； 2. 带着问题，例如bean<br>的scope，几种方式怎么实现的？spring的xml约束文档DTD和XSD，怎么找到的？等等.<ol start="3">
-<li>从简到繁，spring源码包含20+个module，我们需要从最基本的功能开始解析，这里可以<br>通过观察各module之间的依赖来了解熟悉.</li>
-</ol>
-</li>
-</ul>
-<hr>
-<p>##2. bean的加载、解析和注册</p>
-<ol>
-<li>依赖于spring-core(作为spring的基础工具包).</li>
-<li><p>容器的基本用法：<br>创建一个xml文件，基于XmlBeanFactory(已废弃，官方推荐用DefaultListableBeanFactory+XmlBeanDefinitionReader来替代)去解析，<br>从而获得bean.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();</span><br><span class="line">Resource resource = new ClassPathResource(&quot;spring.xml&quot;);</span><br><span class="line">new XmlBeanDefinitionReader(beanFactory).loadBeanDefinitions(resource);</span><br><span class="line">TestBean testBean = beanFactory.getBean(TestBean.class);</span><br></pre></td></tr></table></figure>
-<p>Bean的加载过程：加载解析静态配置文件，转换成BeanDefinition，基于BeanDefinition创建bean实例;</p>
-</li>
-<li><p>Bean的解析和注册</p>
-<ul>
-<li><p>加载资源Resource,继承InputStreamSource,主要负责资源的加载管理，可以通过实现Resource来实现自己的资源加载；</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">public interface Resource extends InputStreamSource &#123;</span><br><span class="line">    boolean exists();</span><br><span class="line"></span><br><span class="line">    default boolean isReadable() &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    default boolean isOpen() &#123;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    default boolean isFile() &#123;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    URL getURL() throws IOException;</span><br><span class="line"></span><br><span class="line">    URI getURI() throws IOException;</span><br><span class="line"></span><br><span class="line">    File getFile() throws IOException;</span><br><span class="line"></span><br><span class="line">    default ReadableByteChannel readableChannel() throws IOException &#123;</span><br><span class="line">        return Channels.newChannel(this.getInputStream());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    long contentLength() throws IOException;</span><br><span class="line"></span><br><span class="line">    long lastModified() throws IOException;</span><br><span class="line"></span><br><span class="line">    Resource createRelative(String var1) throws IOException;</span><br><span class="line"></span><br><span class="line">    @Nullable</span><br><span class="line">    String getFilename();</span><br><span class="line"></span><br><span class="line">    String getDescription();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>  一些重要的方法：</p>
-<ul>
-<li>getInputStream(): 找到并打开资源，返回InputStream从资源中读取的内容；每次调用都会返回一个新的InputStream,<pre><code>调用者需要关闭流.
-</code></pre></li>
-<li>exists(): 返回资源是否实际以物理形式存在.</li>
-<li>isOpen(): 返回一个指示资源是否表示具有打开流的句柄。如果true,IputStream不能多次读取，必须只读一次然后关闭<pre><code>以避免资源泄露。false是所有常规资源实现的返回值；这里涉及到jdk1.8的一个新特性：接口中可以有默认方法.
-</code></pre></li>
-</ul>
-<hr>
-<p>  一些内置Resource实现：</p>
-<ul>
-<li>UrlResource: 包装URL并可用于访问通常可通过URL访问的任何对象，例如文件(file:)、http目标(http:)、FTP目标(ftp:)；</li>
-<li>ClassPathResource: 用于从classpath下加载配置文件，使用线程上下文类加载器、给定的类加载器或者给定的类加载.</li>
-<li>FileSystemResource: 是java.io.File和java.nio.file.Path处理的实现，支持作为File和RUL解析.</li>
-<li>ServletContextResource: 作为ServletContext资源的实现，用于web根目录中的相对路径.</li>
-<li>InputStreamResource: InputStream资源是给定InputStream的资源实现。只有在没有特定的资源实现可用时才应该使用它。特别是，尽可能选择ByteArrayResource或任何基于文件的资源实现。<pre><code>与其他资源实现相比，这是对已打开资源的描述符。因此，它从isOpen()返回true。如果需要将资源描述符保存在某个地方，或者需要多次读取流，请不要使用它。
-</code></pre></li>
-<li>ByteArrayResource:  作为一个给定字符数组的资源实现;</li>
-<li>..</li>
-</ul>
-</li>
-<li>利用EncodedResource二次包装Resource，主要是编码格式和字符集的解析,将之前获取的资源包装成InputSource，用于SAX解析配置.</li>
-<li>先判断xml的验证模式.(排除掉注释<!-- -->的影响，检查是否包含DOCTYPE字符串，如果有就是DTD，没有就是XSD，报错就是VALIDATION_AUTO)</li>
-<li>利用jdk的XML解析出Document.(组装DocumentBuilderFactory，根据factory创建DocumentBuilder，然后解析出Document)</li>
-<li>然后就是解析标签注册bean.(以DefaultListableBeanFactory为例，就是放到一个ConcurrentHashMap中)<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> /** Map from dependency type to corresponding autowired value. */</span><br><span class="line">private final Map&lt;Class&lt;?&gt;, Object&gt; resolvableDependencies = new ConcurrentHashMap&lt;&gt;(16);</span><br><span class="line">     </span><br><span class="line">/** Map of bean definition objects, keyed by bean name. */</span><br><span class="line">private final Map&lt;String, BeanDefinition&gt; beanDefinitionMap = new ConcurrentHashMap&lt;&gt;(256);</span><br><span class="line">     </span><br><span class="line">/** Map of singleton and non-singleton bean names, keyed by dependency type. */</span><br><span class="line">private final Map&lt;Class&lt;?&gt;, String[]&gt; allBeanNamesByType = new ConcurrentHashMap&lt;&gt;(64);</span><br><span class="line">     </span><br><span class="line">/** Map of singleton-only bean names, keyed by dependency type. */</span><br><span class="line">private final Map&lt;Class&lt;?&gt;, String[]&gt; singletonBeanNamesByType = new ConcurrentHashMap&lt;&gt;(64);</span><br><span class="line">     </span><br><span class="line">/** List of bean definition names, in registration order. */</span><br><span class="line">private volatile List&lt;String&gt; beanDefinitionNames = new ArrayList&lt;&gt;(256);</span><br><span class="line">     </span><br><span class="line">/** List of names of manually registered singletons, in registration order. */</span><br><span class="line">private volatile Set&lt;String&gt; manualSingletonNames = new LinkedHashSet&lt;&gt;(16);</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-</ol>
-<p>##3. 部分问题和总结</p>
-<pre><code>1. 以上是bean的加载、解析和注册流程；其中采用了多种设计模式，如工厂设计模式、模板设计模式，这两种设计模式在
-   spring中随处可见，可以更好的解耦；核心类是XmlBeanDefinitionReader，bean的解析注册流程也是在这里定义
-   的，然后调用各个模板解耦组装；这里可以注入验证模式等参数以实际控制解析注册过程；
-2. 对不同的验证模式,Spring 使用了不同的解析器解析。这里简单描述一下
-   原理，比如加载 DTD 类型的 BeansDtdResolver 的 resolveEntity 是直接截取 systemld 最后的 xx.dtd
-   然后去当前路径下寻找，而加载载 xsd 类型的 PluggableSchemaResolver 类的 resolveEntity 是默
-   认到 META-INF/Spring.schemas 文件巾找到 systemid 所对应的 XSD 文件并加载。两者其实最终的加载
-   文件路径都是org.springframework.beans.factory.xml包下.
-</code></pre>
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/26/Spring-Spring-5源码编译踩坑/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/04/26/Spring-Spring-5源码编译踩坑/" class="post-title-link" itemprop="url">Spring: Spring-5源码编译踩坑</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-04-26 14:57:44 / 修改时间：17:48:40" itemprop="dateCreated datePublished" datetime="2019-04-26T14:57:44+08:00">2019-04-26</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>##1. cglib和objenesis的编译错误解决</p>
-<p>###问题分析：<br>    为了避免第三方class的冲突，Spring把最新的cglib和objenesis重新打包(repack)了，在spring-core模块中引用，<br>    可以看到gradle自定义的task任务cglibRepackJar和objenesisRepackJar，因此要先执行这些task任务才能编译成功；<br>    网络上有些是直接引用这些jar包，虽然也可以，但因为版本会更新相关jar包不好找，另一方面也没必要额外引入；而且即使这个<br>    问题使用引入jar包方式解决，后面编译还是会有些测试类找不到无法编译通过；</p>
-<p>###解决办法：<br>    既然知道了问题原因，解决办法也就是先执行自定义task，两种方式；</p>
-<pre><code>1. 可以使用command方式执行；
-   进入源码的根目录，例如我的是：C:\WorkSpaces\source_code\spring-framework-5.1.6.RELEASE
-   然后执行gradle cleanEclipse idea或者gradle cleanEclipse eclipse，根据自己的idea工具选择，
-   然后执行gradle cglibRepackJar和gradle objenesisRepackJar，后面编译遇到类似问题，先看gradle
-   文件，找到对应的自定义task，这样执行；
-2. 一般使用idea工具，都会自带可视化页面；例如idea可以像图1这样做：
-</code></pre><p><img src="/images/spring_1.png" alt></p>
-<pre><code>直接点击执行即可;
-</code></pre><p>##2. AspectJ编译问题解决</p>
-<p>###问题分析：<br>    问题现象是：编译提示找不到AnnotationCacheAspect等类符号，实际可以找到，发现是这样描述的：<br>    <code>public aspect AnnotationCacheAspect extends AbstractCacheAspect {…}</code><br>    像aspect不是java支持的关键字，它只是AspectJ才认识的关键字，需要ajc.exe来执行编译.</p>
-<p>###解决办法：</p>
-<pre><code>1. 下载aspect的jar包，目前版本1.9.3
-2. 建议使用java -jar xxx.jar的方式安装AspectJ，本质是解压，这种方式有可视化界面，且会自动配置classpath之类的（maybe?);
-3. 为spring-aspect工程添加Facets属性，如图2.
-</code></pre><p><img src="/images/spring_2.png" alt></p>
-<pre><code>4. 更改编译器，如图3.
-</code></pre><p> <img src="/images/spring_3.png" alt></p>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/18/大数据：parquet时间c±t时间类型存储、转换、展示/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/2019/04/18/大数据：parquet时间c±t时间类型存储、转换、展示/" class="post-title-link" itemprop="url">大数据：parquet时间类型存储、转换、展示</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-
-            
-            
-            
-
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2019-04-18 14:21:07 / 修改时间：14:28:49" itemprop="dateCreated datePublished" datetime="2019-04-18T14:21:07+08:00">2019-04-18</time>
-            
-
-            
-              
-
-              
-            
-          </span>
-
-          
-            <span class="post-category">
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/big-data/" itemprop="url" rel="index"><span itemprop="name">big data</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="parquet时间类型存储、转换、读取"><a href="#parquet时间类型存储、转换、读取" class="headerlink" title="parquet时间类型存储、转换、读取"></a>parquet时间类型存储、转换、读取</h2><ol>
-<li>hive表转parquet. (10.100.2.100:50070)<br> /user/hive/warehouse/csv2parquet</li>
-<li><p>java读取parquet并解析时间类型.</p>
-</li>
-<li><p>spark写parquet文件格式.</p>
-</li>
-<li><p>解析上面的时间类型.</p>
-</li>
-</ol>
-<h2 id="部分结论"><a href="#部分结论" class="headerlink" title="部分结论"></a>部分结论</h2><ol>
-<li>spark存储可以设置时间类型是long类型，然后正常转换得到；</li>
-<li>hive存储在parquet中的时间类型是int96，可以通过解析得到；</li>
-</ol>
-<h2 id="详细摘要"><a href="#详细摘要" class="headerlink" title="详细摘要"></a>详细摘要</h2><ol>
-<li><p>hive创建parquet文件格式的数据.<br> a. create table haoaktest(</p>
-<pre><code>    id int,
-    mytime timestamp,
-    mydate date
-) row format delimited fields terminated by &apos;,&apos;;
-</code></pre><p> b. load data local inpath ‘/home/hadoop/haoak/haoaktest.csv’ into table haoaktest;</p>
-<pre><code>注意hive的timestamp类型是&quot;yyyy-MM-dd HH:mm:ss.SSS&quot;, date类型是&quot;yyyy-MM-dd&quot;.
-</code></pre><p> c. create table csv2parquet stored as parquet</p>
-<pre><code>as select * from haoaktest;
-</code></pre><p> d. show create table csv2parquet可以看到路径和文件格式，注意文件路径是hive在hdfs上的默认目录下；</p>
-</li>
-</ol>
-
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
 
 
           </div>
@@ -1398,7 +2626,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-count">14</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -1413,7 +2641,13 @@
                     
                       
                     
-                    <span class="site-state-item-count">1</span>
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
                     <span class="site-state-item-name">分类</span>
                   
                 </div>
@@ -1438,7 +2672,11 @@
                     
                       
                     
-                    <span class="site-state-item-count">5</span>
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
                     <span class="site-state-item-name">标签</span>
                   
                 </div>
