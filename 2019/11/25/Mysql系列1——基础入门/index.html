@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="##1. mysql的安装、启动和命令行.  Mysql的安装可以官网下载相应版本，windows可以直接下载免安装解压包，配置环境变量；也可以linux安装或者docker，这些不是本文重点，不再累赘说明；   通过mysql客户端工具访问，语法如下：   mysql -h127.0.0.1 -uroot -p123456 -P3306 my-database，这里建议参数间不加空格，因为-p后">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql系列1——基础入门">
+<meta property="og:url" content="http://yoursite.com/2019/11/25/Mysql系列1——基础入门/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="##1. mysql的安装、启动和命令行.  Mysql的安装可以官网下载相应版本，windows可以直接下载免安装解压包，配置环境变量；也可以linux安装或者docker，这些不是本文重点，不再累赘说明；   通过mysql客户端工具访问，语法如下：   mysql -h127.0.0.1 -uroot -p123456 -P3306 my-database，这里建议参数间不加空格，因为-p后">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-11-28T10:34:39.480Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mysql系列1——基础入门">
+<meta name="twitter:description" content="##1. mysql的安装、启动和命令行.  Mysql的安装可以官网下载相应版本，windows可以直接下载免安装解压包，配置环境变量；也可以linux安装或者docker，这些不是本文重点，不再累赘说明；   通过mysql客户端工具访问，语法如下：   mysql -h127.0.0.1 -uroot -p123456 -P3306 my-database，这里建议参数间不加空格，因为-p后">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/11/25/Mysql系列1——基础入门/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Mysql系列1——基础入门 | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/25/Mysql系列1——基础入门/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Mysql系列1——基础入门
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-25 16:06:48" itemprop="dateCreated datePublished" datetime="2019-11-25T16:06:48+08:00">2019-11-25</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-11-28 18:34:39" itemprop="dateModified" datetime="2019-11-28T18:34:39+08:00">2019-11-28</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>##1. mysql的安装、启动和命令行.</p>
+<blockquote>
+<p>Mysql的安装可以官网下载相应版本，windows可以直接下载免安装解压包，配置环境变量；<br>也可以linux安装或者docker，这些不是本文重点，不再累赘说明；</p>
+</blockquote>
+<blockquote>
+<p>通过mysql客户端工具访问，语法如下：</p>
+<blockquote>
+<ul>
+<li>mysql -h127.0.0.1 -uroot -p123456 -P3306 my-database，这里建议参数间不加空格，<br>因为-p后接密码时不能输入空格，可以直接指定数据库my-database，注意用户必须指定，不然默认<br>用户ODBC;</li>
+<li>查看mysql的版本，可以根据情况使用status(mysql命令行)，或者select version();</li>
+<li>命令行操作时，\G格式化输出,\c取消当前命令操作；可以一次批量操作；</li>
+</ul>
+</blockquote>
+</blockquote>
+<p>##2. mysql的数据类型.</p>
+<blockquote>
+<ul>
+<li>整数类型：tinyInt(1字节)、smallInt(2)、mediumInt(3)、int(4)[别名integer]、bigInt(8).</li>
+<li>浮点数类型：float(4字节)、double(8字节)，对于float(M,N)，表示一共有M个位数，N个小数，<br>计算机是用二进制表示的，<br>9.875=8+1+0.5+0.25+0.125=1<em>2³+0</em>2²+0<em>2¹+1</em>2⁰+1<em>2ˉ¹+1</em>2ˉ²+1*2ˉ³，即1001.111，<br>这种情况0.3这种就没法精确表示，因此浮点数类型是不精确的；</li>
+<li>定点数类型：decimal(M,N)，定点数类型取值和占用字节不固定，思路是对一个有小数的数字而言，<br>可以拆分为整数部分和小数部分，这两部分都用整型表示，即1.3= 1和3；</li>
+<li>无符合数值类型表示：UNSIGNED</li>
+<li>日期和时间类型: year(1字节)、date(3字节)、time(3字节)、datetime(8字节)、timestamp(4字节)；<br>datetime(M)表示精确到M位毫秒，建议用timestamp，可以根据设置的时区显示不同的时间，而且占用空间小，<br>本质是一个int类型；</li>
+<li>字符串类型：char、varchar、tinytext、text、mediumtext、longtext；</li>
+<li>enum类型和set类型；</li>
+<li>二进制类型：bit、binary、varbinary、tinyblob、blob、mediumblob、longblob；</li>
+</ul>
+</blockquote>
+<p>##3. 数据库的基本操作.</p>
+<blockquote>
+<ul>
+<li>create datable (if not exists) xxx;</li>
+<li>drop database (if not exists) xxx;</li>
+<li>show databases;</li>
+<li>use xxx;</li>
+</ul>
+</blockquote>
+<p>##4. 表的基本操作.</p>
+<blockquote>
+<ul>
+<li>show tables;</li>
+<li>create table (if not exists) xxx(schema1 int primary key, schema2 varchar(10));</li>
+<li>drop table (if exists) xxx;</li>
+<li>desc database.xxx;</li>
+<li>show create table database.xxx;</li>
+<li>alter table old_name rename to new_name;/rename old_name to new_name;（也可以用于转移数据库）</li>
+<li>alter table table_name add column schema_name schema_type [schema_param] [first/after schema_name];</li>
+<li>alter table table_name drop column schema_name;</li>
+<li>alter table table_name modify schema_name schema_type [schema_param] [first/after schema_name];;</li>
+</ul>
+</blockquote>
+<p>##5. 列的属性.</p>
+<blockquote>
+<p>常用的列的属性主要有：null、key(primary key、unique、foreign key)、default、extra(例如auto_increment等);<br>primary key和unique key的区别是：</p>
+<blockquote>
+<ul>
+<li>一个表的primary key只能有一个，unique key可以多个；</li>
+<li>primary key修饰的列不能为null，unique修饰的列可以；</li>
+</ul>
+</blockquote>
+</blockquote>
+<p>##6. 简单查询.<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> [<span class="keyword">distinct</span>] 查询列表</span><br><span class="line">[<span class="keyword">from</span> 表名]</span><br><span class="line">[<span class="keyword">where</span> 布尔表达式]</span><br><span class="line">[<span class="keyword">group</span> <span class="keyword">by</span> 分组列表]</span><br><span class="line">[<span class="keyword">having</span> 分组过滤条件]</span><br><span class="line">[<span class="keyword">order</span> <span class="keyword">by</span> 排序列表]</span><br><span class="line">[<span class="keyword">limit</span> 开始行、限制条数]</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p>注意查询的顺序，聚集函数一般配合分组使用，且聚集函数不能用在where子句中；</p>
+</blockquote>
+<p>##7. 子查询</p>
+<blockquote>
+<ul>
+<li>简单样式：select * from a where a.name=(select b.name from b);</li>
+<li>子查询括号内的是内层查询，括号外的是外层查询；</li>
+<li>根据查询结果分为：标量子查询、列子查询、行子查询、表子查询；</li>
+<li>其他的概念：exists子查询和not exists子查询，不相干子查询和相关子查询；</li>
+</ul>
+</blockquote>
+<p>##8. 连接查询</p>
+<blockquote>
+<ul>
+<li>连接查询可以查询N张表，连接产生的笛卡儿积数量中间数据；</li>
+<li>连接分为内连接和外连接，区别是：驱动表中的记录即使在被驱动表中没有匹配记录，是否需要<br>加入到结果集；需要是外连接，不需要是内连接；</li>
+<li>内连接两种形式：select <em> from a,b where a.id=b.id;或者:<br>select </em> from a inner join b on a.id=b.id;由于内连接和where子句是等价的，所以<br>内连接不需要强制使用on子句；</li>
+<li>外连接分为左连接left join和右连接right join.</li>
+<li>对于内连接来说，驱动表和被驱动表是可互换的；对外连接来说不可互换；</li>
+<li>如果一个表关联自己查询，被称为自查询；</li>
+</ul>
+</blockquote>
+<p>##9. 组合查询</p>
+<blockquote>
+<p>union和union all查询区别是：union会自动去重，union all会保留重复行.<br>组合查询中可以使用group by和limit.</p>
+</blockquote>
+<p>##10. 增删改的一些细节</p>
+<blockquote>
+<ul>
+<li>insert ignore————对于哪些主键或UNIQUE约束的列或列组合来说，如果表中已存在记录的列中没有与待插入<br>记录在这些列或列组合上重复的值，则插入，否则忽略;</li>
+<li>insert on duplicate key update————同上，如果已存在记录，则更新；</li>
+</ul>
+</blockquote>
+<p>##11. 视图</p>
+<blockquote>
+<ul>
+<li>语法： create view 视图名 as 查询语句</li>
+<li>视图本质是查询语句的别名，不会把结果存储，当查询视图时，会转换成相应的查询语句进行<br>查询操作；例如当更新表后，查询视图结果也会改变；</li>
+<li>一般视图只在查询语句中使用，增删改时最好不要使用视图；</li>
+</ul>
+</blockquote>
+<p>##12. 存储程序</p>
+<blockquote>
+<ul>
+<li>存储程序可以封装一些语句，提供一种简单方式调用存储程序，相当于这些语句的别名；<br>存储程序包括存储例程（存储过程和存储函数）、触发器、事件；</li>
+<li>mysql通过@定义变量，例如@a、@b等；通过delimiter定义语句结束分隔符.</li>
+<li>存储函数.<blockquote>
+<ul>
+<li>本质是一个存储sql语句的函数;</li>
+<li>定义语法：注意如果需要使用;可以提前定义delimiter;<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">function</span> 存储函数名称(【参数列表】)</span><br><span class="line"><span class="keyword">returns</span> 返回值类型</span><br><span class="line"><span class="keyword">begin</span> </span><br><span class="line">    函数主体</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<blockquote>
+<ul>
+<li>使用方式：和内置行数如avg(),count()等一样使用；</li>
+<li>在函数体中定义变量格式： declare 变量1,变量2, … 数据类型 [default 默认值];</li>
+<li>判断语句格式<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">if 表达式 then </span><br><span class="line">    处理语句列表</span><br><span class="line">[elseif 表达式 then </span><br><span class="line">    处理语句列表]</span><br><span class="line">    ...</span><br><span class="line"> [else </span><br><span class="line">    处理语句列表]</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">if</span>;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<ul>
+<li>循环语句格式<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">while 表达式 <span class="keyword">do</span></span><br><span class="line">    处理语句列表</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">while</span>;</span><br><span class="line"></span><br><span class="line">repeat </span><br><span class="line">    处理语句列表</span><br><span class="line">until 表达式</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">repeat</span>;</span><br><span class="line"></span><br><span class="line">loop </span><br><span class="line">    处理语句列表</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">loop</span>;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+</blockquote>
+<blockquote>
+<ul>
+<li>存储过程<blockquote>
+<ul>
+<li>存储过程和存储函数都属于存储例程；都是对某些语句的封装，存储函数侧重于执行函数<br>并返回一个值，存储过程侧重于单纯的执行；</li>
+<li>语法：<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">procedure</span> 存储过程名称(存储过程参数)</span><br><span class="line"><span class="keyword">begin</span> </span><br><span class="line">    处理语句列表</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<blockquote>
+<ul>
+<li>存储过程的调用： call 存储过程([参数列表])</li>
+<li>删除：mysql中除了删除数据用delete，其他都用drop.</li>
+</ul>
+</blockquote>
+</blockquote>
+<blockquote>
+<ul>
+<li>存储函数和存储过程的不同<blockquote>
+<ul>
+<li>存储函数在定义时需要显示用RETURNS语句标明返回的数据类型，而且在函数体中必须<br>显示RETURN返回值，存储过程不用；</li>
+<li>调用方式不同，存储函数在表达式中调用，存储过程需要call调用；</li>
+<li>存储函数只支持IN参数，存储过程支持IN、OUT、INOUT参数；</li>
+<li>存储函数只能返回一个值，存储过程可以返回多个值；</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li>游标<blockquote>
+<p>游标用于遍历数据，一般配合存储过程使用，样例如下:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">delimiter $</span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">procedure</span> cursor_demo2()</span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">	<span class="keyword">declare</span> m_addr <span class="built_in">VARCHAR</span>(<span class="number">30</span>);</span><br><span class="line">	<span class="keyword">declare</span> m_phone <span class="built_in">varchar</span>(<span class="number">30</span>);</span><br><span class="line">	<span class="keyword">declare</span> record_count <span class="built_in">int</span>;</span><br><span class="line">	<span class="keyword">declare</span> i <span class="built_in">int</span> <span class="keyword">default</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">declare</span> t2_record_crusor <span class="keyword">cursor</span> <span class="keyword">for</span> <span class="keyword">select</span> addr, phone <span class="keyword">from</span> student;</span><br><span class="line">	<span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> student <span class="keyword">into</span> record_count;</span><br><span class="line"></span><br><span class="line">	open t2_record_crusor;</span><br><span class="line">	while i &lt; record_count DO</span><br><span class="line">		fetch t2_record_crusor into m_addr, m_phone;</span><br><span class="line">		<span class="keyword">select</span> m_addr,m_phone;</span><br><span class="line">		<span class="keyword">set</span> i=i+<span class="number">1</span>;</span><br><span class="line">	<span class="keyword">end</span> <span class="keyword">while</span>;</span><br><span class="line">	close t2_record_crusor;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">$</span><br></pre></td></tr></table></figure>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li>触发器<blockquote>
+<p>触发器是指在对表中记录做增删改前后可以让mysql自动执行一些语句；</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TRIGGER</span> 触发器名</span><br><span class="line">&#123;<span class="keyword">BEFORE</span>|<span class="keyword">AFTER</span>&#125;</span><br><span class="line">&#123;<span class="keyword">INSERT</span>|<span class="keyword">DELETE</span>|<span class="keyword">UPDATE</span>&#125;</span><br><span class="line"><span class="keyword">ON</span> 表名</span><br><span class="line"><span class="keyword">FOR</span> <span class="keyword">EACH</span> <span class="keyword">ROW</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">    触发器内容</span><br><span class="line"><span class="keyword">END</span></span><br></pre></td></tr></table></figure>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<blockquote>
+<p>注意点：1. 触发器内容中不能有输出结果集的语句；2. 触发器中NEW代表记录列的值可以被更改，OLD代表不可更改；</p>
+<ul>
+<li>事件<br>事件可以让mysql服务器在固定时间或每隔一段时间自动执行一些语句，语法如下：<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">EVENT</span> 事件名</span><br><span class="line"><span class="keyword">ON</span> SCHEDULE</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">AT</span> 某个确定的时间点| </span><br><span class="line">    EVERY 期望的时间间隔 [STARTS datetime][<span class="keyword">END</span> datetime]</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">DO</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">    具体的语句</span><br><span class="line"><span class="keyword">END</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+</blockquote>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/mysql/" rel="tag"># mysql</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/11/11/IO二三事2——NIO/" rel="next" title="IO二三事2——NIO">
+                <i class="fa fa-chevron-left"></i> IO二三事2——NIO
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ank.hao</p>
+              <div class="site-description motion-element" itemprop="description">技术、点滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">分类</span>
+                  
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.1.0',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="##1. 前言.I/O就是一个大命题，从最基础的入门API操作，到高级的网络IO、NIO、Netty等，软件本质上就是输入输出和处理，因此IO占了很重要一部分，这里不指望涵盖方方面面，但作为自己知识体系的一部分，还是有必要梳理一下的； 经常碰到的一些面试问题如：  同步、异步、阻塞、非阻塞之间的关系和区别？ IO模型有哪些，有什么特点，它们之间有什么区别？ NIO有哪些优势，netty为什么高效？">
+<meta name="keywords" content="I&#x2F;O">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IO二三事1——基础篇">
+<meta property="og:url" content="http://yoursite.com/2019/11/08/IO二三事1——基础篇/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="##1. 前言.I/O就是一个大命题，从最基础的入门API操作，到高级的网络IO、NIO、Netty等，软件本质上就是输入输出和处理，因此IO占了很重要一部分，这里不指望涵盖方方面面，但作为自己知识体系的一部分，还是有必要梳理一下的； 经常碰到的一些面试问题如：  同步、异步、阻塞、非阻塞之间的关系和区别？ IO模型有哪些，有什么特点，它们之间有什么区别？ NIO有哪些优势，netty为什么高效？">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/images/IO_1.png">
+<meta property="og:updated_time" content="2019-11-11T02:27:41.534Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="IO二三事1——基础篇">
+<meta name="twitter:description" content="##1. 前言.I/O就是一个大命题，从最基础的入门API操作，到高级的网络IO、NIO、Netty等，软件本质上就是输入输出和处理，因此IO占了很重要一部分，这里不指望涵盖方方面面，但作为自己知识体系的一部分，还是有必要梳理一下的； 经常碰到的一些面试问题如：  同步、异步、阻塞、非阻塞之间的关系和区别？ IO模型有哪些，有什么特点，它们之间有什么区别？ NIO有哪些优势，netty为什么高效？">
+<meta name="twitter:image" content="http://yoursite.com/images/IO_1.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="http://yoursite.com/2019/11/08/IO二三事1——基础篇/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>IO二三事1——基础篇 | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/08/IO二三事1——基础篇/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">IO二三事1——基础篇
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-08 19:56:58" itemprop="dateCreated datePublished" datetime="2019-11-08T19:56:58+08:00">2019-11-08</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-11-11 10:27:41" itemprop="dateModified" datetime="2019-11-11T10:27:41+08:00">2019-11-11</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>##1. 前言.<br>I/O就是一个大命题，从最基础的入门API操作，到高级的网络IO、NIO、Netty等，软件本质上就是输入输出和处理，<br>因此IO占了很重要一部分，这里不指望涵盖方方面面，但作为自己知识体系的一部分，还是有必要梳理一下的；</p>
+<p>经常碰到的一些面试问题如：</p>
+<ul>
+<li>同步、异步、阻塞、非阻塞之间的关系和区别？</li>
+<li>IO模型有哪些，有什么特点，它们之间有什么区别？</li>
+<li>NIO有哪些优势，netty为什么高效？</li>
+</ul>
+<p>这些问题感觉熟悉又陌生，大部分人知道二三，但是又经不住刨根问底，这篇就先理清基础概念，有助于后续问题分析.</p>
+<p>##2. 基础概念.</p>
+<p>###1. IO过程<br>本地输入操作包含过程：</p>
+<ul>
+<li>等待数据准备好</li>
+<li>从内核向进程复制数据</li>
+</ul>
+<p>网络数据输入包含过程：</p>
+<ul>
+<li>等待数据从网络送达，到达后被复制到内核缓冲区</li>
+<li>把数据从内核缓冲区复制到程序缓冲区</li>
+</ul>
+<p>###2. 阻塞和非阻塞、同步与异步</p>
+<ul>
+<li>同步和异步————消息如何通知(client).</li>
+<li>阻塞和非阻塞————(client)等待消息通知时的状态.<br>简单例子：小明下载文件.</li>
+<li>小明一直干等着下载完成————同步、阻塞</li>
+<li>小明边玩手机边等着下载完成————同步、非阻塞</li>
+<li>软件下载完成有提示，小明一直等着提示音————异步、阻塞</li>
+<li>软件下载完成有提示，小明玩手机看书直到听到提示音————异步、非阻塞</li>
+</ul>
+<p>###3. unix的IO模型<br>unix网络编程把IO模型分为5类，分别如下：</p>
+<ol>
+<li>阻塞I/O：<blockquote>
+<p>在进程空间内调用时，数据传到内核空间并从内核空间复制到用户空间、或者调用<br> 发生错误时才会返回，期间一直阻塞等待；</p>
+</blockquote>
+</li>
+<li>非阻塞I/O：<blockquote>
+<p>在数据到达内核阶段，如果该缓冲区没有数据，则会直接返回错误；非阻塞IO会轮询<br> 这个状态，看内核是否有数据到达；</p>
+</blockquote>
+</li>
+<li>I/O复用：<blockquote>
+<p>linux提供select/poll，进程通过将一个或多个fd传递给select或poll系统调用，<br> 阻塞在select上，这样select/poll可以侦测多个fd是否处于就绪状态；select/poll<br> 使用顺序扫描，并且支持的fd数量有限；linux提供epoll系统调用，使用事件驱动，<br> 当有fd准备就绪时，立即回调，效率更高；</p>
+</blockquote>
+</li>
+<li>信号驱动I/O：<blockquote>
+<p>首先开启套接口信号驱动IO功能，并通过系统调用sigaction执行一个信号处理函数，<br> 当数据准备就绪时，为该进程生成一个信号，通过信号回调通知应用程序；</p>
+</blockquote>
+</li>
+<li>异步I/O：<blockquote>
+<p>告知内核启动某个操作，并在内核操作完成后通知进程；和信号驱动的主要区别是：信号<br> 驱动IO由内核通知我们何时可以操作，异步IO由内核通知我们操作已经完成；</p>
+</blockquote>
+</li>
+</ol>
+<p>区别可以用下面图片概括：<br><img src="/images/IO_1.png" alt></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/I-O/" rel="tag"># I/O</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/10/31/踩坑系列——兼容oracle引发的事件/" rel="next" title="踩坑系列——兼容oracle引发的事件">
+                <i class="fa fa-chevron-left"></i> 踩坑系列——兼容oracle引发的事件
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/11/11/IO二三事2——NIO/" rel="prev" title="IO二三事2——NIO">
+                IO二三事2——NIO <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <div class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ank.hao</p>
+              <div class="site-description motion-element" itemprop="description">技术、点滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">18</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">分类</span>
+                  
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">标签</span>
+                  
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.1.0</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/schemes/muse.js?v=7.1.0"></script>
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
