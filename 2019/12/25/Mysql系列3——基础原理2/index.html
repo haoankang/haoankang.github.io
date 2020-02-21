@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1.Mysql数据目录数据终究要存储在磁盘上，因此Mysql数据目录中包含各种文件，例如表空间、表、视图、日志、进程文件等；因此数据库受文件系统的影响：   数据库名称和表名称不得超过文件系统所允许的最大长度 特殊字符问题 文件长度受文件系统最大长度限制   mysql中有几个系统数据库：   mysql: 存储了Mysql的用户账户和权限信息，一些存储过程、事件的定义信息，一些日志信息、帮助信息">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="&#39;Mysql系列3——基础原理2&#39;">
+<meta property="og:url" content="http://yoursite.com/2019/12/25/Mysql系列3——基础原理2/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="1.Mysql数据目录数据终究要存储在磁盘上，因此Mysql数据目录中包含各种文件，例如表空间、表、视图、日志、进程文件等；因此数据库受文件系统的影响：   数据库名称和表名称不得超过文件系统所允许的最大长度 特殊字符问题 文件长度受文件系统最大长度限制   mysql中有几个系统数据库：   mysql: 存储了Mysql的用户账户和权限信息，一些存储过程、事件的定义信息，一些日志信息、帮助信息">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-01-02T12:02:12.742Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="&#39;Mysql系列3——基础原理2&#39;">
+<meta name="twitter:description" content="1.Mysql数据目录数据终究要存储在磁盘上，因此Mysql数据目录中包含各种文件，例如表空间、表、视图、日志、进程文件等；因此数据库受文件系统的影响：   数据库名称和表名称不得超过文件系统所允许的最大长度 特殊字符问题 文件长度受文件系统最大长度限制   mysql中有几个系统数据库：   mysql: 存储了Mysql的用户账户和权限信息，一些存储过程、事件的定义信息，一些日志信息、帮助信息">
+
+<link rel="canonical" href="http://yoursite.com/2019/12/25/Mysql系列3——基础原理2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>'Mysql系列3——基础原理2' | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-right"></div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/25/Mysql系列3——基础原理2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          'Mysql系列3——基础原理2'
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-25 20:38:12" itemprop="dateCreated datePublished" datetime="2019-12-25T20:38:12+08:00">2019-12-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-01-02 20:02:12" itemprop="dateModified" datetime="2020-01-02T20:02:12+08:00">2020-01-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">mysql</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><strong>1.Mysql数据目录</strong><br>数据终究要存储在磁盘上，因此Mysql数据目录中包含各种文件，例如表空间、表、视图、日志、进程文件等；因此数据库受文件系统的影响：</p>
+<blockquote>
+<ul>
+<li>数据库名称和表名称不得超过文件系统所允许的最大长度</li>
+<li>特殊字符问题</li>
+<li>文件长度受文件系统最大长度限制</li>
+</ul>
+</blockquote>
+<p>mysql中有几个系统数据库：</p>
+<blockquote>
+<ul>
+<li>mysql: 存储了Mysql的用户账户和权限信息，一些存储过程、事件的定义信息，一些日志信息、帮助信息以及时区信息；</li>
+<li>information_schema: 维护所有其他数据库的信息，是一些描述性信息；</li>
+<li>performance_schema: mysql服务器运行过程中的一些状态信息；</li>
+<li>sys: 通过视图形式把information_schema和performance_schema结合起来，可以更方便的了解mysql服务器的一些性能信息；</li>
+</ul>
+</blockquote>
+<p><strong>2.InnoDB表空间</strong><br>表空间中每个也都有一个页号FILE_PAGE_OFFSET，这个页号由4个字节组成，如果页设置大小为默认16kb，则一个表空间最多64TB数据；<br>表空间分为独立表空间和系统表空间；对于16KB的页来说，连续64个页是一个区，默认1MB空间；一个索引会生成2个段，一个叶子节点段，<br>一个非叶子节点段；</p>
+<p><strong>3.表单访问方法</strong></p>
+<blockquote>
+<ul>
+<li>const: 通过主键或者唯一二级索引列与常数的等值比较来定位一条记录的访问方法；</li>
+<li>ref: 搜索条件为二级索引列与常数等值比较，采用二级索引来执行查询的访问方法；</li>
+<li>ref_or_null: 搜索条件为（二级索引列与常数等值比较）or（二级索引列为null）；</li>
+<li>range: 二级索引匹配区间值；</li>
+<li>index: 只需要遍历二级索引记录的访问方法；</li>
+<li>index merge: 使用多个索引来完成一次查询；</li>
+<li>all: 全表扫描；</li>
+</ul>
+</blockquote>
+<p><strong>4.连接</strong><br>连接分为内连接和外连接，区别在于：驱动表中的记录即使在被驱动表没有匹配，是否加入到结果集中；<br><br>驱动表只访问一次，被驱动表可能被访问多次，访问次数取决于对驱动表执行单表查询后的结果集中的记录数，这种连接执行方式称为嵌套循环连接；尽量减少访问被驱动表的次数；</p>
+<p><strong>5.成本</strong><br>mysql中一条查询语句的执行成本是由两个方面组成：IO成本和CPU成本；<br><br>mysql执行查询语句前会先分析所有可用方案的执行成本，对比找出成本最低的方案，也就是执行计划；</p>
+<blockquote>
+<ol>
+<li>根据搜索条件，找出所有可能使用的索引；</li>
+<li>计算全表扫描的代价；</li>
+<li>计算使用不同索引执行查询的代价；</li>
+<li>对比各种执行方案的代价，找出成本最低的那个；</li>
+</ol>
+</blockquote>
+<p>因此需要注意可能存在的索引计算代价花费时间过长造成的负优化，一些成本常数可设置；</p>
+<p><strong>6.统计数据的收集</strong><br>InnoDB默认是以表为单位来收集和存储统计数据的，这些统计数据可用是基于磁盘的永久性统计数据，也可以是基于内存的非永久性统计数据；<br><br>innodb_stats_persistent控制着使用永久性统计数据还是非永久性统计数据；<br><br>innodb_stats_persistent_sample_pages控制着永久性统计数据的采样页面数量；<br><br>innodb_stats_transient_sample_pages控制着非永久性统计数据的采样页面数量；<br><br>innodb_stats_auto_recalc控制着是否自动重新计算统计数据。</p>
+<p>我们可以针对某个具体的表，在创建和修改表时通过指定STATS_PERSISTENT、STATS_AUTO_RECALC、STATS_SAMPLE_PAGES的值来控制相关统计数据属性。</p>
+<p>innodb_stats_method决定着在统计某个索引列不重复值的数量时如何对待NULL值。</p>
+<p><strong>7.查询优化（内部）</strong></p>
+<blockquote>
+<ul>
+<li>条件化简；</li>
+<li>外连接消除；</li>
+<li>子查询优化；</li>
+</ul>
+</blockquote>
+<p><strong>8.Explain执行计划</strong><br>格式：[explain] [format=json] sql;<br>optimizer_trace参数可以启用查看详细的执行优化过程；</p>
+<p><strong>9.Buffer Pool</strong></p>
+<ol>
+<li>磁盘太慢，所以要用内存做缓存；Buffer Pool本质是InnoDB向操作系统申请的一段连续的内存空间，可通过innodb_buffer_pool_size来调整大小；<br></li>
+<li>Buffer Pool向操作系统申请的连续内存由控制块和缓存页组成，InnoDB使用链表来管理Buffer Pool，free链表中每个节点都代表一个空闲的缓存页，为了快速定位页是否被加载到Buffer Pool，使用表空间号+页号作为key，<br>缓存页作为value，建立哈希表；<br></li>
+<li>Buffer Pool中被修改的页被称为脏页，脏页不会立即刷新，而是加入flush链表，待之后的某个时间点同步到磁盘上；LRU链表分为young和old两个区域；<br></li>
+<li>每个buffer pool中都有各自独立的链表，一个buffer pool实例由若干chunk组成；</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/24/Mysql系列2——基础原理/" rel="prev" title="'Mysql系列2——基础原理'">
+      <i class="fa fa-chevron-left"></i> 'Mysql系列2——基础原理'
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/01/02/Mysql系列4——基础原理3/" rel="next" title="'Mysql系列4——基础原理3'">
+      'Mysql系列4——基础原理3' <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ank.hao</p>
+  <div class="site-description" itemprop="description">技术、点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.1
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

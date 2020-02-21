@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="##1.问题描述最近开发一个造数功能模块，因为有递增和递减，所以需要生成的数据有序；这里用到多线程，多线程相关的核心逻辑如下：12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364//造数逻辑public JSONA">
+<meta name="keywords" content="JSONArray，并发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="踩坑系列——JSONArray引发的并发问题">
+<meta property="og:url" content="http://yoursite.com/2019/12/04/踩坑系列——JSONArray引发的并发问题/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="##1.问题描述最近开发一个造数功能模块，因为有递增和递减，所以需要生成的数据有序；这里用到多线程，多线程相关的核心逻辑如下：12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364//造数逻辑public JSONA">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-12-04T06:30:49.254Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="踩坑系列——JSONArray引发的并发问题">
+<meta name="twitter:description" content="##1.问题描述最近开发一个造数功能模块，因为有递增和递减，所以需要生成的数据有序；这里用到多线程，多线程相关的核心逻辑如下：12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364//造数逻辑public JSONA">
+
+<link rel="canonical" href="http://yoursite.com/2019/12/04/踩坑系列——JSONArray引发的并发问题/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>踩坑系列——JSONArray引发的并发问题 | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-right"></div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/04/踩坑系列——JSONArray引发的并发问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          踩坑系列——JSONArray引发的并发问题
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-12-04 11:40:33 / 修改时间：14:30:49" itemprop="dateCreated datePublished" datetime="2019-12-04T11:40:33+08:00">2019-12-04</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/踩坑系列/" itemprop="url" rel="index">
+                    <span itemprop="name">踩坑系列</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>##1.问题描述<br>最近开发一个造数功能模块，因为有递增和递减，所以需要生成的数据有序；这里用到多线程，多线程相关的核心逻辑如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//造数逻辑</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> JSONArray <span class="title">buildDataCore</span><span class="params">(JSONArray datalogic, Integer num)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    JSONObject result = <span class="keyword">new</span> JSONObject();</span><br><span class="line">    JSONArray columns = <span class="keyword">new</span> JSONArray();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//每次造数num条记录</span></span><br><span class="line">    JSONArray data = <span class="keyword">new</span> JSONArray(num);</span><br><span class="line">    <span class="keyword">long</span> beginTime = System.currentTimeMillis();</span><br><span class="line">    <span class="keyword">final</span> CountDownLatch countDownLatch = <span class="keyword">new</span> CountDownLatch(num);</span><br><span class="line">    AtomicInteger count = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    CopyOnWriteArrayList list = <span class="keyword">new</span> CopyOnWriteArrayList(<span class="keyword">new</span> Object[num]);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(count.intValue()&lt;num)&#123;</span><br><span class="line">        BaseService.executor.execute(<span class="keyword">new</span> BuildDataThread(count.intValue(), datalogic, list, columns, countDownLatch));</span><br><span class="line">        count.incrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    countDownLatch.await();</span><br><span class="line">    <span class="keyword">long</span> endTime = System.currentTimeMillis();</span><br><span class="line">    data.addAll(list);</span><br><span class="line">    log.info(<span class="string">"造数时间："</span>+(endTime-beginTime));</span><br><span class="line">    <span class="keyword">return</span> data;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BuildDataThread</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line">        <span class="keyword">private</span> JSONArray datalogic;</span><br><span class="line">        <span class="keyword">private</span> CopyOnWriteArrayList data;</span><br><span class="line">        <span class="keyword">private</span> JSONArray columns;</span><br><span class="line">        <span class="keyword">private</span> CountDownLatch countDownLatch;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">BuildDataThread</span><span class="params">(<span class="keyword">int</span> count, JSONArray datalogic, CopyOnWriteArrayList data, JSONArray columns, CountDownLatch countDownLatch)</span></span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.count = count;</span><br><span class="line">            <span class="keyword">this</span>.datalogic = datalogic;</span><br><span class="line">            <span class="keyword">this</span>.data = data;</span><br><span class="line">            <span class="keyword">this</span>.columns = columns;</span><br><span class="line">            <span class="keyword">this</span>.countDownLatch = countDownLatch;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            JSONObject data_child = <span class="keyword">new</span> JSONObject();</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> n=<span class="number">0</span>;n&lt;datalogic.size();n++)&#123;</span><br><span class="line">                JSONObject jsonObject = datalogic.getJSONObject(n);</span><br><span class="line">                DataType dateType = DataType.getDateType(jsonObject.getString(<span class="string">"type"</span>));</span><br><span class="line">                Object object = <span class="keyword">null</span>;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    object = BuildDataUtil.buildData(jsonObject.getJSONObject(<span class="string">"logic"</span>), dateType, count);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    log.error(<span class="string">"造数出错："</span>,e);</span><br><span class="line">                &#125;</span><br><span class="line"><span class="comment">//                if(count==0)&#123;</span></span><br><span class="line"><span class="comment">//                    columns.add(jsonObject.getString("name"));</span></span><br><span class="line"><span class="comment">//                &#125;</span></span><br><span class="line"></span><br><span class="line">                data_child.put(jsonObject.getString(<span class="string">"name"</span>),object);</span><br><span class="line">            &#125;</span><br><span class="line">            data.set(count,data_child);</span><br><span class="line"></span><br><span class="line">            countDownLatch.countDown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>一开始是把JSONArray直接作为入参，希望通过jsonArray.set(index, object)合并结果，当数据量<br>比较大时，必定会出现一些结果是null的情况，且不会报错，通过打印日志也可以确定造数逻辑没问题，每次必定返回结果，<br>不会生成null；</p>
+<p>##2. 问题分析.<br>程序没有报错且造数方法每次返回正常结果，所以可以确认程序没问题，JSONArray的set方法单线程下也可以确认没问题，<br>可以得到我们期望的执行结果；所以这里问题就可以定位到是多线程环境下JSONArray的set方法出问题了；源码如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">JSONArray</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.list = <span class="keyword">new</span> ArrayList();</span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">set</span><span class="params">(<span class="keyword">int</span> index, Object element)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (index == -<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">this</span>.list.add(element);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">this</span>.list.size() &gt; index) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.list.set(index, element);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="keyword">this</span>.list.size(); i &lt; index; ++i) &#123;</span><br><span class="line">            <span class="keyword">this</span>.list.add((Object)<span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.list.add(element);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>JSONArray底层默认用ArrayList，list的size只能通过增删个体改变，无法指定，虽然ArrayList有默认构造方法<br>public ArrayList(int initialCapacity)，但是这个是容器长度，用于扩容等，并不是size；因此，当调用<br>ArrayList.set(index, object)这个方法时，假如有线程1填充JSONArray[1]和线程2填充JSONArray[2]，线程1<br>执行到this.list.add(element)这部分了，线程2正好执行到else{…}子句，就会把线程1的结果覆盖为null；</p>
+<p>##3. 解决方案及问题衍生.<br>解决思路就如前面代码所示，用一个线程安全的CopyOnWriteArrayList代替JSONArray；</p>
+<p>一般并发编程时，一定要注意使用的使用的集合和变量是否有线程安全问题；</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JSONArray，并发/" rel="tag"># JSONArray，并发</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/11/25/Mysql系列1——基础入门/" rel="prev" title="Mysql系列1——基础入门">
+      <i class="fa fa-chevron-left"></i> Mysql系列1——基础入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/12/17/面试系列基础知识一/" rel="next" title="'面试系列基础知识一'">
+      '面试系列基础知识一' <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ank.hao</p>
+  <div class="site-description" itemprop="description">技术、点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.1
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1.Spring IOC&amp;amp;AOPIOC即依赖注入，是一种设计思想，将类的创建和依赖交给框架通过配置来管理，资源不由使用资源的双方管理而由第三方管理；可以降低耦合度，资源集中管理使得资源可配置和易管理；IOC容器实际上就是个Map，Map中存放了各种对象；Spring IOC的初始化（实现）过程：   xml配置–（读取）–&amp;gt;Resource–（解析）–&amp;gt;BeanDefiniti">
+<meta name="keywords" content="spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="&#39;Spring常见问题总结1&#39;">
+<meta property="og:url" content="http://yoursite.com/2020/01/20/Spring常见问题总结1/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="1.Spring IOC&amp;amp;AOPIOC即依赖注入，是一种设计思想，将类的创建和依赖交给框架通过配置来管理，资源不由使用资源的双方管理而由第三方管理；可以降低耦合度，资源集中管理使得资源可配置和易管理；IOC容器实际上就是个Map，Map中存放了各种对象；Spring IOC的初始化（实现）过程：   xml配置–（读取）–&amp;gt;Resource–（解析）–&amp;gt;BeanDefiniti">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.plantuml.com/plantuml/svg/dL9DIm9H5DtxIshH7z08Z0ZQX12qVphNUg3pPDwBi9MHaUKWBan8qBw8SPCfRiQAVetlZQxw2xtvQ4Od9yJLyEuzvvvxpXtAaCPYSTxhZB-gN6zk0r9tKOOHhPWYbAKqaW5AYIO1Lgrl3JuIiRYuDYQFUXJIQfKBmNi6jRQU20b5AlYeFPKof3AC62PgyXHfy8UNL521mO85b-26TyqI3UPepiw1Nz4fJqiF_AwxkeZy541ZnKEKEm7gp1-RxyxmOPTVll11HvGCMPtqBwn6rsxiepmue-Ka2kotv703b9To23YRVU1ZYH2mz9J3Pq4AhfBVmEgHFKcIKLR6xzd2G0-0pU0tqnAq9L5O4ZVom8w98lGhtcl9ccYEnF1spiK_coLjdGMBhNY8g76yDv87vfKsD-m_K5Jg_ER--rDtPSJhCpTDTrzUhydwsAnEsq_JHacydRjStz0EbdeudGClAGMeVOoGRJyYhnsL4gZA3m00">
+<meta property="og:image" content="http://yoursite.com/images/spring_4.jpg">
+<meta property="og:updated_time" content="2020-01-22T09:32:08.375Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="&#39;Spring常见问题总结1&#39;">
+<meta name="twitter:description" content="1.Spring IOC&amp;amp;AOPIOC即依赖注入，是一种设计思想，将类的创建和依赖交给框架通过配置来管理，资源不由使用资源的双方管理而由第三方管理；可以降低耦合度，资源集中管理使得资源可配置和易管理；IOC容器实际上就是个Map，Map中存放了各种对象；Spring IOC的初始化（实现）过程：   xml配置–（读取）–&amp;gt;Resource–（解析）–&amp;gt;BeanDefiniti">
+<meta name="twitter:image" content="http://www.plantuml.com/plantuml/svg/dL9DIm9H5DtxIshH7z08Z0ZQX12qVphNUg3pPDwBi9MHaUKWBan8qBw8SPCfRiQAVetlZQxw2xtvQ4Od9yJLyEuzvvvxpXtAaCPYSTxhZB-gN6zk0r9tKOOHhPWYbAKqaW5AYIO1Lgrl3JuIiRYuDYQFUXJIQfKBmNi6jRQU20b5AlYeFPKof3AC62PgyXHfy8UNL521mO85b-26TyqI3UPepiw1Nz4fJqiF_AwxkeZy541ZnKEKEm7gp1-RxyxmOPTVll11HvGCMPtqBwn6rsxiepmue-Ka2kotv703b9To23YRVU1ZYH2mz9J3Pq4AhfBVmEgHFKcIKLR6xzd2G0-0pU0tqnAq9L5O4ZVom8w98lGhtcl9ccYEnF1spiK_coLjdGMBhNY8g76yDv87vfKsD-m_K5Jg_ER--rDtPSJhCpTDTrzUhydwsAnEsq_JHacydRjStz0EbdeudGClAGMeVOoGRJyYhnsL4gZA3m00">
+
+<link rel="canonical" href="http://yoursite.com/2020/01/20/Spring常见问题总结1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>'Spring常见问题总结1' | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-right"></div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/20/Spring常见问题总结1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          'Spring常见问题总结1'
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-20 13:56:45" itemprop="dateCreated datePublished" datetime="2020-01-20T13:56:45+08:00">2020-01-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-01-22 17:32:08" itemprop="dateModified" datetime="2020-01-22T17:32:08+08:00">2020-01-22</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/spring/" itemprop="url" rel="index">
+                    <span itemprop="name">spring</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><strong>1.Spring IOC&amp;AOP</strong><br>IOC即依赖注入，是一种设计思想，将类的创建和依赖交给框架通过配置来管理，资源不由使用资源的双方管理而由第三方管理；可以降低耦合度，资源集中管理使得资源可配置和易管理；<br>IOC容器实际上就是个Map，Map中存放了各种对象；Spring IOC的初始化（实现）过程：</p>
+<blockquote>
+<blockquote>
+<p>xml配置–（读取）–&gt;Resource–（解析）–&gt;BeanDefinition–（注册）–&gt;BeanFactory</p>
+</blockquote>
+</blockquote>
+<p>AOP即面向切面编程，可以为业务模块所共用的逻辑（如事务、日志、权限）封装起来，便于减少系统重复代码、降低耦合，有利于扩展和维护；Spring AOP是基于动态代理的，如果代理<br>对象实现了接口，使用jdk动态代理，如果没有实现接口则使用Cglib实现代理；</p>
+<p><strong>2.Spring AOP和AspectJ AOP区别</strong><br>Spring AOP属于运行时增强，AspectJ是编译时增强。Spring AOP基于代理，而AspectJ基于字节码操作；Spring AOP集成了AspectJ，常用的aop注解是AspectJ的；<br>jdk动态代理基于反射生成新的代理类，必须实现接口；</p>
+<p><strong>3.Spring的生命周期</strong><br><img src="http://www.plantuml.com/plantuml/svg/dL9DIm9H5DtxIshH7z08Z0ZQX12qVphNUg3pPDwBi9MHaUKWBan8qBw8SPCfRiQAVetlZQxw2xtvQ4Od9yJLyEuzvvvxpXtAaCPYSTxhZB-gN6zk0r9tKOOHhPWYbAKqaW5AYIO1Lgrl3JuIiRYuDYQFUXJIQfKBmNi6jRQU20b5AlYeFPKof3AC62PgyXHfy8UNL521mO85b-26TyqI3UPepiw1Nz4fJqiF_AwxkeZy541ZnKEKEm7gp1-RxyxmOPTVll11HvGCMPtqBwn6rsxiepmue-Ka2kotv703b9To23YRVU1ZYH2mz9J3Pq4AhfBVmEgHFKcIKLR6xzd2G0-0pU0tqnAq9L5O4ZVom8w98lGhtcl9ccYEnF1spiK_coLjdGMBhNY8g76yDv87vfKsD-m_K5Jg_ER--rDtPSJhCpTDTrzUhydwsAnEsq_JHacydRjStz0EbdeudGClAGMeVOoGRJyYhnsL4gZA3m00"></p>
+<p><strong>4.Spring MVC</strong><br>SpringMVC是一个Web开发框架，把后端项目分层为Model、View、Controller，工作原理如下：<br><img src="/images/spring_4.jpg" alt><br>流程说明：</p>
+<blockquote>
+<ul>
+<li>客户端（浏览器）发送请求，直接请求到DispacterServlet;</li>
+<li>DispacterServlet根据请求信息调用HandlerMapping，解析请求对应的Handler;</li>
+<li>解析到对应的handler后，开始由HandlerAdapter适配器处理;</li>
+<li>HandlerAdapter回根据handler来调用真正的处理器开始处理请求，并处理相应业务逻辑;</li>
+<li>处理器处理完业务后，会返回一个ModelAndView对象;</li>
+<li>ViewResolver会根据逻辑View查找实际的View;</li>
+<li>DispacterServlet把返回的Model传给view;</li>
+<li>view返回给客户端;</li>
+</ul>
+</blockquote>
+<p>重要组件说明：</p>
+<blockquote>
+<ul>
+<li>前端控制器DispacterServlet;</li>
+<li>处理器映射器HandlerMapping;</li>
+<li>处理器适配器HandlerAdapter;</li>
+<li>处理器Handler(Controller);</li>
+<li>视图解析器ViewResolver;</li>
+<li>视图View(jsp,freemarker..);</li>
+</ul>
+</blockquote>
+<p><strong>5.拦截器和过滤器</strong><br>过滤器处于客户端和web资源之间，可以针对request和response做过滤或提前设置参数，然后再传入servlet；拦截器是一种AOP；区别如下：</p>
+<blockquote>
+<p>拦截器是基于java反射机制的，而过滤器是基于函数回调；<br>拦截器不依赖web容器，而过滤器依赖web容器；<br>拦截器作为spring的组件，能通过IOC容器管理，获取spring中各种资源，而过滤器不能；<br>过滤器是在servlet规范中定义的，由servlet容器支持；拦截器是在spring容器内的，由spring框架支持；</p>
+</blockquote>
+<p>拦截顺序：过滤doFilter前–&gt;拦截器preHandle–&gt;action处理–&gt;拦截器postHandle–&gt;过滤doFilter后 </p>
+<p><strong>6.SpringMVC中的异常处理</strong></p>
+<blockquote>
+<ol>
+<li>自定义Exception;</li>
+<li>利用ControllerAdvice和ExceptionHandler全局捕获处理;</li>
+<li>定义一个返回对象，包括状态码、message、data等；</li>
+</ol>
+</blockquote>
+<p><strong>7. Spring中的设计模式</strong></p>
+<blockquote>
+<ul>
+<li>工厂模式：利用BeanFactory和ApplicationContext创建bean对象;</li>
+<li>单例模式：例如bean的作用域为singleton时;</li>
+<li>代理模式：AOP的原理;</li>
+<li>模板方法：例如JdbcTemplete等;</li>
+<li>观察者 ：Sping事件驱动模型;</li>
+<li>适配器 ：AOP的增强或通知时使用了适配器模式，Jpa适配不同数据库；</li>
+</ul>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/spring/" rel="tag"># spring</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/01/07/面试系列二/" rel="prev" title="'面试系列二'">
+      <i class="fa fa-chevron-left"></i> '面试系列二'
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/01/22/设计模式/" rel="next" title="'设计模式'">
+      '设计模式' <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ank.hao</p>
+  <div class="site-description" itemprop="description">技术、点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.1
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

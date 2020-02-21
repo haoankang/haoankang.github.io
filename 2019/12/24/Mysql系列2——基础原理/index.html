@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1.Mysql客户端和服务端通信方式   TCP/IP通信，最常用方式，例如客户端连接：msql -hhost -uusername -ppasswd -P3306 [database] 命令管道和共享内存，windows可选连接方式. Unix域套接字文件，类unix系统可选.   2.服务端处理客户端请求 整个过程分为三个部分：连接管理、解析优化、存储引擎.常用命令：123show engin">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="&#39;Mysql系列2——基础原理&#39;">
+<meta property="og:url" content="http://yoursite.com/2019/12/24/Mysql系列2——基础原理/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="1.Mysql客户端和服务端通信方式   TCP/IP通信，最常用方式，例如客户端连接：msql -hhost -uusername -ppasswd -P3306 [database] 命令管道和共享内存，windows可选连接方式. Unix域套接字文件，类unix系统可选.   2.服务端处理客户端请求 整个过程分为三个部分：连接管理、解析优化、存储引擎.常用命令：123show engin">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/images/Mysql_1.png">
+<meta property="og:image" content="http://yoursite.com/images/Mysql_2.png">
+<meta property="og:updated_time" content="2019-12-25T12:25:59.716Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="&#39;Mysql系列2——基础原理&#39;">
+<meta name="twitter:description" content="1.Mysql客户端和服务端通信方式   TCP/IP通信，最常用方式，例如客户端连接：msql -hhost -uusername -ppasswd -P3306 [database] 命令管道和共享内存，windows可选连接方式. Unix域套接字文件，类unix系统可选.   2.服务端处理客户端请求 整个过程分为三个部分：连接管理、解析优化、存储引擎.常用命令：123show engin">
+<meta name="twitter:image" content="http://yoursite.com/images/Mysql_1.png">
+
+<link rel="canonical" href="http://yoursite.com/2019/12/24/Mysql系列2——基础原理/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>'Mysql系列2——基础原理' | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-right"></div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/24/Mysql系列2——基础原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          'Mysql系列2——基础原理'
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-24 14:37:12" itemprop="dateCreated datePublished" datetime="2019-12-24T14:37:12+08:00">2019-12-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-25 20:25:59" itemprop="dateModified" datetime="2019-12-25T20:25:59+08:00">2019-12-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">mysql</span>
+                  </a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><strong>1.Mysql客户端和服务端通信方式</strong></p>
+<blockquote>
+<ul>
+<li>TCP/IP通信，最常用方式，例如客户端连接：msql -hhost -uusername -ppasswd -P3306 [database]</li>
+<li>命令管道和共享内存，windows可选连接方式.</li>
+<li>Unix域套接字文件，类unix系统可选.</li>
+</ul>
+</blockquote>
+<p><strong>2.服务端处理客户端请求</strong></p>
+<p><img src="/images/Mysql_1.png" alt><br>整个过程分为三个部分：连接管理、解析优化、存储引擎.<br>常用命令：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">engines</span>;</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> tableName() <span class="keyword">engine</span>=<span class="keyword">InnoDB</span>;</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> tableName <span class="keyword">engine</span>=MyISAM;</span><br></pre></td></tr></table></figure></p>
+<p><strong>3.服务端参数</strong></p>
+<p>服务端启动参数可以直接在启动时添加，例如mysqld –skip-networking；</p>
+<p>服务端启动时读取配置文件my.ini或my.cnf，按照一定顺序读取；</p>
+<p>配置文件中，按照分组概念配置，不同启动命令可以读取不同的组；</p>
+<p>服务器启动后，有很多系统变量，影响着服务器的行为，显示：show variables [like (匹配项)];</p>
+<p>同时服务器启动后，会有状态变量，可以查看服务器的状态：show status [like (匹配项)];</p>
+<p><strong>4.字符集和比较规则</strong></p>
+<p>mysql中UTF-8分为utf8和utf8mb4，utf8是阉割版的utf8，1-3个字节，utf8mb4对应utf8，1-4个字节；<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="built_in">character</span> <span class="keyword">set</span>/<span class="keyword">charset</span> (<span class="keyword">like</span> [匹配项]);</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">collation</span> (<span class="keyword">like</span> [匹配项]);</span><br></pre></td></tr></table></figure></p>
+<p>mysql中比较规则后缀：_ai和_as区分重音，_ci和_cs区分大小写，_bin以二进制形式比较；</p>
+<p>mysql中有4个字符集和比较规则级别：服务器、数据库、表、列；<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">编解码过程：</span><br><span class="line">character_set_client: 服务器解码请求时使用字符集</span><br><span class="line">character_set_connection: 服务器处理请求时会把请求字符串从character_set_client转码到character_set_connection;</span><br><span class="line">character_set_result: 服务器向客户端返回结果时使用的字符集</span><br><span class="line">一般建议这三个参数设置一样.</span><br></pre></td></tr></table></figure></p>
+<p><strong>5.InnoDB记录存储结构</strong><br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">InnoDB将数据分为若干页，以页作为磁盘和内存之间交互的基本单位，InnoDB中页的大小一般为16kb；</span><br><span class="line">InnoDB数据按行存储，因此有行格式：Compact、Redundant、Dynamic、Compressed;</span><br><span class="line">指定或修改行格式语法：</span><br><span class="line">    <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名 (列的信息) ROW_FORMAT=行格式名称</span><br><span class="line">    <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名 ROW_FORMAT=行格式名称</span><br></pre></td></tr></table></figure></p>
+<p>其中Compact和Redundant行格式如下：<br><img src="/images/Mysql_2.png" alt><br>Dynamic和Compact行格式类似，不同的地方在于行溢出的处理；Compressed行格式是压缩格式；</p>
+<p>一个页一般16Kb，当记录的数据太大存放不了，会存放到其他页，这种情况被称为行溢出，发生行溢出的主要是varchar(m),blob,text；</p>
+<p><strong>6.InnoDB数据页结构</strong><br>总的来说，一个InnoDB的数据页被分成7个部分，如下图：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>中文名</th>
+<th>占用空间大小</th>
+<th>简单描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File Header</td>
+<td>文件头部</td>
+<td>38字节</td>
+<td>页的一些通用信息</td>
+</tr>
+<tr>
+<td>Page Header</td>
+<td>页面头部</td>
+<td>56字节</td>
+<td>数据页专有的一些信息</td>
+</tr>
+<tr>
+<td>Infimum + Supremum</td>
+<td>最小记录和最大记录</td>
+<td>26字节</td>
+<td>两个虚拟的行记录</td>
+</tr>
+<tr>
+<td>User Records</td>
+<td>用户记录</td>
+<td>不确定</td>
+<td>实际存储的行记录内容</td>
+</tr>
+<tr>
+<td>Free Space</td>
+<td>空闲空间</td>
+<td>不确定</td>
+<td>页中尚未使用的空间</td>
+</tr>
+<tr>
+<td>Page Directory</td>
+<td>页面目录</td>
+<td>不确定</td>
+<td>页中的某些记录的相对位置</td>
+</tr>
+<tr>
+<td>File Trailer</td>
+<td>文件尾部</td>
+<td>8字节</td>
+<td>校验页是否完整</td>
+</tr>
+</tbody>
+</table>
+<p>每个记录的头信息中都有一个next_record属性，从而使页中的属性串成一个单链表；<br><br>InnoDB会把页中的记录划分成若干组，每个组的最后一个记录的地址偏移量作为一个槽，存放在Page Directory中，<br>所以在一个页中根据主键查找非常快，先通过二分法确定该记录所在槽，再通过记录的next_record属性遍历该槽<br>所在组中的各个记录；<br><br>每个数据页的File Header部分都有上一个和下一个页的编号，所有数据页会组成一个双链表；<br><br>为保证从内存中同步到磁盘的页的完整性，在页的首部和尾部都会存储页中数据的校验和页面最后修改时对应的LSN值，<br>如果首部和尾部的校验和LSN校验不成功的话，就说明同步过程出现了问题。</p>
+<p><strong>7.B+树索引</strong><br>每个页记录头信息有个record_type属性：</p>
+<blockquote>
+<ul>
+<li>0: 普通用户记录</li>
+<li>1: 目录项记录</li>
+<li>2: 最小记录</li>
+<li>3: 最大记录</li>
+</ul>
+</blockquote>
+<p>InnoDB中，为了检索方便，使用B+树结构管理数据；叶子节点全部是用户数据页，非叶节点都是目录页，目录项记录<br>只存储主键值和对应的页号，目录项过多又由目录来管理，层层嵌套形成了B+树；<br></p>
+<blockquote>
+<ul>
+<li>聚簇索引：1.使用记录主键值的大小进行记录和页的排序；2.B+树的叶子节点存储的是完整的用户记录；</li>
+<li>二级索引：1.使用非主键列进行记录也页排序；2.B+树叶子节点存储的不是完整用户记录，而是【非主键列+主键】；3.目录项记录中不再是【主键+页号】，而是【非主键列+页号】，需要回表才能找到完整记录；</li>
+<li>联合索引：1.例如建一个C2和C3列的联合索引，先把各个记录和页按照C2列进行排序；在C2列相同情况下，采用C3列进行排序；本质上是二级索引，但多个列只有一个索引；</li>
+</ul>
+</blockquote>
+<p>InnoDB中B+树索引的生成是自上而下的，一个B+树索引的根节点自诞生之日起，就不再移动；<br><br>MyISAM中，索引也是树形结构，索引与数据分开存储，索引中存储的是主键值+行号，每次查询都需要回表操作；<br></p>
+<p><strong>8.索引的使用</strong></p>
+<ol>
+<li>首先明确索引代价=空间+时间（增删改），索引适用一些情况，具体问题具体分析；<blockquote>
+<ul>
+<li>全值匹配</li>
+<li>匹配左边列</li>
+<li>匹配范围值</li>
+<li>精确匹配第一列并范围匹配另外一列</li>
+<li>用于排序、分组</li>
+</ul>
+</blockquote>
+</li>
+<li>回表代价巨大，如果使用二级索引查询，结果需要二级索引+聚簇索引，且这种情况下聚簇索引通常是随机IO，因此需要回表的记录越多，使用二级索引的性能越低；</li>
+<li>为了清除回表的性能损耗，建议查询列表中只包含索引列；</li>
+<li>使用索引时需要注意以下事项：<blockquote>
+<ul>
+<li>只为用于搜索、排序、分组的列建立索引</li>
+<li>为基数大的列建立索引</li>
+<li>索引列的类型尽量小</li>
+<li>可以只对字符串的前缀建立索引</li>
+<li>只有索引列在比较表达式中单独出现才适用索引</li>
+<li>为了尽可能减少聚簇索引的页分裂和记录位移，建议主键拥有AUTO_INCREMENT属性</li>
+<li>定位并删除表中的重复和冗余索引</li>
+<li>尽量使用覆盖索引进行查询，避免回表的性能损耗</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/21/oracle系列——wallet使用/" rel="prev" title="'oracle系列——wallet使用'">
+      <i class="fa fa-chevron-left"></i> 'oracle系列——wallet使用'
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/12/25/Mysql系列3——基础原理2/" rel="next" title="'Mysql系列3——基础原理2'">
+      'Mysql系列3——基础原理2' <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ank.hao</p>
+  <div class="site-description" itemprop="description">技术、点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.1
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
