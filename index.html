@@ -101,7 +101,10 @@
     </div>
   </div>
 
-  <div class="site-nav-right"></div>
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
 </div>
 
 
@@ -140,6 +143,378 @@
             
 
   <div class="posts-expand">
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/23/Spring-Cloud常见问题总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/23/Spring-Cloud常见问题总结/" class="post-title-link" itemprop="url">Spring Cloud常见问题总结</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-23 10:48:48" itemprop="dateCreated datePublished" datetime="2020-02-23T10:48:48+08:00">2020-02-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-24 09:55:37" itemprop="dateModified" datetime="2020-02-24T09:55:37+08:00">2020-02-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/spring-cloud/" itemprop="url" rel="index"><span itemprop="name">spring cloud</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>##1. 什么是微服务.</p>
+<blockquote>
+<p>微服务是一种架构模式，是一种特殊的分布式，提倡将单一应用程序划分成一组小的服务，每个服务运行在自己的进程中，服务之间互相协作，互相配合，<br>为用户提供服务；服务之间采用轻量级的通信机制互相沟通；</p>
+</blockquote>
+<p>##2. 微服务优缺点.<br>优点：</p>
+<blockquote>
+<p>单一职责，代码容易理解，开发效率提高，松耦合，可扩展，高可靠；</p>
+</blockquote>
+<p>缺点：</p>
+<blockquote>
+<p>架构复杂，运维复杂，通信成本；</p>
+</blockquote>
+<p>##3. 什么是Spring Cloud.<br>Spring Cloud是基于Spring Boot的一套微服务解决方案，提供了包括服务注册和发现、配置中心、服务网关、负载均衡和路由、熔断器和链路监控等<br>组件；</p>
+<p>##4. Spring Cloud和Dubbo.</p>
+<blockquote>
+<ul>
+<li>Spring Cloud和Dubbo都是微服务架构；</li>
+<li>Spring Cloud包含微服务所需的一系列组件，而Dubbo只是服务治理；</li>
+<li>服务调用方式：Dubbo使用的是RPC远程调用，而Spring Cloud使用的是Rest API;</li>
+<li>注册中心：Dubbo使用zookeeper作为注册中心，强调CP；Spring Cloud默认使用Eureka作为注册中心，强调AP；</li>
+</ul>
+</blockquote>
+<p>##5. 微服务之间如何通信.</p>
+<blockquote>
+<ul>
+<li>同步：RPC或Rest等；</li>
+<li>异步：消息队列；</li>
+</ul>
+</blockquote>
+<p>##6. Ribbon和Feign.<br>Ribbon和Feign都是客户端的负载均衡工具，Feign的底层是通过Ribbon实现的，它是对Ribbon的进一步封装；Ribbon使用HttpClient和RestTemplate<br>模拟http请求，而feign采用注解+接口方式，不需要自己构建http请求；</p>
+<p>##7. Eureka的自我保护模式.<br> 默认情况下，如果EurekaServer在一定时间内没有接收到大部分微服务实例的心跳，EurekaServer将会进入自我保护模式，在该模式下EurekaServer<br> 就会保护服务注册表中的信息，不再删除服务注册表中的数据（也就是不会注销任何微服务）。当网络故障恢复后，该Eureka Server节点会自动退出<br> 自我保护模式。</p>
+<p>##8. Eureka和ZooKeeper都可以提供服务注册与发现的功能,请说说两个的区别.</p>
+<blockquote>
+<ul>
+<li>eureka保证的是AP，zookeeper保证的是CP；</li>
+<li>zookeeper节点有leader和follow等角色，而eureka各个节点平等；</li>
+<li>zookeeper采用过半存活原则，eureka采用自我保护机制解决分区问题；</li>
+<li>eureka本质上是一个工程，而zookeeper是一个进程；</li>
+</ul>
+</blockquote>
+<p>##9. 什么是服务熔断，什么是服务降级.<br>微服务架构中，服务之间相互调用形成调用链；当下游服务因为某些原因变得不可用或反应过慢，上游服务为了保证整体服务的可用性，不再继续调用<br>目标服务，快速返回释放资源，这种行为被称为熔断机制；熔断和降级一般配合使用，服务熔断是降级的一种方式；</p>
+<p>##10. 服务雪崩.<br>微服务之间存在服务之间相互调用，当一个下游服务失败，导致整个链路的服务都失败，被称为服务雪崩；</p>
+<p>##11. eureka集群怎么构建.<br>互相注册，主要配置修改如下，fetch-registry和registry-with-eureka要设置为true，并配置service-url；<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">eureka:</span><br><span class="line">  instance:</span><br><span class="line">    hostname: eureka1</span><br><span class="line">  client:</span><br><span class="line">    fetch-registry: true</span><br><span class="line">    register-with-eureka: true</span><br><span class="line">    service-url:</span><br><span class="line">      defaultZone: http://localhost:8022/eureka/</span><br></pre></td></tr></table></figure></p>
+<p>##12. eureka中角色<br>eureka分为服务端和客户端，按照数据流向分为注册中心、服务提供者和服务消费者；主要由fetch-registry和registry-with-eureka参设设置；</p>
+<blockquote>
+<ul>
+<li>服务提供者启动后，向注册中心注册；运行过程中，定时向注册中心发送心跳；停止服务时，向注册中心发送cancel请求；</li>
+<li>服务消费者启动后，从注册中心拉取服务；运行过程中，定时更新注册表；</li>
+<li>注册中心启动后，从其他节点拉取注册信息；运行过程中，定时清理没有按时发送心跳的服务节点；运行过程中，收到registry、renew、cancel请求，<br>都会同步到其他注册中心节点；</li>
+</ul>
+</blockquote>
+<p>eureka数据存储结构</p>
+<blockquote>
+<p>分为两层：数据存储层和缓存层；eureka client在拉取服务时，会先从缓存层获取；</p>
+<ul>
+<li>数据存储层，是一个双层的ConcurrentHashMap结构；第一层key是spring.application.name，第二层是instanceId;</li>
+<li>缓存层，分为一级缓存和二级缓存；二级缓存定时更新一级缓存；</li>
+</ul>
+</blockquote>
+<p>服务注册机制：</p>
+<blockquote>
+<ol>
+<li>保存服务信息，将服务信息保存到registry中；</li>
+<li>更新队列，将此事件添加到更新队列中，供 Eureka Client 增量同步服务信息使用。</li>
+<li>清空二级缓存，即 readWriteCacheMap，用于保证数据的一致性。</li>
+<li>更新阈值，供剔除服务使用。</li>
+<li>同步服务信息，将此事件同步至其他的 Eureka Server 节点。</li>
+</ol>
+</blockquote>
+<p>服务续约机制：</p>
+<blockquote>
+<ol>
+<li>更新服务对象的最近续约时间，即 Lease 对象的 lastUpdateTimestamp;</li>
+<li>同步服务信息，将此事件同步至其他的 Eureka Server 节点。</li>
+</ol>
+</blockquote>
+<p>服务注销机制：</p>
+<blockquote>
+<ol>
+<li>删除服务信息，将服务信息从 registry 中删除；</li>
+<li>更新队列，将此事件添加到更新队列中，供 Eureka Client 增量同步服务信息使用。</li>
+<li>清空二级缓存，即 readWriteCacheMap，用于保证数据的一致性。</li>
+<li>更新阈值，供剔除服务使用。</li>
+<li>同步服务信息，将此事件同步至其他的 Eureka Server 节点。</li>
+</ol>
+</blockquote>
+<p>服务剔除条件：</p>
+<blockquote>
+<ol>
+<li>关闭了自我保护</li>
+<li>如果开启了自我保护，需要进一步判断是 Eureka Server 出了问题，还是 Eureka Client 出了问题，如果是 Eureka Client 出了问题则进行剔除。<br>这里判断使用阈值；</li>
+</ol>
+</blockquote>
+<p>##13. Ribbon负载均衡.<br>Ribbon原理：在程序启动时，如果启用了Ribbon，Ribbon会从注册中心拉取服务列表，然后根据相应的策略选择节点；</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/22/Spring事务管理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/22/Spring事务管理/" class="post-title-link" itemprop="url">Spring事务管理</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-22 13:47:47" itemprop="dateCreated datePublished" datetime="2020-02-22T13:47:47+08:00">2020-02-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-24 09:55:37" itemprop="dateModified" datetime="2020-02-24T09:55:37+08:00">2020-02-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>##1. 概述<br>事务是逻辑上的一组操作，要么都执行，要么都不执行；要满足ACID特性；</p>
+<p>##2. Spring事务管理接口</p>
+<blockquote>
+<ul>
+<li>PlatformTransactionManager：事务管理器</li>
+<li>TransactionDefinition：事务定义信息（事务隔离级别、传播机制、回滚机制、超时、只读规则）</li>
+<li>TransactionStatus：事务运行状态</li>
+</ul>
+</blockquote>
+<p>Spring并不直接管理事务，而是提供多种事务管理器，将事务管理的职责委托给Hibernate和JPA等持久化<br>框架实现；</p>
+<blockquote>
+<p>并发事务带来的问题：</p>
+<ul>
+<li>脏写</li>
+<li>脏读</li>
+<li>不可重复读</li>
+<li>幻读</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>事务隔离级别：</p>
+<ul>
+<li>读未提交TransactionDefinition.ISOLATION_READ_UNCOMMITTED</li>
+<li>读已提交TransactionDefinition.ISOLATION_READ_COMMITTED</li>
+<li>可重复读TransactionDefinition.ISOLATION_REPEATABLE_READ</li>
+<li>序列化TransactionDefinition.ISOLATION_SERIALIZABLE</li>
+<li>具体实现方式可以参考之前mysql事务部分</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>事务传播机制：当一个事务方法被另一个事务方法调用时，必须指定事务如何传播</p>
+<ul>
+<li>TransactionDefinition.PROPAGATION_REQUIRED： 如果当前存在事务，则加入该事务；如果当前没有事务，则创建一个新的事务。</li>
+<li>TransactionDefinition.PROPAGATION_SUPPORTS： 如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务的方式继续运行。</li>
+<li>TransactionDefinition.PROPAGATION_MANDATORY： 如果当前存在事务，则加入该事务；如果当前没有事务，则抛出异常。（mandatory：强制性）</li>
+<li>TransactionDefinition.PROPAGATION_REQUIRES_NEW： 创建一个新的事务，如果当前存在事务，则把当前事务挂起。</li>
+<li>TransactionDefinition.PROPAGATION_NOT_SUPPORTED： 以非事务方式运行，如果当前存在事务，则把当前事务挂起。</li>
+<li>TransactionDefinition.PROPAGATION_NEVER： 以非事务方式运行，如果当前存在事务，则抛出异常。</li>
+</ul>
+</blockquote>
+<p>##3. Spring支持两种方式的事务管理</p>
+<blockquote>
+<ul>
+<li>编程式事务  通过Transaction Template手动管理事务，实际应用中很少使用</li>
+<li>声明式事务  推荐使用（代码侵入性最小），实际是通过AOP实现</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/22/动态数据源切换问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/22/动态数据源切换问题/" class="post-title-link" itemprop="url">动态数据源切换问题</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-22 11:19:03" itemprop="dateCreated datePublished" datetime="2020-02-22T11:19:03+08:00">2020-02-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-24 09:55:37" itemprop="dateModified" datetime="2020-02-24T09:55:37+08:00">2020-02-24</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>##1. 描述<br>有些项目需要同时操作多个数据源，这里提供一种Spring框架下最常见的解决方案。</p>
+<blockquote>
+<p>核心原理是利用AbstractRoutingDataSource，当项目配置AbstractRoutingDataSource数据源时，<br>每次访问数据库时会调用该类的 determineCurrentLookupKey() 方法获取数据库实例的 key，再<br>根据提前配置的key-Value数据源的映射切换到相应的数据源；</p>
+</blockquote>
+<blockquote>
+<p>关键的几个类</p>
+<ul>
+<li>继承AbstractRoutingDataSource的类</li>
+<li>DataSourceConfig数据源配置类</li>
+<li>包含ThreadLocal变量，数据上下文配置类</li>
+<li>切面类</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>需要注意的几点：</p>
+<ol>
+<li>因为考虑到多线程并发问题，最好用ThreadLocal来实现切换获取数据库key；</li>
+<li>考虑到动态切换问题，一般是利用切面，在访问dao层之前根据条件判断切换；这一步可以扩展，例如<br>利用Druid实现数据库切换和负载均衡功能，包括读写分离等；</li>
+</ol>
+</blockquote>
+<p>##2. 实例<br>可以参考：<a href="https://github.com/haoankang/JVMProject/tree/master/Dynamic-Datasource" target="_blank" rel="noopener">https://github.com/haoankang/JVMProject/tree/master/Dynamic-Datasource</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
         
   
   
@@ -183,9 +558,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/jvm/" itemprop="url" rel="index">
-                    <span itemprop="name">jvm</span>
-                  </a>
+                  <a href="/categories/jvm/" itemprop="url" rel="index"><span itemprop="name">jvm</span></a>
                 </span>
             </span>
 
@@ -314,9 +687,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index">
-                    <span itemprop="name">java</span>
-                  </a>
+                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
                 </span>
             </span>
 
@@ -464,9 +835,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/设计模式/" itemprop="url" rel="index">
-                    <span itemprop="name">设计模式</span>
-                  </a>
+                  <a href="/categories/设计模式/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
                 </span>
             </span>
 
@@ -579,7 +948,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-01-22 17:32:08" itemprop="dateModified" datetime="2020-01-22T17:32:08+08:00">2020-01-22</time>
+                <time title="修改时间：2020-02-24 09:55:37" itemprop="dateModified" datetime="2020-02-24T09:55:37+08:00">2020-02-24</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -587,9 +956,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/spring/" itemprop="url" rel="index">
-                    <span itemprop="name">spring</span>
-                  </a>
+                  <a href="/categories/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
                 </span>
             </span>
 
@@ -661,6 +1028,22 @@
 <li>适配器 ：AOP的增强或通知时使用了适配器模式，Jpa适配不同数据库；</li>
 </ul>
 </blockquote>
+<p><strong>8. Spring IOC的初始化过程</strong></p>
+<blockquote>
+<ol>
+<li>读取资源配置文件；</li>
+<li>解析并包装成相应的BeanDefinition；</li>
+<li>注册到BeanFactory中；</li>
+</ol>
+</blockquote>
+<p><strong>9. Spring如何解决循环依赖问题</strong><br>首先，需要明确的是spring对循环依赖的处理有三种情况：</p>
+<blockquote>
+<ul>
+<li>构造器的循环依赖：这种依赖spring是处理不了的，直 接抛出BeanCurrentlylnCreationException异常。</li>
+<li>单例模式下的setter循环依赖：通过“三级缓存”处理循环依赖。</li>
+<li>非单例循环依赖：无法处理。</li>
+</ul>
+</blockquote>
 
       
     </div>
@@ -719,9 +1102,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/面试/" itemprop="url" rel="index">
-                    <span itemprop="name">面试</span>
-                  </a>
+                  <a href="/categories/面试/" itemprop="url" rel="index"><span itemprop="name">面试</span></a>
                 </span>
             </span>
 
@@ -861,9 +1242,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mysql/" itemprop="url" rel="index">
-                    <span itemprop="name">mysql</span>
-                  </a>
+                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
                 </span>
             </span>
 
@@ -1026,9 +1405,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mysql/" itemprop="url" rel="index">
-                    <span itemprop="name">mysql</span>
-                  </a>
+                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
                 </span>
             </span>
 
@@ -1118,467 +1495,11 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/24/Mysql系列2——基础原理/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/12/24/Mysql系列2——基础原理/" class="post-title-link" itemprop="url">'Mysql系列2——基础原理'</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-12-24 14:37:12" itemprop="dateCreated datePublished" datetime="2019-12-24T14:37:12+08:00">2019-12-24</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-25 20:25:59" itemprop="dateModified" datetime="2019-12-25T20:25:59+08:00">2019-12-25</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mysql/" itemprop="url" rel="index">
-                    <span itemprop="name">mysql</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><strong>1.Mysql客户端和服务端通信方式</strong></p>
-<blockquote>
-<ul>
-<li>TCP/IP通信，最常用方式，例如客户端连接：msql -hhost -uusername -ppasswd -P3306 [database]</li>
-<li>命令管道和共享内存，windows可选连接方式.</li>
-<li>Unix域套接字文件，类unix系统可选.</li>
-</ul>
-</blockquote>
-<p><strong>2.服务端处理客户端请求</strong></p>
-<p><img src="/images/Mysql_1.png" alt><br>整个过程分为三个部分：连接管理、解析优化、存储引擎.<br>常用命令：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">engines</span>;</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> tableName() <span class="keyword">engine</span>=<span class="keyword">InnoDB</span>;</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> tableName <span class="keyword">engine</span>=MyISAM;</span><br></pre></td></tr></table></figure></p>
-<p><strong>3.服务端参数</strong></p>
-<p>服务端启动参数可以直接在启动时添加，例如mysqld –skip-networking；</p>
-<p>服务端启动时读取配置文件my.ini或my.cnf，按照一定顺序读取；</p>
-<p>配置文件中，按照分组概念配置，不同启动命令可以读取不同的组；</p>
-<p>服务器启动后，有很多系统变量，影响着服务器的行为，显示：show variables [like (匹配项)];</p>
-<p>同时服务器启动后，会有状态变量，可以查看服务器的状态：show status [like (匹配项)];</p>
-<p><strong>4.字符集和比较规则</strong></p>
-<p>mysql中UTF-8分为utf8和utf8mb4，utf8是阉割版的utf8，1-3个字节，utf8mb4对应utf8，1-4个字节；<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="built_in">character</span> <span class="keyword">set</span>/<span class="keyword">charset</span> (<span class="keyword">like</span> [匹配项]);</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">collation</span> (<span class="keyword">like</span> [匹配项]);</span><br></pre></td></tr></table></figure></p>
-<p>mysql中比较规则后缀：_ai和_as区分重音，_ci和_cs区分大小写，_bin以二进制形式比较；</p>
-<p>mysql中有4个字符集和比较规则级别：服务器、数据库、表、列；<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">编解码过程：</span><br><span class="line">character_set_client: 服务器解码请求时使用字符集</span><br><span class="line">character_set_connection: 服务器处理请求时会把请求字符串从character_set_client转码到character_set_connection;</span><br><span class="line">character_set_result: 服务器向客户端返回结果时使用的字符集</span><br><span class="line">一般建议这三个参数设置一样.</span><br></pre></td></tr></table></figure></p>
-<p><strong>5.InnoDB记录存储结构</strong><br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">InnoDB将数据分为若干页，以页作为磁盘和内存之间交互的基本单位，InnoDB中页的大小一般为16kb；</span><br><span class="line">InnoDB数据按行存储，因此有行格式：Compact、Redundant、Dynamic、Compressed;</span><br><span class="line">指定或修改行格式语法：</span><br><span class="line">    <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名 (列的信息) ROW_FORMAT=行格式名称</span><br><span class="line">    <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名 ROW_FORMAT=行格式名称</span><br></pre></td></tr></table></figure></p>
-<p>其中Compact和Redundant行格式如下：<br><img src="/images/Mysql_2.png" alt><br>Dynamic和Compact行格式类似，不同的地方在于行溢出的处理；Compressed行格式是压缩格式；</p>
-<p>一个页一般16Kb，当记录的数据太大存放不了，会存放到其他页，这种情况被称为行溢出，发生行溢出的主要是varchar(m),blob,text；</p>
-<p><strong>6.InnoDB数据页结构</strong><br>总的来说，一个InnoDB的数据页被分成7个部分，如下图：</p>
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>中文名</th>
-<th>占用空间大小</th>
-<th>简单描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>File Header</td>
-<td>文件头部</td>
-<td>38字节</td>
-<td>页的一些通用信息</td>
-</tr>
-<tr>
-<td>Page Header</td>
-<td>页面头部</td>
-<td>56字节</td>
-<td>数据页专有的一些信息</td>
-</tr>
-<tr>
-<td>Infimum + Supremum</td>
-<td>最小记录和最大记录</td>
-<td>26字节</td>
-<td>两个虚拟的行记录</td>
-</tr>
-<tr>
-<td>User Records</td>
-<td>用户记录</td>
-<td>不确定</td>
-<td>实际存储的行记录内容</td>
-</tr>
-<tr>
-<td>Free Space</td>
-<td>空闲空间</td>
-<td>不确定</td>
-<td>页中尚未使用的空间</td>
-</tr>
-<tr>
-<td>Page Directory</td>
-<td>页面目录</td>
-<td>不确定</td>
-<td>页中的某些记录的相对位置</td>
-</tr>
-<tr>
-<td>File Trailer</td>
-<td>文件尾部</td>
-<td>8字节</td>
-<td>校验页是否完整</td>
-</tr>
-</tbody>
-</table>
-<p>每个记录的头信息中都有一个next_record属性，从而使页中的属性串成一个单链表；<br><br>InnoDB会把页中的记录划分成若干组，每个组的最后一个记录的地址偏移量作为一个槽，存放在Page Directory中，<br>所以在一个页中根据主键查找非常快，先通过二分法确定该记录所在槽，再通过记录的next_record属性遍历该槽<br>所在组中的各个记录；<br><br>每个数据页的File Header部分都有上一个和下一个页的编号，所有数据页会组成一个双链表；<br><br>为保证从内存中同步到磁盘的页的完整性，在页的首部和尾部都会存储页中数据的校验和页面最后修改时对应的LSN值，<br>如果首部和尾部的校验和LSN校验不成功的话，就说明同步过程出现了问题。</p>
-<p><strong>7.B+树索引</strong><br>每个页记录头信息有个record_type属性：</p>
-<blockquote>
-<ul>
-<li>0: 普通用户记录</li>
-<li>1: 目录项记录</li>
-<li>2: 最小记录</li>
-<li>3: 最大记录</li>
-</ul>
-</blockquote>
-<p>InnoDB中，为了检索方便，使用B+树结构管理数据；叶子节点全部是用户数据页，非叶节点都是目录页，目录项记录<br>只存储主键值和对应的页号，目录项过多又由目录来管理，层层嵌套形成了B+树；<br></p>
-<blockquote>
-<ul>
-<li>聚簇索引：1.使用记录主键值的大小进行记录和页的排序；2.B+树的叶子节点存储的是完整的用户记录；</li>
-<li>二级索引：1.使用非主键列进行记录也页排序；2.B+树叶子节点存储的不是完整用户记录，而是【非主键列+主键】；3.目录项记录中不再是【主键+页号】，而是【非主键列+页号】，需要回表才能找到完整记录；</li>
-<li>联合索引：1.例如建一个C2和C3列的联合索引，先把各个记录和页按照C2列进行排序；在C2列相同情况下，采用C3列进行排序；本质上是二级索引，但多个列只有一个索引；</li>
-</ul>
-</blockquote>
-<p>InnoDB中B+树索引的生成是自上而下的，一个B+树索引的根节点自诞生之日起，就不再移动；<br><br>MyISAM中，索引也是树形结构，索引与数据分开存储，索引中存储的是主键值+行号，每次查询都需要回表操作；<br></p>
-<p><strong>8.索引的使用</strong></p>
-<ol>
-<li>首先明确索引代价=空间+时间（增删改），索引适用一些情况，具体问题具体分析；<blockquote>
-<ul>
-<li>全值匹配</li>
-<li>匹配左边列</li>
-<li>匹配范围值</li>
-<li>精确匹配第一列并范围匹配另外一列</li>
-<li>用于排序、分组</li>
-</ul>
-</blockquote>
-</li>
-<li>回表代价巨大，如果使用二级索引查询，结果需要二级索引+聚簇索引，且这种情况下聚簇索引通常是随机IO，因此需要回表的记录越多，使用二级索引的性能越低；</li>
-<li>为了清除回表的性能损耗，建议查询列表中只包含索引列；</li>
-<li>使用索引时需要注意以下事项：<blockquote>
-<ul>
-<li>只为用于搜索、排序、分组的列建立索引</li>
-<li>为基数大的列建立索引</li>
-<li>索引列的类型尽量小</li>
-<li>可以只对字符串的前缀建立索引</li>
-<li>只有索引列在比较表达式中单独出现才适用索引</li>
-<li>为了尽可能减少聚簇索引的页分裂和记录位移，建议主键拥有AUTO_INCREMENT属性</li>
-<li>定位并删除表中的重复和冗余索引</li>
-<li>尽量使用覆盖索引进行查询，避免回表的性能损耗</li>
-</ul>
-</blockquote>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/21/oracle系列——wallet使用/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/12/21/oracle系列——wallet使用/" class="post-title-link" itemprop="url">'oracle系列——wallet使用'</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2019-12-21 13:00:54 / 修改时间：14:09:07" itemprop="dateCreated datePublished" datetime="2019-12-21T13:00:54+08:00">2019-12-21</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/oracle/" itemprop="url" rel="index">
-                    <span itemprop="name">oracle</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><strong>1.前言</strong><br>这几天客户项目上用到oracle wallet，调研对接和使用问题，做一下总结.</p>
-<p><strong>2.oracle wallet作用简介</strong><br>oracle wallet主要用于安全方面，可以免密登陆，从而不暴露用户名和密码；一般这种不用用户名密码的，肯定是用证书了，so，这就是oracle wallet；</p>
-<p><strong>3.基本使用</strong><br>这里不建议使用docker容器的oracle，因为测试的大部分oracle镜像都缺胳膊少腿的，所以还是自己搭一个oracle服务器吧；<br>引用一个搭建步骤：<a href="https://www.acgist.com/article/497.html，可能会报错，直接搜相关问题解决；" target="_blank" rel="noopener">https://www.acgist.com/article/497.html，可能会报错，直接搜相关问题解决；</a></p>
-<p>然后就是创建和使用wallet.（服务端创建）</p>
-<blockquote>
-<ul>
-<li>创建wallet:新建一个目录，执行命令.————mkstore -wrl &lt;wallet_location&gt; -create</li>
-<li>创建客户端连接服务端的网络连接串，每个连接串对应一个数据库用户，在$ORACLE_HOME/network/admin/tnsnames.ora文件中.<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">myorcl =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = 10.100.1.111)(PORT = 1521))</span><br><span class="line">    (CONNECT_DATA=</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (SERVICE_NAME=acgist)</span><br><span class="line">    )</span><br><span class="line">  )</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li>配置wallet添加用户认证信息.————mkstore -wrl &lt;wallet_location&gt; -createCredential myorcl </li>
-<li>在$ORACLE_HOME/network/admin/sqlnet.ora中配置&lt;wallet_location&gt;；<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">WALLET_LOCATION=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=/home/oracle/wallet_111)))</span><br><span class="line">SQLNET.WALLET_OVERRIDE = TRUE</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li>然后可以在服务端先测试一下: sqlplus /@myorcl，如果能直连成功，则说明没问题；</li>
-</ul>
-</blockquote>
-<p>在客户机上免密登陆.</p>
-<blockquote>
-<ul>
-<li>需要先安装oracle的客户端，设置相关环境变量；(客户端和服务端不一定要匹配，我这里服务端是11.2.0.1.0，客户端是12.2.0.1)</li>
-<li>把服务端的wallet包拷贝到客户端，假设路径还是/home/oracle/wallet_111</li>
-<li>在$ORACLE_HOME/network/admin/下新建tnsnames.ora和sqlnet.ora，内容和要使用的数据库保持一致；</li>
-<li>验证: sqlplus /@myorcl</li>
-</ul>
-</blockquote>
-<p><strong>4.应用程序使用wallet——在安装oracle客户端的机器上部署</strong><br>如果客户机上已经安装了oracle客户端，则可以直接使用oci连接，从而无需改造程序；例如笔者用的spring boot，可以直接这样修改数据源配置：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">  datasource:</span><br><span class="line">    driver-class-name: oracle.jdbc.driver.OracleDriver</span><br><span class="line">    url: jdbc:oracle:oci://@myorcl</span><br><span class="line">    username:</span><br><span class="line">    password:</span><br></pre></td></tr></table></figure></p>
-<p>这里需要特别注意的是：ojdbc的包一定要与客户端版本一致，例如笔者环境jdk1.8，oracle客户端12.2.0.1，那么要引用下面依赖：<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- https://mvnrepository.com/artifact/com.oracle/ojdbc8 --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;ojdbc8&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;12.2.0.1&lt;/version&gt;</span><br><span class="line">           &lt;scope&gt;provided&lt;/scope&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br></pre></td></tr></table></figure></p>
-<p><strong>5.应用程序使用wallet——在未安装oracle客户端的机器上部署</strong><br>客户机未安装oracle客户端，则需要使用thin连接，这时需要按照以下步骤改造程序：</p>
-<blockquote>
-<ul>
-<li>在客户机上新建wallet目录并把服务端的wallet拷贝过来，假设目录：/home/oracle/wallet_111，并且在此目录下新建tnsnames.ora并配置使用的数据库.</li>
-<li>应用程序中引入以下依赖包.<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- https://mvnrepository.com/artifact/com.oracle/ojdbc8 --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;ojdbc8&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;12.2.0.1&lt;/version&gt;</span><br><span class="line">           &lt;scope&gt;provided&lt;/scope&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">       &lt;!-- https://mvnrepository.com/artifact/com.oracle.ojdbc/oraclepki --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle.ojdbc&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;oraclepki&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;19.3.0.0&lt;/version&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">       &lt;!-- https://mvnrepository.com/artifact/com.oracle.ojdbc/osdt_cert --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle.ojdbc&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;osdt_cert&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;19.3.0.0&lt;/version&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">       &lt;!-- https://mvnrepository.com/artifact/com.oracle.ojdbc/osdt_core --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle.ojdbc&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;osdt_core&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;19.3.0.0&lt;/version&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li>应用程序中自定义DataSource.<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">@Bean</span><br><span class="line">    public DataSource dataSource()&#123;</span><br><span class="line">        OracleDataSource dataSource = null;</span><br><span class="line">        try &#123;</span><br><span class="line">            dataSource = new OracleDataSource();</span><br><span class="line">            Properties properties = new Properties();</span><br><span class="line">            String oracle_net_wallet_location = "/home/oracle/wallet_111";  //目录下应包含wallet的相关文件和tnsnames.ora</span><br><span class="line">            properties.put("oracle.net.tns_admin", oracle_net_wallet_location);</span><br><span class="line">            properties.put("oracle.net.wallet_location", "(source=(method=file)(method_data=(directory="+oracle_net_wallet_location+")))");</span><br><span class="line">            dataSource.setConnectionProperties(properties);</span><br><span class="line">            dataSource.setURL("jdbc:oracle:thin:@myorcl");</span><br><span class="line">        &#125;catch (Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        return dataSource;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li>以上就可以了；</li>
-<li>需要注意一些特殊引用，例如quartz.quartz定义数据源有三种方式:配置文件、JNDI、自定义ConnectionProvider；这里笔者选用的第三种方式集成，具体可以查看quartz官方文档，不再赘述.</li>
-</ul>
-</blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/17/面试系列基础知识一/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/12/17/面试系列基础知识一/" class="post-title-link" itemprop="url">'面试系列基础知识一'</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-12-17 10:23:08" itemprop="dateCreated datePublished" datetime="2019-12-17T10:23:08+08:00">2019-12-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-18 10:11:35" itemprop="dateModified" datetime="2020-02-18T10:11:35+08:00">2020-02-18</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/面试/" itemprop="url" rel="index">
-                    <span itemprop="name">面试</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><strong>1.并发问题产生的根源</strong></p>
-<ol>
-<li>CPU缓存导致的可见性问题；</li>
-<li>CPU切换导致的原子性问题；</li>
-<li>编译器优化导致的指令重排序问题；</li>
-</ol>
-<p><strong>2.HashMap问题</strong></p>
-<ol>
-<li>基本数据结构：数组+链表；</li>
-<li>数据结构根本目的之一是性能；数组都是有下标的，所以查找速度很快，但插入慢；链表只记录下一个元素<br>的地址，优势是插入较快；因为HashMap的添加、修改和查询操作都比较频繁，因此使用数组+链表数据结构；<br>根据hash算法快速定位数组，插入的数据顺序放到链表中，这样综合效率较高；</li>
-<li>HashMap的初始化容量机制和扩容机制： 既然HashMap底层是数组，数组初始化时需要指定一个长度，默认<br>初始化一个长度16的数组；有个扩容因子，默认0.75，每次扩容时机是：数组长度*负载因子，每次扩容2倍，<br>保持数组长度为2的幂次方，因为底层存储用的&amp;；</li>
-<li>put过程：先对key调用hashCode()得到一个hash值，类型int，然后用hash值与（16-1）进行位运算，从而<br>得到数组下标；为了减少哈希碰撞，获取hash时，会先把key的hashcode和它自己无符号右移16位进行异或<br>运算，这样是为了扩大特征值，再与(16-1)位运算；</li>
-<li>链表过长处理： hashmap已经尽力减少哈希冲突，但是终究还是有冲突，如果一个链表过长会影响查询效率，<br>这种情况下，HashMap会把链表结构转换成红黑树，put时，判断当前链表长度是否大于(TREEIFY_THRESHOLD-1)，<br>默认(8-1)，当hashmap扩容时，会判断红黑树节点数量是否大于(NTREEIFY_THRESHOLD)，默认(6-1)，会把<br>红黑树转换成链表；</li>
-<li>HashMap的get查询流程：<blockquote>
-<blockquote>
-<ul>
-<li>先计算key的哈希值；</li>
-<li>通过哈希值定位key存在哪个数组下标；</li>
-<li>找到后看数组下标里面有没有节点，没有就返回null；</li>
-<li>有节点的话，区分节点是红黑树还是链表，然后分别使用对应数据结构的查找方法；</li>
-<li>根据查找的key和节点里面存的key值判断两个key是不是equals()，equals则返回对应的节点，否则继续<br>匹配下一个节点，直到匹配成功返回节点，或者没有节点匹配后返回null；</li>
-</ul>
-</blockquote>
-</blockquote>
-</li>
-</ol>
-<p><strong>3.ArrayList和LinkedList</strong></p>
-<p><strong>4.数据结构——树</strong></p>
-<ol>
-<li>二叉树的基本特点：左子节点的值比父节点的值要小，右节点的值比父节点要大，高度决定了它的查找效率；本质是一种<br>二分算法的实现；二叉树理想查询时间复杂度是O(logN)，最坏是O(N)；不同的插入顺序导致二叉树的高度不一样，查询<br>效率千差万别，因此产生了平衡二叉树，比较典型的是AVL树和红黑树，AVL树实现复杂且插入和删除性能差，一般用红黑树；</li>
-<li>红黑树的定义：任何一个节点都有颜色，红或黑；根节点是黑色的；父节点之间不可能出现两个连续红节点；任何一个节点<br>向下遍历到其子孙的叶子节点，所经过的黑色节点个数必须相等；空节点被认为是黑色；</li>
-<li>红黑树通过旋转完成平衡，添加、删除、查找时间复杂度基本都是O(logN)；</li>
-<li>B树属于多叉树（平衡多路查找树），排序也是左小右大；B+树是B树基础上衍生的，区别是：B树根节点包含数据，B+树根节点<br>只能由索引，数据全部在叶子节点；</li>
-</ol>
-<p><strong>5.死锁</strong><br>死锁是什么：</p>
-<blockquote>
-<p>死锁，是指多个进程循环等待他方占有的资源而无限期的僵持下去的局面；</p>
-</blockquote>
-<p>死锁产生的必要条件：</p>
-<blockquote>
-<ul>
-<li>互斥条件：每个资源一段时间只能由一个进程占有；</li>
-<li>不可抢占条件：已经分配给一个进程的资源不能强制被抢占，只能被占有它的进程释放；</li>
-<li>占有且申请条件：已经得到某个资源的进程申请新的资源；</li>
-<li>循环依赖条件：有两个或以上的进程组成一个环路，该环路中的每个进程都在等待下一个进程所占有的资源；</li>
-</ul>
-</blockquote>
-<p>死锁的预防：</p>
-<blockquote>
-<p>针对死锁的必要条件，打破某些条件；</p>
-</blockquote>
-<p>死锁的避免：</p>
-<blockquote>
-<ul>
-<li>安全序列：系统中的所有进程都能够按照某一种秩序分配资源，并且依次执行完毕，这种进程序列就是安全序列；</li>
-<li>银行家算法。</li>
-</ul>
-</blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1644,16 +1565,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-count">32</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

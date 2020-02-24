@@ -101,7 +101,10 @@
     </div>
   </div>
 
-  <div class="site-nav-right"></div>
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
 </div>
 
 
@@ -144,6 +147,456 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/24/Mysql系列2——基础原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/12/24/Mysql系列2——基础原理/" class="post-title-link" itemprop="url">'Mysql系列2——基础原理'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-24 14:37:12" itemprop="dateCreated datePublished" datetime="2019-12-24T14:37:12+08:00">2019-12-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-25 20:25:59" itemprop="dateModified" datetime="2019-12-25T20:25:59+08:00">2019-12-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>1.Mysql客户端和服务端通信方式</strong></p>
+<blockquote>
+<ul>
+<li>TCP/IP通信，最常用方式，例如客户端连接：msql -hhost -uusername -ppasswd -P3306 [database]</li>
+<li>命令管道和共享内存，windows可选连接方式.</li>
+<li>Unix域套接字文件，类unix系统可选.</li>
+</ul>
+</blockquote>
+<p><strong>2.服务端处理客户端请求</strong></p>
+<p><img src="/images/Mysql_1.png" alt><br>整个过程分为三个部分：连接管理、解析优化、存储引擎.<br>常用命令：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">engines</span>;</span><br><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> tableName() <span class="keyword">engine</span>=<span class="keyword">InnoDB</span>;</span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> tableName <span class="keyword">engine</span>=MyISAM;</span><br></pre></td></tr></table></figure></p>
+<p><strong>3.服务端参数</strong></p>
+<p>服务端启动参数可以直接在启动时添加，例如mysqld –skip-networking；</p>
+<p>服务端启动时读取配置文件my.ini或my.cnf，按照一定顺序读取；</p>
+<p>配置文件中，按照分组概念配置，不同启动命令可以读取不同的组；</p>
+<p>服务器启动后，有很多系统变量，影响着服务器的行为，显示：show variables [like (匹配项)];</p>
+<p>同时服务器启动后，会有状态变量，可以查看服务器的状态：show status [like (匹配项)];</p>
+<p><strong>4.字符集和比较规则</strong></p>
+<p>mysql中UTF-8分为utf8和utf8mb4，utf8是阉割版的utf8，1-3个字节，utf8mb4对应utf8，1-4个字节；<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="built_in">character</span> <span class="keyword">set</span>/<span class="keyword">charset</span> (<span class="keyword">like</span> [匹配项]);</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">collation</span> (<span class="keyword">like</span> [匹配项]);</span><br></pre></td></tr></table></figure></p>
+<p>mysql中比较规则后缀：_ai和_as区分重音，_ci和_cs区分大小写，_bin以二进制形式比较；</p>
+<p>mysql中有4个字符集和比较规则级别：服务器、数据库、表、列；<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">编解码过程：</span><br><span class="line">character_set_client: 服务器解码请求时使用字符集</span><br><span class="line">character_set_connection: 服务器处理请求时会把请求字符串从character_set_client转码到character_set_connection;</span><br><span class="line">character_set_result: 服务器向客户端返回结果时使用的字符集</span><br><span class="line">一般建议这三个参数设置一样.</span><br></pre></td></tr></table></figure></p>
+<p><strong>5.InnoDB记录存储结构</strong><br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">InnoDB将数据分为若干页，以页作为磁盘和内存之间交互的基本单位，InnoDB中页的大小一般为16kb；</span><br><span class="line">InnoDB数据按行存储，因此有行格式：Compact、Redundant、Dynamic、Compressed;</span><br><span class="line">指定或修改行格式语法：</span><br><span class="line">    <span class="keyword">CREATE</span> <span class="keyword">TABLE</span> 表名 (列的信息) ROW_FORMAT=行格式名称</span><br><span class="line">    <span class="keyword">ALTER</span> <span class="keyword">TABLE</span> 表名 ROW_FORMAT=行格式名称</span><br></pre></td></tr></table></figure></p>
+<p>其中Compact和Redundant行格式如下：<br><img src="/images/Mysql_2.png" alt><br>Dynamic和Compact行格式类似，不同的地方在于行溢出的处理；Compressed行格式是压缩格式；</p>
+<p>一个页一般16Kb，当记录的数据太大存放不了，会存放到其他页，这种情况被称为行溢出，发生行溢出的主要是varchar(m),blob,text；</p>
+<p><strong>6.InnoDB数据页结构</strong><br>总的来说，一个InnoDB的数据页被分成7个部分，如下图：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>中文名</th>
+<th>占用空间大小</th>
+<th>简单描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>File Header</td>
+<td>文件头部</td>
+<td>38字节</td>
+<td>页的一些通用信息</td>
+</tr>
+<tr>
+<td>Page Header</td>
+<td>页面头部</td>
+<td>56字节</td>
+<td>数据页专有的一些信息</td>
+</tr>
+<tr>
+<td>Infimum + Supremum</td>
+<td>最小记录和最大记录</td>
+<td>26字节</td>
+<td>两个虚拟的行记录</td>
+</tr>
+<tr>
+<td>User Records</td>
+<td>用户记录</td>
+<td>不确定</td>
+<td>实际存储的行记录内容</td>
+</tr>
+<tr>
+<td>Free Space</td>
+<td>空闲空间</td>
+<td>不确定</td>
+<td>页中尚未使用的空间</td>
+</tr>
+<tr>
+<td>Page Directory</td>
+<td>页面目录</td>
+<td>不确定</td>
+<td>页中的某些记录的相对位置</td>
+</tr>
+<tr>
+<td>File Trailer</td>
+<td>文件尾部</td>
+<td>8字节</td>
+<td>校验页是否完整</td>
+</tr>
+</tbody>
+</table>
+<p>每个记录的头信息中都有一个next_record属性，从而使页中的属性串成一个单链表；<br><br>InnoDB会把页中的记录划分成若干组，每个组的最后一个记录的地址偏移量作为一个槽，存放在Page Directory中，<br>所以在一个页中根据主键查找非常快，先通过二分法确定该记录所在槽，再通过记录的next_record属性遍历该槽<br>所在组中的各个记录；<br><br>每个数据页的File Header部分都有上一个和下一个页的编号，所有数据页会组成一个双链表；<br><br>为保证从内存中同步到磁盘的页的完整性，在页的首部和尾部都会存储页中数据的校验和页面最后修改时对应的LSN值，<br>如果首部和尾部的校验和LSN校验不成功的话，就说明同步过程出现了问题。</p>
+<p><strong>7.B+树索引</strong><br>每个页记录头信息有个record_type属性：</p>
+<blockquote>
+<ul>
+<li>0: 普通用户记录</li>
+<li>1: 目录项记录</li>
+<li>2: 最小记录</li>
+<li>3: 最大记录</li>
+</ul>
+</blockquote>
+<p>InnoDB中，为了检索方便，使用B+树结构管理数据；叶子节点全部是用户数据页，非叶节点都是目录页，目录项记录<br>只存储主键值和对应的页号，目录项过多又由目录来管理，层层嵌套形成了B+树；<br></p>
+<blockquote>
+<ul>
+<li>聚簇索引：1.使用记录主键值的大小进行记录和页的排序；2.B+树的叶子节点存储的是完整的用户记录；</li>
+<li>二级索引：1.使用非主键列进行记录也页排序；2.B+树叶子节点存储的不是完整用户记录，而是【非主键列+主键】；3.目录项记录中不再是【主键+页号】，而是【非主键列+页号】，需要回表才能找到完整记录；</li>
+<li>联合索引：1.例如建一个C2和C3列的联合索引，先把各个记录和页按照C2列进行排序；在C2列相同情况下，采用C3列进行排序；本质上是二级索引，但多个列只有一个索引；</li>
+</ul>
+</blockquote>
+<p>InnoDB中B+树索引的生成是自上而下的，一个B+树索引的根节点自诞生之日起，就不再移动；<br><br>MyISAM中，索引也是树形结构，索引与数据分开存储，索引中存储的是主键值+行号，每次查询都需要回表操作；<br></p>
+<p><strong>8.索引的使用</strong></p>
+<ol>
+<li>首先明确索引代价=空间+时间（增删改），索引适用一些情况，具体问题具体分析；<blockquote>
+<ul>
+<li>全值匹配</li>
+<li>匹配左边列</li>
+<li>匹配范围值</li>
+<li>精确匹配第一列并范围匹配另外一列</li>
+<li>用于排序、分组</li>
+</ul>
+</blockquote>
+</li>
+<li>回表代价巨大，如果使用二级索引查询，结果需要二级索引+聚簇索引，且这种情况下聚簇索引通常是随机IO，因此需要回表的记录越多，使用二级索引的性能越低；</li>
+<li>为了清除回表的性能损耗，建议查询列表中只包含索引列；</li>
+<li>使用索引时需要注意以下事项：<blockquote>
+<ul>
+<li>只为用于搜索、排序、分组的列建立索引</li>
+<li>为基数大的列建立索引</li>
+<li>索引列的类型尽量小</li>
+<li>可以只对字符串的前缀建立索引</li>
+<li>只有索引列在比较表达式中单独出现才适用索引</li>
+<li>为了尽可能减少聚簇索引的页分裂和记录位移，建议主键拥有AUTO_INCREMENT属性</li>
+<li>定位并删除表中的重复和冗余索引</li>
+<li>尽量使用覆盖索引进行查询，避免回表的性能损耗</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/21/oracle系列——wallet使用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/12/21/oracle系列——wallet使用/" class="post-title-link" itemprop="url">'oracle系列——wallet使用'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-12-21 13:00:54 / 修改时间：14:09:07" itemprop="dateCreated datePublished" datetime="2019-12-21T13:00:54+08:00">2019-12-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/oracle/" itemprop="url" rel="index"><span itemprop="name">oracle</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>1.前言</strong><br>这几天客户项目上用到oracle wallet，调研对接和使用问题，做一下总结.</p>
+<p><strong>2.oracle wallet作用简介</strong><br>oracle wallet主要用于安全方面，可以免密登陆，从而不暴露用户名和密码；一般这种不用用户名密码的，肯定是用证书了，so，这就是oracle wallet；</p>
+<p><strong>3.基本使用</strong><br>这里不建议使用docker容器的oracle，因为测试的大部分oracle镜像都缺胳膊少腿的，所以还是自己搭一个oracle服务器吧；<br>引用一个搭建步骤：<a href="https://www.acgist.com/article/497.html，可能会报错，直接搜相关问题解决；" target="_blank" rel="noopener">https://www.acgist.com/article/497.html，可能会报错，直接搜相关问题解决；</a></p>
+<p>然后就是创建和使用wallet.（服务端创建）</p>
+<blockquote>
+<ul>
+<li>创建wallet:新建一个目录，执行命令.————mkstore -wrl &lt;wallet_location&gt; -create</li>
+<li>创建客户端连接服务端的网络连接串，每个连接串对应一个数据库用户，在$ORACLE_HOME/network/admin/tnsnames.ora文件中.<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">myorcl =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = 10.100.1.111)(PORT = 1521))</span><br><span class="line">    (CONNECT_DATA=</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (SERVICE_NAME=acgist)</span><br><span class="line">    )</span><br><span class="line">  )</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li>配置wallet添加用户认证信息.————mkstore -wrl &lt;wallet_location&gt; -createCredential myorcl </li>
+<li>在$ORACLE_HOME/network/admin/sqlnet.ora中配置&lt;wallet_location&gt;；<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">WALLET_LOCATION=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=/home/oracle/wallet_111)))</span><br><span class="line">SQLNET.WALLET_OVERRIDE = TRUE</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li>然后可以在服务端先测试一下: sqlplus /@myorcl，如果能直连成功，则说明没问题；</li>
+</ul>
+</blockquote>
+<p>在客户机上免密登陆.</p>
+<blockquote>
+<ul>
+<li>需要先安装oracle的客户端，设置相关环境变量；(客户端和服务端不一定要匹配，我这里服务端是11.2.0.1.0，客户端是12.2.0.1)</li>
+<li>把服务端的wallet包拷贝到客户端，假设路径还是/home/oracle/wallet_111</li>
+<li>在$ORACLE_HOME/network/admin/下新建tnsnames.ora和sqlnet.ora，内容和要使用的数据库保持一致；</li>
+<li>验证: sqlplus /@myorcl</li>
+</ul>
+</blockquote>
+<p><strong>4.应用程序使用wallet——在安装oracle客户端的机器上部署</strong><br>如果客户机上已经安装了oracle客户端，则可以直接使用oci连接，从而无需改造程序；例如笔者用的spring boot，可以直接这样修改数据源配置：<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">  datasource:</span><br><span class="line">    driver-class-name: oracle.jdbc.driver.OracleDriver</span><br><span class="line">    url: jdbc:oracle:oci://@myorcl</span><br><span class="line">    username:</span><br><span class="line">    password:</span><br></pre></td></tr></table></figure></p>
+<p>这里需要特别注意的是：ojdbc的包一定要与客户端版本一致，例如笔者环境jdk1.8，oracle客户端12.2.0.1，那么要引用下面依赖：<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- https://mvnrepository.com/artifact/com.oracle/ojdbc8 --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;ojdbc8&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;12.2.0.1&lt;/version&gt;</span><br><span class="line">           &lt;scope&gt;provided&lt;/scope&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br></pre></td></tr></table></figure></p>
+<p><strong>5.应用程序使用wallet——在未安装oracle客户端的机器上部署</strong><br>客户机未安装oracle客户端，则需要使用thin连接，这时需要按照以下步骤改造程序：</p>
+<blockquote>
+<ul>
+<li>在客户机上新建wallet目录并把服务端的wallet拷贝过来，假设目录：/home/oracle/wallet_111，并且在此目录下新建tnsnames.ora并配置使用的数据库.</li>
+<li>应用程序中引入以下依赖包.<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- https://mvnrepository.com/artifact/com.oracle/ojdbc8 --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;ojdbc8&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;12.2.0.1&lt;/version&gt;</span><br><span class="line">           &lt;scope&gt;provided&lt;/scope&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">       &lt;!-- https://mvnrepository.com/artifact/com.oracle.ojdbc/oraclepki --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle.ojdbc&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;oraclepki&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;19.3.0.0&lt;/version&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">       &lt;!-- https://mvnrepository.com/artifact/com.oracle.ojdbc/osdt_cert --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle.ojdbc&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;osdt_cert&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;19.3.0.0&lt;/version&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br><span class="line">       &lt;!-- https://mvnrepository.com/artifact/com.oracle.ojdbc/osdt_core --&gt;</span><br><span class="line">       &lt;dependency&gt;</span><br><span class="line">           &lt;groupId&gt;com.oracle.ojdbc&lt;/groupId&gt;</span><br><span class="line">           &lt;artifactId&gt;osdt_core&lt;/artifactId&gt;</span><br><span class="line">           &lt;version&gt;19.3.0.0&lt;/version&gt;</span><br><span class="line">       &lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li>应用程序中自定义DataSource.<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">@Bean</span><br><span class="line">    public DataSource dataSource()&#123;</span><br><span class="line">        OracleDataSource dataSource = null;</span><br><span class="line">        try &#123;</span><br><span class="line">            dataSource = new OracleDataSource();</span><br><span class="line">            Properties properties = new Properties();</span><br><span class="line">            String oracle_net_wallet_location = "/home/oracle/wallet_111";  //目录下应包含wallet的相关文件和tnsnames.ora</span><br><span class="line">            properties.put("oracle.net.tns_admin", oracle_net_wallet_location);</span><br><span class="line">            properties.put("oracle.net.wallet_location", "(source=(method=file)(method_data=(directory="+oracle_net_wallet_location+")))");</span><br><span class="line">            dataSource.setConnectionProperties(properties);</span><br><span class="line">            dataSource.setURL("jdbc:oracle:thin:@myorcl");</span><br><span class="line">        &#125;catch (Exception e)&#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        return dataSource;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</blockquote>
+<blockquote>
+<ul>
+<li>以上就可以了；</li>
+<li>需要注意一些特殊引用，例如quartz.quartz定义数据源有三种方式:配置文件、JNDI、自定义ConnectionProvider；这里笔者选用的第三种方式集成，具体可以查看quartz官方文档，不再赘述.</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/17/面试系列基础知识一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/12/17/面试系列基础知识一/" class="post-title-link" itemprop="url">'面试系列基础知识一'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-17 10:23:08" itemprop="dateCreated datePublished" datetime="2019-12-17T10:23:08+08:00">2019-12-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-18 10:11:35" itemprop="dateModified" datetime="2020-02-18T10:11:35+08:00">2020-02-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/面试/" itemprop="url" rel="index"><span itemprop="name">面试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>1.并发问题产生的根源</strong></p>
+<ol>
+<li>CPU缓存导致的可见性问题；</li>
+<li>CPU切换导致的原子性问题；</li>
+<li>编译器优化导致的指令重排序问题；</li>
+</ol>
+<p><strong>2.HashMap问题</strong></p>
+<ol>
+<li>基本数据结构：数组+链表；</li>
+<li>数据结构根本目的之一是性能；数组都是有下标的，所以查找速度很快，但插入慢；链表只记录下一个元素<br>的地址，优势是插入较快；因为HashMap的添加、修改和查询操作都比较频繁，因此使用数组+链表数据结构；<br>根据hash算法快速定位数组，插入的数据顺序放到链表中，这样综合效率较高；</li>
+<li>HashMap的初始化容量机制和扩容机制： 既然HashMap底层是数组，数组初始化时需要指定一个长度，默认<br>初始化一个长度16的数组；有个扩容因子，默认0.75，每次扩容时机是：数组长度*负载因子，每次扩容2倍，<br>保持数组长度为2的幂次方，因为底层存储用的&amp;；</li>
+<li>put过程：先对key调用hashCode()得到一个hash值，类型int，然后用hash值与（16-1）进行位运算，从而<br>得到数组下标；为了减少哈希碰撞，获取hash时，会先把key的hashcode和它自己无符号右移16位进行异或<br>运算，这样是为了扩大特征值，再与(16-1)位运算；</li>
+<li>链表过长处理： hashmap已经尽力减少哈希冲突，但是终究还是有冲突，如果一个链表过长会影响查询效率，<br>这种情况下，HashMap会把链表结构转换成红黑树，put时，判断当前链表长度是否大于(TREEIFY_THRESHOLD-1)，<br>默认(8-1)，当hashmap扩容时，会判断红黑树节点数量是否大于(NTREEIFY_THRESHOLD)，默认(6-1)，会把<br>红黑树转换成链表；</li>
+<li>HashMap的get查询流程：<blockquote>
+<blockquote>
+<ul>
+<li>先计算key的哈希值；</li>
+<li>通过哈希值定位key存在哪个数组下标；</li>
+<li>找到后看数组下标里面有没有节点，没有就返回null；</li>
+<li>有节点的话，区分节点是红黑树还是链表，然后分别使用对应数据结构的查找方法；</li>
+<li>根据查找的key和节点里面存的key值判断两个key是不是equals()，equals则返回对应的节点，否则继续<br>匹配下一个节点，直到匹配成功返回节点，或者没有节点匹配后返回null；</li>
+</ul>
+</blockquote>
+</blockquote>
+</li>
+</ol>
+<p><strong>3.ArrayList和LinkedList</strong></p>
+<p><strong>4.数据结构——树</strong></p>
+<ol>
+<li>二叉树的基本特点：左子节点的值比父节点的值要小，右节点的值比父节点要大，高度决定了它的查找效率；本质是一种<br>二分算法的实现；二叉树理想查询时间复杂度是O(logN)，最坏是O(N)；不同的插入顺序导致二叉树的高度不一样，查询<br>效率千差万别，因此产生了平衡二叉树，比较典型的是AVL树和红黑树，AVL树实现复杂且插入和删除性能差，一般用红黑树；</li>
+<li>红黑树的定义：任何一个节点都有颜色，红或黑；根节点是黑色的；父节点之间不可能出现两个连续红节点；任何一个节点<br>向下遍历到其子孙的叶子节点，所经过的黑色节点个数必须相等；空节点被认为是黑色；</li>
+<li>红黑树通过旋转完成平衡，添加、删除、查找时间复杂度基本都是O(logN)；</li>
+<li>B树属于多叉树（平衡多路查找树），排序也是左小右大；B+树是B树基础上衍生的，区别是：B树根节点包含数据，B+树根节点<br>只能由索引，数据全部在叶子节点；</li>
+</ol>
+<p><strong>5.死锁</strong><br>死锁是什么：</p>
+<blockquote>
+<p>死锁，是指多个进程循环等待他方占有的资源而无限期的僵持下去的局面；</p>
+</blockquote>
+<p>死锁产生的必要条件：</p>
+<blockquote>
+<ul>
+<li>互斥条件：每个资源一段时间只能由一个进程占有；</li>
+<li>不可抢占条件：已经分配给一个进程的资源不能强制被抢占，只能被占有它的进程释放；</li>
+<li>占有且申请条件：已经得到某个资源的进程申请新的资源；</li>
+<li>循环依赖条件：有两个或以上的进程组成一个环路，该环路中的每个进程都在等待下一个进程所占有的资源；</li>
+</ul>
+</blockquote>
+<p>死锁的预防：</p>
+<blockquote>
+<p>针对死锁的必要条件，打破某些条件；</p>
+</blockquote>
+<p>死锁的避免：</p>
+<blockquote>
+<ul>
+<li>安全序列：系统中的所有进程都能够按照某一种秩序分配资源，并且依次执行完毕，这种进程序列就是安全序列；</li>
+<li>银行家算法。</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/04/踩坑系列——JSONArray引发的并发问题/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -177,9 +630,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/踩坑系列/" itemprop="url" rel="index">
-                    <span itemprop="name">踩坑系列</span>
-                  </a>
+                  <a href="/categories/踩坑系列/" itemprop="url" rel="index"><span itemprop="name">踩坑系列</span></a>
                 </span>
             </span>
 
@@ -258,9 +709,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mysql/" itemprop="url" rel="index">
-                    <span itemprop="name">mysql</span>
-                  </a>
+                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
                 </span>
             </span>
 
@@ -750,9 +1199,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/踩坑系列/" itemprop="url" rel="index">
-                    <span itemprop="name">踩坑系列</span>
-                  </a>
+                  <a href="/categories/踩坑系列/" itemprop="url" rel="index"><span itemprop="name">踩坑系列</span></a>
                 </span>
             </span>
 
@@ -879,9 +1326,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
+                  <a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a>
                 </span>
             </span>
 
@@ -1123,9 +1568,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
+                  <a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a>
                 </span>
             </span>
 
@@ -1205,345 +1648,11 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/29/Zookeeper系列2——详解Paxos算法和ZAB协议/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/08/29/Zookeeper系列2——详解Paxos算法和ZAB协议/" class="post-title-link" itemprop="url">Zookeeper系列2——详解Paxos算法和ZAB协议</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-08-29 13:59:24" itemprop="dateCreated datePublished" datetime="2019-08-29T13:59:24+08:00">2019-08-29</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-18 15:16:22" itemprop="dateModified" datetime="2019-09-18T15:16:22+08:00">2019-09-18</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="Paxos算法"><a href="#Paxos算法" class="headerlink" title="Paxos算法."></a>Paxos算法.</h2><p>paxos算法目的是构建一个分布式一致性状态机；</p>
-<p>这里有几个概念要整理清楚：paxos算法中的三个角色proposal、acceptor和learner，每个进程可能不止一个角色；即<br>假如有A进程，那么A可能有proposal和acceptor两个角色，那么A的proposal会和A的acceptor相互通信；假设系统已经<br>可以产生一个全局时钟的概念来确保提案编号的顺序性；</p>
-<p>算法过程：类似于二阶段提交，有两个阶段：</p>
-<blockquote>
-<p>perpare阶段：(a) Proposer选择一个提案编号N，然后向半数以上的Acceptor发送编号为N的Prepare请求。</p>
-</blockquote>
-<blockquote>
-<p>(b) 如果一个Acceptor收到一个编号为N的Prepare请求，如果小于它已经响应过的请求，则拒绝，不回应或<br>回复error。若N大于该Acceptor已经响应过的所有Prepare请求的编号（maxN），那么它就会将它已经接受过<br>（已经经过第二阶段accept的提案）的编号最大的提案（如果有的话，如果还没有的accept提案的话返回<br>{pok，null，null}）作为响应反馈给Proposer，同时该Acceptor承诺不再接受任何编号小于N的提案。</p>
-</blockquote>
-<blockquote>
-<p>accept阶段：(a) 如果一个Proposer收到半数以上Acceptor对其发出的编号为N的Prepare请求的响应，那么它<br>就会发送一个针对[N,V]提案的Accept请求给半数以上的Acceptor。注意：V就是收到的响应中编号最大的提案的<br>value（某个acceptor响应的它已经通过的{acceptN，acceptV}），如果响应中不包含任何提案，那么V就由<br>Proposer自己决定。</p>
-</blockquote>
-<blockquote>
-<p>(b) 如果Acceptor收到一个针对编号为N的提案的Accept请求，只要该Acceptor没有对编号大于N的Prepare<br>请求做出过响应，它就接受该提案。如果N小于Acceptor以及响应的prepare请求，则拒绝，不回应或回复error<br>（当proposer没有收到过半的回应，那么他会重新进入第一阶段，递增提案号，重新提出prepare请求）。</p>
-</blockquote>
-<p>以上是paxos算法过程，这里自己整理不好语言，借鉴于网络；个人感觉是逻辑比较清晰的说明了；这是算法核心，通常<br>会有一些优化，例如选取主proposal保证算法活性，即完整算法过程只进行一次，之后就类似于master-slave模式了；</p>
-<h2 id="ZAB协议"><a href="#ZAB协议" class="headerlink" title="ZAB协议."></a>ZAB协议.</h2><p>ZAB协议目的是构建一个高可用的分布式数据主备系统；</p>
-<p>ZAB协议有两种模式：崩溃恢复和消息广播，也就是两个过程，进一步分为三个阶段：发现、同步和广播；</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/14/Zookeeper系列1——概述/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/08/14/Zookeeper系列1——概述/" class="post-title-link" itemprop="url">Zookeeper系列1——概述</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-08-14 14:36:44" itemprop="dateCreated datePublished" datetime="2019-08-14T14:36:44+08:00">2019-08-14</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-12 09:33:56" itemprop="dateModified" datetime="2019-09-12T09:33:56+08:00">2019-09-12</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>##1. zookeeper概述.<br>1.1 zookeeper是什么？</p>
-<blockquote>
-<p>zookeeper的由来：雅虎开发人员为了开发一个通用的无单点问题的分布式协调框架，后来发展成zookeepr.<br><br>zookeeper是一种用于分布式应用程序的开源分布式协调服务，是一个典型的分布式数据一致性解决方案，分布式应用可以基于zookeeper实现如数据发布/订阅、负载均衡、<br>命名服务、分布式协调/通知、集群管理、master选举、分布式锁和分布式队列等功能；<br><br>zookeeper可以保证如下分布式一致性特性：顺序一致性、原子性、单一视图、可靠性、实时性；</p>
-</blockquote>
-<p>1.2 zookeeper设计目标？</p>
-<blockquote>
-<p>zookeeper致力于提供一个高性能、高可用，且具有严格顺序访问（主要是写顺序）控制能力的分布式协调服务；</p>
-<ul>
-<li>简单的数据模型(共享的、树形结构的命名空间)</li>
-<li>可以构建集群(zookeeper集群)</li>
-<li>顺序访问(客户端的每个请求都会被分配全局唯一的递增编号，这个编号反映了所有事务操作的先后顺序)</li>
-<li>高性能(zookeeper将全量数据存储在内存中)</li>
-</ul>
-</blockquote>
-<p>1.3 zookeeper的数据模型和分层命名空间.</p>
-<blockquote>
-<p>zookeeper提供的命名空间类似于标准文件系统，名称由/分割的路径元素序列，命名空间中的每个节点都由路径标识。<img src="/images/zookeeper_0.png" alt></p>
-</blockquote>
-<p>1.4 zookeeper的概念.</p>
-<blockquote>
-<p>重要概念总结</p>
-<blockquote>
-<ul>
-<li>zookeeper本身就是分布式程序(只要半数节点存活就可以正常提供服务)，为了保证高可用，最好以集群形态部署；</li>
-<li>zookeeper将数据保存在内存中，保证了高吞吐量和低延迟；在读多于写时尤其高性能，因为写会导致所有服务器间同步状态；</li>
-<li>zookeeper的临时节点生命周期和会话息息相关；</li>
-<li>zookeeper底层只提供了两个功能：管理（读写）用户提交的数据、为用户程序提交数据节点监听服务；</li>
-</ul>
-</blockquote>
-</blockquote>
-<blockquote>
-<ul>
-<li>集群角色————通常分布式系统中，典型的集群模式是Master/Slave模式（主备模式，master机器处理所有写请求，Slave通过异步复制获取最新请求，提供读取服务）；<br>zookeeper引入Leader、Follower和Observer三种角色；leader提供读写服务，Follower和Observer提供读取服务，唯一区别是Observer不参与Leader选举过程，也<br>不参与写操作的“过半写成功”策略.</li>
-<li>会话————zookeeper默认对外服务端口2181，客户端启动时，会与zookeeper服务器建立一个TCP长连接，通过这个连接，客户端可以通过心跳检测与服务器保持有效会话，<br>也可以向服务器发送请求并接收参数，还可以接收来自服务器的watch事件通知.断开时在超时规定时间内重连会话仍有效.</li>
-<li>数据节点（Znode)————zookeeper中znode分为持久节点和临时节点.临时节点生命周期与客户端会话绑定,会话失效临时节点会被移除.znode上维护一个stat结构，<br>其中包括数据更改、ACL更改和时间戳的版本号，以允许缓存验证和协调更新.</li>
-<li>版本————对应znode的版本.</li>
-<li>watcher————事件监听器，zookeeper允许用户在指定节点上注册一些watcher，并且在一些特定事件触发时服务器通知感兴趣的客户端.</li>
-<li>ACL————Acess Control Lists.有5种权限：create、read、write、delete、admin.</li>
-</ul>
-</blockquote>
-<p>1.4 简单的API.</p>
-<blockquote>
-<ul>
-<li>create: 在树中的某个位置创建节点</li>
-<li>delete: 删除节点</li>
-<li>exists: 测试某个节点是否存在</li>
-<li>get data</li>
-<li>set data</li>
-<li>get children</li>
-<li>sync</li>
-</ul>
-</blockquote>
-<p>1.5 分布式一致性协议.</p>
-<blockquote>
-<ul>
-<li>2PC: 提交事务请求——》执行事务提交</li>
-<li>3PC: canCommit–&gt;preCommit–&gt;doCommit</li>
-<li>TCC: Try–&gt;Conform/cancel</li>
-<li>Paxos算法: “过半”原则，少数服从多数</li>
-<li>ZAB: zookeeper的一致性协议（Zookeeper Atomic Broadcast，zookeeper原子消息广播协议）</li>
-</ul>
-</blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/07/Hyper-V虚拟机网络设置/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/08/07/Hyper-V虚拟机网络设置/" class="post-title-link" itemprop="url">Hyper-V虚拟机网络设置</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2019-08-07 11:23:18 / 修改时间：12:58:43" itemprop="dateCreated datePublished" datetime="2019-08-07T11:23:18+08:00">2019-08-07</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/虚拟机/" itemprop="url" rel="index">
-                    <span itemprop="name">虚拟机</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="Hyper-V虚拟机网络设置"><a href="#Hyper-V虚拟机网络设置" class="headerlink" title="Hyper-V虚拟机网络设置"></a>Hyper-V虚拟机网络设置</h2><p>1.需求</p>
-<blockquote>
-<ul>
-<li>无论物理机的网络环境怎么变化，都需要保持虚拟机的IP地址不变，保证我本机使用xshell等终端访问始终用同一个IP地址，或者在安装了其他软件后，访问虚拟机的IP地址保持不变。</li>
-<li>物理机可访问虚拟机，虚拟机可访问网络都行。重点保证本机可访问虚拟机，以及虚拟机之间能互相访问。</li>
-<li>无论物理机的网络环境怎么变化，虚拟机可以连接到外网。</li>
-</ul>
-</blockquote>
-<p>2.检查 </p>
-<blockquote>
-<p>Hyper-V的网卡配置使用“虚拟交换机管理器”配置，创建虚拟交换机时，“外部”简单但是虚拟机ip地址会经常变，“内部”即常说的NAT网络，<br>可以配置固定ip，这里重点说这种方式；开始前需要检查：目前windows的NAT虚拟网络只能支持一个，因此在开始创建NAT网络前需要先<br>检查是否已存在NAT网络。检查可以直接查看网络适配器列表，看看是否由多个Hyper-V网络适配器，只允许一个Hyper-V默认交换机和即将<br>要使用的，其他的即使显示不可用的也要删除，删除方法之一是：在设备管理器中删除网络适配器；</p>
-</blockquote>
-<p>3.配置Hyper-V网络适配器并固定IP</p>
-<blockquote>
-<ul>
-<li>新建虚拟机.(略)</li>
-<li>创建一个内部方式的虚拟交换机，取名假设test</li>
-<li>在虚拟机的网络适配器上配置刚新建的test；</li>
-<li>设置虚拟交换机test的IP；<img src="/images/vm_1.png" alt></li>
-<li>修改虚拟机IP； <img src="/images/vm_2.png" alt></li>
-<li>重启虚拟机网路：systemctl restart network，查看IP：ip addr show；</li>
-</ul>
-</blockquote>
-<ol start="4">
-<li><p>连接外网</p>
-<blockquote>
-<p>前面介绍，Hyper-V有个默认交换机，通过这个交换机就可以连接外网且无须额外配置；需要将这个默认交换机配置到新建的虚拟机中，<br>且注意先后顺序，必须先配置默认的test适配器才能绑定固定IP；配置默认交换机前需要关闭虚拟机，最终配置如下图：<br><img src="/images/vm_3.png" alt></p>
-</blockquote>
-</li>
-<li><p>扩展</p>
-<blockquote>
-<p>如果需要配置多个虚拟机脸网，如上步骤，核心配置test适配器固定IP，使用默认交换机联网；xshell使用test网络适配器中配置的静态IP.</p>
-</blockquote>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1609,16 +1718,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-count">32</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

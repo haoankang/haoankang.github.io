@@ -101,7 +101,10 @@
     </div>
   </div>
 
-  <div class="site-nav-right"></div>
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
 </div>
 
 
@@ -140,6 +143,334 @@
             
 
   <div class="posts-expand">
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/29/Zookeeper系列2——详解Paxos算法和ZAB协议/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/08/29/Zookeeper系列2——详解Paxos算法和ZAB协议/" class="post-title-link" itemprop="url">Zookeeper系列2——详解Paxos算法和ZAB协议</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-29 13:59:24" itemprop="dateCreated datePublished" datetime="2019-08-29T13:59:24+08:00">2019-08-29</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-09-18 15:16:22" itemprop="dateModified" datetime="2019-09-18T15:16:22+08:00">2019-09-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="Paxos算法"><a href="#Paxos算法" class="headerlink" title="Paxos算法."></a>Paxos算法.</h2><p>paxos算法目的是构建一个分布式一致性状态机；</p>
+<p>这里有几个概念要整理清楚：paxos算法中的三个角色proposal、acceptor和learner，每个进程可能不止一个角色；即<br>假如有A进程，那么A可能有proposal和acceptor两个角色，那么A的proposal会和A的acceptor相互通信；假设系统已经<br>可以产生一个全局时钟的概念来确保提案编号的顺序性；</p>
+<p>算法过程：类似于二阶段提交，有两个阶段：</p>
+<blockquote>
+<p>perpare阶段：(a) Proposer选择一个提案编号N，然后向半数以上的Acceptor发送编号为N的Prepare请求。</p>
+</blockquote>
+<blockquote>
+<p>(b) 如果一个Acceptor收到一个编号为N的Prepare请求，如果小于它已经响应过的请求，则拒绝，不回应或<br>回复error。若N大于该Acceptor已经响应过的所有Prepare请求的编号（maxN），那么它就会将它已经接受过<br>（已经经过第二阶段accept的提案）的编号最大的提案（如果有的话，如果还没有的accept提案的话返回<br>{pok，null，null}）作为响应反馈给Proposer，同时该Acceptor承诺不再接受任何编号小于N的提案。</p>
+</blockquote>
+<blockquote>
+<p>accept阶段：(a) 如果一个Proposer收到半数以上Acceptor对其发出的编号为N的Prepare请求的响应，那么它<br>就会发送一个针对[N,V]提案的Accept请求给半数以上的Acceptor。注意：V就是收到的响应中编号最大的提案的<br>value（某个acceptor响应的它已经通过的{acceptN，acceptV}），如果响应中不包含任何提案，那么V就由<br>Proposer自己决定。</p>
+</blockquote>
+<blockquote>
+<p>(b) 如果Acceptor收到一个针对编号为N的提案的Accept请求，只要该Acceptor没有对编号大于N的Prepare<br>请求做出过响应，它就接受该提案。如果N小于Acceptor以及响应的prepare请求，则拒绝，不回应或回复error<br>（当proposer没有收到过半的回应，那么他会重新进入第一阶段，递增提案号，重新提出prepare请求）。</p>
+</blockquote>
+<p>以上是paxos算法过程，这里自己整理不好语言，借鉴于网络；个人感觉是逻辑比较清晰的说明了；这是算法核心，通常<br>会有一些优化，例如选取主proposal保证算法活性，即完整算法过程只进行一次，之后就类似于master-slave模式了；</p>
+<h2 id="ZAB协议"><a href="#ZAB协议" class="headerlink" title="ZAB协议."></a>ZAB协议.</h2><p>ZAB协议目的是构建一个高可用的分布式数据主备系统；</p>
+<p>ZAB协议有两种模式：崩溃恢复和消息广播，也就是两个过程，进一步分为三个阶段：发现、同步和广播；</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/14/Zookeeper系列1——概述/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/08/14/Zookeeper系列1——概述/" class="post-title-link" itemprop="url">Zookeeper系列1——概述</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-14 14:36:44" itemprop="dateCreated datePublished" datetime="2019-08-14T14:36:44+08:00">2019-08-14</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-09-12 09:33:56" itemprop="dateModified" datetime="2019-09-12T09:33:56+08:00">2019-09-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>##1. zookeeper概述.<br>1.1 zookeeper是什么？</p>
+<blockquote>
+<p>zookeeper的由来：雅虎开发人员为了开发一个通用的无单点问题的分布式协调框架，后来发展成zookeepr.<br><br>zookeeper是一种用于分布式应用程序的开源分布式协调服务，是一个典型的分布式数据一致性解决方案，分布式应用可以基于zookeeper实现如数据发布/订阅、负载均衡、<br>命名服务、分布式协调/通知、集群管理、master选举、分布式锁和分布式队列等功能；<br><br>zookeeper可以保证如下分布式一致性特性：顺序一致性、原子性、单一视图、可靠性、实时性；</p>
+</blockquote>
+<p>1.2 zookeeper设计目标？</p>
+<blockquote>
+<p>zookeeper致力于提供一个高性能、高可用，且具有严格顺序访问（主要是写顺序）控制能力的分布式协调服务；</p>
+<ul>
+<li>简单的数据模型(共享的、树形结构的命名空间)</li>
+<li>可以构建集群(zookeeper集群)</li>
+<li>顺序访问(客户端的每个请求都会被分配全局唯一的递增编号，这个编号反映了所有事务操作的先后顺序)</li>
+<li>高性能(zookeeper将全量数据存储在内存中)</li>
+</ul>
+</blockquote>
+<p>1.3 zookeeper的数据模型和分层命名空间.</p>
+<blockquote>
+<p>zookeeper提供的命名空间类似于标准文件系统，名称由/分割的路径元素序列，命名空间中的每个节点都由路径标识。<img src="/images/zookeeper_0.png" alt></p>
+</blockquote>
+<p>1.4 zookeeper的概念.</p>
+<blockquote>
+<p>重要概念总结</p>
+<blockquote>
+<ul>
+<li>zookeeper本身就是分布式程序(只要半数节点存活就可以正常提供服务)，为了保证高可用，最好以集群形态部署；</li>
+<li>zookeeper将数据保存在内存中，保证了高吞吐量和低延迟；在读多于写时尤其高性能，因为写会导致所有服务器间同步状态；</li>
+<li>zookeeper的临时节点生命周期和会话息息相关；</li>
+<li>zookeeper底层只提供了两个功能：管理（读写）用户提交的数据、为用户程序提交数据节点监听服务；</li>
+</ul>
+</blockquote>
+</blockquote>
+<blockquote>
+<ul>
+<li>集群角色————通常分布式系统中，典型的集群模式是Master/Slave模式（主备模式，master机器处理所有写请求，Slave通过异步复制获取最新请求，提供读取服务）；<br>zookeeper引入Leader、Follower和Observer三种角色；leader提供读写服务，Follower和Observer提供读取服务，唯一区别是Observer不参与Leader选举过程，也<br>不参与写操作的“过半写成功”策略.</li>
+<li>会话————zookeeper默认对外服务端口2181，客户端启动时，会与zookeeper服务器建立一个TCP长连接，通过这个连接，客户端可以通过心跳检测与服务器保持有效会话，<br>也可以向服务器发送请求并接收参数，还可以接收来自服务器的watch事件通知.断开时在超时规定时间内重连会话仍有效.</li>
+<li>数据节点（Znode)————zookeeper中znode分为持久节点和临时节点.临时节点生命周期与客户端会话绑定,会话失效临时节点会被移除.znode上维护一个stat结构，<br>其中包括数据更改、ACL更改和时间戳的版本号，以允许缓存验证和协调更新.</li>
+<li>版本————对应znode的版本.</li>
+<li>watcher————事件监听器，zookeeper允许用户在指定节点上注册一些watcher，并且在一些特定事件触发时服务器通知感兴趣的客户端.</li>
+<li>ACL————Acess Control Lists.有5种权限：create、read、write、delete、admin.</li>
+</ul>
+</blockquote>
+<p>1.4 简单的API.</p>
+<blockquote>
+<ul>
+<li>create: 在树中的某个位置创建节点</li>
+<li>delete: 删除节点</li>
+<li>exists: 测试某个节点是否存在</li>
+<li>get data</li>
+<li>set data</li>
+<li>get children</li>
+<li>sync</li>
+</ul>
+</blockquote>
+<p>1.5 分布式一致性协议.</p>
+<blockquote>
+<ul>
+<li>2PC: 提交事务请求——》执行事务提交</li>
+<li>3PC: canCommit–&gt;preCommit–&gt;doCommit</li>
+<li>TCC: Try–&gt;Conform/cancel</li>
+<li>Paxos算法: “过半”原则，少数服从多数</li>
+<li>ZAB: zookeeper的一致性协议（Zookeeper Atomic Broadcast，zookeeper原子消息广播协议）</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/07/Hyper-V虚拟机网络设置/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/08/07/Hyper-V虚拟机网络设置/" class="post-title-link" itemprop="url">Hyper-V虚拟机网络设置</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-08-07 11:23:18 / 修改时间：12:58:43" itemprop="dateCreated datePublished" datetime="2019-08-07T11:23:18+08:00">2019-08-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/虚拟机/" itemprop="url" rel="index"><span itemprop="name">虚拟机</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="Hyper-V虚拟机网络设置"><a href="#Hyper-V虚拟机网络设置" class="headerlink" title="Hyper-V虚拟机网络设置"></a>Hyper-V虚拟机网络设置</h2><p>1.需求</p>
+<blockquote>
+<ul>
+<li>无论物理机的网络环境怎么变化，都需要保持虚拟机的IP地址不变，保证我本机使用xshell等终端访问始终用同一个IP地址，或者在安装了其他软件后，访问虚拟机的IP地址保持不变。</li>
+<li>物理机可访问虚拟机，虚拟机可访问网络都行。重点保证本机可访问虚拟机，以及虚拟机之间能互相访问。</li>
+<li>无论物理机的网络环境怎么变化，虚拟机可以连接到外网。</li>
+</ul>
+</blockquote>
+<p>2.检查 </p>
+<blockquote>
+<p>Hyper-V的网卡配置使用“虚拟交换机管理器”配置，创建虚拟交换机时，“外部”简单但是虚拟机ip地址会经常变，“内部”即常说的NAT网络，<br>可以配置固定ip，这里重点说这种方式；开始前需要检查：目前windows的NAT虚拟网络只能支持一个，因此在开始创建NAT网络前需要先<br>检查是否已存在NAT网络。检查可以直接查看网络适配器列表，看看是否由多个Hyper-V网络适配器，只允许一个Hyper-V默认交换机和即将<br>要使用的，其他的即使显示不可用的也要删除，删除方法之一是：在设备管理器中删除网络适配器；</p>
+</blockquote>
+<p>3.配置Hyper-V网络适配器并固定IP</p>
+<blockquote>
+<ul>
+<li>新建虚拟机.(略)</li>
+<li>创建一个内部方式的虚拟交换机，取名假设test</li>
+<li>在虚拟机的网络适配器上配置刚新建的test；</li>
+<li>设置虚拟交换机test的IP；<img src="/images/vm_1.png" alt></li>
+<li>修改虚拟机IP； <img src="/images/vm_2.png" alt></li>
+<li>重启虚拟机网路：systemctl restart network，查看IP：ip addr show；</li>
+</ul>
+</blockquote>
+<ol start="4">
+<li><p>连接外网</p>
+<blockquote>
+<p>前面介绍，Hyper-V有个默认交换机，通过这个交换机就可以连接外网且无须额外配置；需要将这个默认交换机配置到新建的虚拟机中，<br>且注意先后顺序，必须先配置默认的test适配器才能绑定固定IP；配置默认交换机前需要关闭虚拟机，最终配置如下图：<br><img src="/images/vm_3.png" alt></p>
+</blockquote>
+</li>
+<li><p>扩展</p>
+<blockquote>
+<p>如果需要配置多个虚拟机脸网，如上步骤，核心配置test适配器固定IP，使用默认交换机联网；xshell使用test网络适配器中配置的静态IP.</p>
+</blockquote>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
         
   
   
@@ -183,9 +514,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/kafka/" itemprop="url" rel="index">
-                    <span itemprop="name">kafka</span>
-                  </a>
+                  <a href="/categories/kafka/" itemprop="url" rel="index"><span itemprop="name">kafka</span></a>
                 </span>
             </span>
 
@@ -342,9 +671,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/kafka/" itemprop="url" rel="index">
-                    <span itemprop="name">kafka</span>
-                  </a>
+                  <a href="/categories/kafka/" itemprop="url" rel="index"><span itemprop="name">kafka</span></a>
                 </span>
             </span>
 
@@ -532,9 +859,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/kafka/" itemprop="url" rel="index">
-                    <span itemprop="name">kafka</span>
-                  </a>
+                  <a href="/categories/kafka/" itemprop="url" rel="index"><span itemprop="name">kafka</span></a>
                 </span>
             </span>
 
@@ -1005,184 +1330,11 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/26/Spring-Spring-5源码编译踩坑/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/04/26/Spring-Spring-5源码编译踩坑/" class="post-title-link" itemprop="url">Spring: Spring-5源码编译踩坑</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2019-04-26 14:57:44 / 修改时间：17:48:40" itemprop="dateCreated datePublished" datetime="2019-04-26T14:57:44+08:00">2019-04-26</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>##1. cglib和objenesis的编译错误解决</p>
-<p>###问题分析：<br>    为了避免第三方class的冲突，Spring把最新的cglib和objenesis重新打包(repack)了，在spring-core模块中引用，<br>    可以看到gradle自定义的task任务cglibRepackJar和objenesisRepackJar，因此要先执行这些task任务才能编译成功；<br>    网络上有些是直接引用这些jar包，虽然也可以，但因为版本会更新相关jar包不好找，另一方面也没必要额外引入；而且即使这个<br>    问题使用引入jar包方式解决，后面编译还是会有些测试类找不到无法编译通过；</p>
-<p>###解决办法：<br>    既然知道了问题原因，解决办法也就是先执行自定义task，两种方式；</p>
-<pre><code>1. 可以使用command方式执行；
-   进入源码的根目录，例如我的是：C:\WorkSpaces\source_code\spring-framework-5.1.6.RELEASE
-   然后执行gradle cleanEclipse idea或者gradle cleanEclipse eclipse，根据自己的idea工具选择，
-   然后执行gradle cglibRepackJar和gradle objenesisRepackJar，后面编译遇到类似问题，先看gradle
-   文件，找到对应的自定义task，这样执行；
-2. 一般使用idea工具，都会自带可视化页面；例如idea可以像图1这样做：
-</code></pre><p><img src="/images/spring_1.png" alt></p>
-<pre><code>直接点击执行即可;
-</code></pre><p>##2. AspectJ编译问题解决</p>
-<p>###问题分析：<br>    问题现象是：编译提示找不到AnnotationCacheAspect等类符号，实际可以找到，发现是这样描述的：<br>    <code>public aspect AnnotationCacheAspect extends AbstractCacheAspect {…}</code><br>    像aspect不是java支持的关键字，它只是AspectJ才认识的关键字，需要ajc.exe来执行编译.</p>
-<p>###解决办法：</p>
-<pre><code>1. 下载aspect的jar包，目前版本1.9.3
-2. 建议使用java -jar xxx.jar的方式安装AspectJ，本质是解压，这种方式有可视化界面，且会自动配置classpath之类的（maybe?);
-3. 为spring-aspect工程添加Facets属性，如图2.
-</code></pre><p><img src="/images/spring_2.png" alt></p>
-<pre><code>4. 更改编译器，如图3.
-</code></pre><p> <img src="/images/spring_3.png" alt></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/18/大数据：parquet时间c±t时间类型存储、转换、展示/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/04/18/大数据：parquet时间c±t时间类型存储、转换、展示/" class="post-title-link" itemprop="url">大数据：parquet时间类型存储、转换、展示</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2019-04-18 14:21:07 / 修改时间：14:28:49" itemprop="dateCreated datePublished" datetime="2019-04-18T14:21:07+08:00">2019-04-18</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/big-data/" itemprop="url" rel="index">
-                    <span itemprop="name">big data</span>
-                  </a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="parquet时间类型存储、转换、读取"><a href="#parquet时间类型存储、转换、读取" class="headerlink" title="parquet时间类型存储、转换、读取"></a>parquet时间类型存储、转换、读取</h2><ol>
-<li>hive表转parquet. (10.100.2.100:50070)<br> /user/hive/warehouse/csv2parquet</li>
-<li><p>java读取parquet并解析时间类型.</p>
-</li>
-<li><p>spark写parquet文件格式.</p>
-</li>
-<li><p>解析上面的时间类型.</p>
-</li>
-</ol>
-<h2 id="部分结论"><a href="#部分结论" class="headerlink" title="部分结论"></a>部分结论</h2><ol>
-<li>spark存储可以设置时间类型是long类型，然后正常转换得到；</li>
-<li>hive存储在parquet中的时间类型是int96，可以通过解析得到；</li>
-</ol>
-<h2 id="详细摘要"><a href="#详细摘要" class="headerlink" title="详细摘要"></a>详细摘要</h2><ol>
-<li><p>hive创建parquet文件格式的数据.<br> a. create table haoaktest(</p>
-<pre><code>    id int,
-    mytime timestamp,
-    mydate date
-) row format delimited fields terminated by &apos;,&apos;;
-</code></pre><p> b. load data local inpath ‘/home/hadoop/haoak/haoaktest.csv’ into table haoaktest;</p>
-<pre><code>注意hive的timestamp类型是&quot;yyyy-MM-dd HH:mm:ss.SSS&quot;, date类型是&quot;yyyy-MM-dd&quot;.
-</code></pre><p> c. create table csv2parquet stored as parquet</p>
-<pre><code>as select * from haoaktest;
-</code></pre><p> d. show create table csv2parquet可以看到路径和文件格式，注意文件路径是hive在hdfs上的默认目录下；</p>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1248,16 +1400,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-count">32</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

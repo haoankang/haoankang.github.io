@@ -30,7 +30,7 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="http://www.plantuml.com/plantuml/svg/dL9DIm9H5DtxIshH7z08Z0ZQX12qVphNUg3pPDwBi9MHaUKWBan8qBw8SPCfRiQAVetlZQxw2xtvQ4Od9yJLyEuzvvvxpXtAaCPYSTxhZB-gN6zk0r9tKOOHhPWYbAKqaW5AYIO1Lgrl3JuIiRYuDYQFUXJIQfKBmNi6jRQU20b5AlYeFPKof3AC62PgyXHfy8UNL521mO85b-26TyqI3UPepiw1Nz4fJqiF_AwxkeZy541ZnKEKEm7gp1-RxyxmOPTVll11HvGCMPtqBwn6rsxiepmue-Ka2kotv703b9To23YRVU1ZYH2mz9J3Pq4AhfBVmEgHFKcIKLR6xzd2G0-0pU0tqnAq9L5O4ZVom8w98lGhtcl9ccYEnF1spiK_coLjdGMBhNY8g76yDv87vfKsD-m_K5Jg_ER--rDtPSJhCpTDTrzUhydwsAnEsq_JHacydRjStz0EbdeudGClAGMeVOoGRJyYhnsL4gZA3m00">
 <meta property="og:image" content="http://yoursite.com/images/spring_4.jpg">
-<meta property="og:updated_time" content="2020-01-22T09:32:08.375Z">
+<meta property="og:updated_time" content="2020-02-24T01:55:37.303Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="&#39;Spring常见问题总结1&#39;">
 <meta name="twitter:description" content="1.Spring IOC&amp;amp;AOPIOC即依赖注入，是一种设计思想，将类的创建和依赖交给框架通过配置来管理，资源不由使用资源的双方管理而由第三方管理；可以降低耦合度，资源集中管理使得资源可配置和易管理；IOC容器实际上就是个Map，Map中存放了各种对象；Spring IOC的初始化（实现）过程：   xml配置–（读取）–&amp;gt;Resource–（解析）–&amp;gt;BeanDefiniti">
@@ -106,7 +106,10 @@
     </div>
   </div>
 
-  <div class="site-nav-right"></div>
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
 </div>
 
 
@@ -179,7 +182,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-01-22 17:32:08" itemprop="dateModified" datetime="2020-01-22T17:32:08+08:00">2020-01-22</time>
+                <time title="修改时间：2020-02-24 09:55:37" itemprop="dateModified" datetime="2020-02-24T09:55:37+08:00">2020-02-24</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -187,9 +190,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/spring/" itemprop="url" rel="index">
-                    <span itemprop="name">spring</span>
-                  </a>
+                  <a href="/categories/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
                 </span>
             </span>
 
@@ -259,6 +260,22 @@
 <li>模板方法：例如JdbcTemplete等;</li>
 <li>观察者 ：Sping事件驱动模型;</li>
 <li>适配器 ：AOP的增强或通知时使用了适配器模式，Jpa适配不同数据库；</li>
+</ul>
+</blockquote>
+<p><strong>8. Spring IOC的初始化过程</strong></p>
+<blockquote>
+<ol>
+<li>读取资源配置文件；</li>
+<li>解析并包装成相应的BeanDefinition；</li>
+<li>注册到BeanFactory中；</li>
+</ol>
+</blockquote>
+<p><strong>9. Spring如何解决循环依赖问题</strong><br>首先，需要明确的是spring对循环依赖的处理有三种情况：</p>
+<blockquote>
+<ul>
+<li>构造器的循环依赖：这种依赖spring是处理不了的，直 接抛出BeanCurrentlylnCreationException异常。</li>
+<li>单例模式下的setter循环依赖：通过“三级缓存”处理循环依赖。</li>
+<li>非单例循环依赖：无法处理。</li>
 </ul>
 </blockquote>
 
@@ -358,16 +375,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-count">32</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">14</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">19</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
