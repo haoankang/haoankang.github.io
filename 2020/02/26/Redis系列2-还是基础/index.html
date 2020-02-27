@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="###1. Redis主从架构.Redis主从架构特点：   主服务器负责接收写请求； 从服务器负责接收读请求； 从服务器的数据由主服务器复制过去，主从服务器的数据是一致的；   好处：读写分离、高可用、更高并发量； 复制功能的具体实现：  复制功能分为两个操作：同步（将从服务器数据库状态更新至主服务器的数据库状态）；命令传播（主服务器状态修改，让主从服务器数据库状态重新一致）；  同步时，从服务">
+<meta name="keywords" content="redis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis系列2-还是基础">
+<meta property="og:url" content="http://yoursite.com/2020/02/26/Redis系列2-还是基础/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="###1. Redis主从架构.Redis主从架构特点：   主服务器负责接收写请求； 从服务器负责接收读请求； 从服务器的数据由主服务器复制过去，主从服务器的数据是一致的；   好处：读写分离、高可用、更高并发量； 复制功能的具体实现：  复制功能分为两个操作：同步（将从服务器数据库状态更新至主服务器的数据库状态）；命令传播（主服务器状态修改，让主从服务器数据库状态重新一致）；  同步时，从服务">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-02-27T02:51:11.133Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis系列2-还是基础">
+<meta name="twitter:description" content="###1. Redis主从架构.Redis主从架构特点：   主服务器负责接收写请求； 从服务器负责接收读请求； 从服务器的数据由主服务器复制过去，主从服务器的数据是一致的；   好处：读写分离、高可用、更高并发量； 复制功能的具体实现：  复制功能分为两个操作：同步（将从服务器数据库状态更新至主服务器的数据库状态）；命令传播（主服务器状态修改，让主从服务器数据库状态重新一致）；  同步时，从服务">
+
+<link rel="canonical" href="http://yoursite.com/2020/02/26/Redis系列2-还是基础/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Redis系列2-还是基础 | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/26/Redis系列2-还是基础/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis系列2-还是基础
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-26 20:41:54" itemprop="dateCreated datePublished" datetime="2020-02-26T20:41:54+08:00">2020-02-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-27 10:51:11" itemprop="dateModified" datetime="2020-02-27T10:51:11+08:00">2020-02-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>###1. Redis主从架构.<br>Redis主从架构特点：</p>
+<blockquote>
+<ul>
+<li>主服务器负责接收写请求；</li>
+<li>从服务器负责接收读请求；</li>
+<li>从服务器的数据由主服务器复制过去，主从服务器的数据是一致的；</li>
+</ul>
+</blockquote>
+<p>好处：读写分离、高可用、更高并发量；</p>
+<p>复制功能的具体实现：</p>
+<blockquote>
+<p>复制功能分为两个操作：同步（将从服务器数据库状态更新至主服务器的数据库状态）；命令传播（主服务器状态修改，让主从服务器数据库状态重新一致）；</p>
+</blockquote>
+<p>同步时，从服务器向主服务器发送PYSNC命令，主要分为两个场景：完整重同步（初次同步）和部分重同步（断电重连），流程如下：</p>
+<blockquote>
+<p>完整重同步：</p>
+<ul>
+<li>从服务器向主服务器发送PYSNC命令；</li>
+<li>收到PYSNC的主服务器执行BGSAVE命令，在后台生成一个RDB文件，并用缓冲区记录接下来的所有写命令；</li>
+<li>RDB文件写完后，发送给从服务器，从服务器接收和载入RDB文件；</li>
+<li>主服务器将缓存区中的写命令发送给从服务器，从服务器执行这些命令，达到一致性；</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>部分重同步：<br>部分重同步的功能由以下部分组成：主从服务器的复制偏移量、主服务器的复制积压缓冲区、服务器运行的ID；<br>主服务器进行命令传播时，不仅会把命令发送给从服务器，还会把命令写入复制缓冲区；</p>
+</blockquote>
+<p>命令传播：</p>
+<blockquote>
+<p>完成了主从同步之后，就进入命令传播阶段；主服务器只要把写命令发送给从服务器，从服务器执行写命令，即可实现主从同步；<br>命令传播阶段，从服务器默认会以秒为间隔向主服务器发送REPLCONF ACK &lt;复制偏移量&gt;</p>
+</blockquote>
+<p>###2. 哨兵机制保证高可用性</p>
+<blockquote>
+<p>接上节主从机制，如果从服务器挂了，没影响；但是如果写服务器挂了，就没有服务器处理写请求了；这时哨兵系统会从从服务器中选举一个作为主服务器，<br>当主服务器重连之后，将之前的主服务器设置为从服务器，这个过程叫主备切换。（故障转移）</p>
+</blockquote>
+<p>哨兵机制主要功能如下：</p>
+<blockquote>
+<ul>
+<li>不停的监控Redis主从服务器是否正常工作；</li>
+<li>如果某个服务器有故障，哨兵负责同志管理员；</li>
+<li>如果主服务器挂了，会自动选举一个从服务器做主服务器；</li>
+<li>可以作为配置中心，能够提供当前主服务器的信息；</li>
+</ul>
+</blockquote>
+<p>哨兵判断主服务器是否下线：主观下线+客观下线；当一个主服务器被判断客观下线后，哨兵集群会选举一个领头哨兵，选举规则较多，总的来说是先到先得；<br>故障转移具体步骤：</p>
+<blockquote>
+<ul>
+<li>在已下线主服务器属下的从服务器中，挑选一个转换为主服务器</li>
+<li>让已下线主服务器属下的所有从服务器改为复制新的主服务器</li>
+<li>已下线的主服务器重新连接时，让他成为新的主服务器的从服务器</li>
+</ul>
+</blockquote>
+<p>挑选从服务器作为主服务器，规则如下：</p>
+<blockquote>
+<ul>
+<li>跟master断开连接的时长</li>
+<li>slave优先级</li>
+<li>复制偏移量</li>
+<li>run id</li>
+</ul>
+</blockquote>
+<p>###3. 数据丢失<br>即使主从结构+哨兵，redis还是会有数据丢失问题.</p>
+<blockquote>
+<ul>
+<li>主服务器宕机，还没有来得及同步消息；</li>
+<li>脑裂导致的数据丢失；</li>
+</ul>
+</blockquote>
+<p>###4. 缓存与数据库双写一致性<br>应用——缓存——数据库；读操作不会造成一致性问题，只有写操作才可能出现，两种解决方案：</p>
+<blockquote>
+<ul>
+<li>写操作时，先删除缓存，再修改数据库；</li>
+<li>写操作时，写修改数据库，再删除缓存；</li>
+</ul>
+</blockquote>
+<p>为什么删除缓存，而不是更新缓存？</p>
+<blockquote>
+<ol>
+<li>复杂的缓存场景中，缓存可能需要取几张表的数据计算得出；</li>
+<li>更新缓存代价较高；</li>
+</ol>
+</blockquote>
+<p>如果缓存+数据库必须严格一致，可以使用将读写请求串行化到内存队列中；</p>
+<p>###5. 其他问题</p>
+<ol>
+<li><p>RDB原理.</p>
+<blockquote>
+<p>fork和COW.redis通过fork命令创建子进程来进行RDB操作，子进程创建后，父子进程共享数据段，父进程继续提供服务；</p>
+</blockquote>
+</li>
+<li><p>redis基础数据类型使用场景.</p>
+<blockquote>
+<ul>
+<li>string. 缓存功能、计数器、共享session等；</li>
+<li>hash. 一般村结构化数据、对象；</li>
+<li>list. 有序列表，可以做一些列表型的数据，如粉丝列表、文章评论列表；也可以用来实现消息队列；</li>
+<li>set. set主要用于一些去重的场景；</li>
+<li>zset. 排行榜等；</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+<p>###6. redis集群<br>redis cluster，主要针对海量数据+高可用+高并发；介绍：自动将数据进行分片，每个master上存储部分数据；提供内置的高可用支持，当<br>主节点挂掉，从节点替换；</p>
+<p>redis cluster模式下，每个redis要开放两个端口：6379和16379；16379是进行节点间通信的，也就是cluster bus，用的是gossip二进制协议；</p>
+<p>节点间的内部通信机制.</p>
+<blockquote>
+<p>基本通信原理：集群元数据的维护两种方式集中式和gossip协议；</p>
+</blockquote>
+<p>分布式寻址算法.</p>
+<blockquote>
+<ul>
+<li>hash算法；</li>
+<li>一致性hash算法+虚拟节点；</li>
+<li>redis cluster的hash slot算法；</li>
+</ul>
+</blockquote>
+<p>跟哨兵模式对比.</p>
+<blockquote>
+<p>高可用和主备切换与哨兵模式相似，功能更加强大，直接集成了replication和sentinel的功能；</p>
+</blockquote>
+<p>###7. redis的并发竞争问题，以及redis的CAS方案.<br>并发竞争问题，是指多个客户端同时并发写一个key，可能会出问题；</p>
+<p>解决方案：</p>
+<blockquote>
+<ul>
+<li>利用zookeeper的分布式锁，写入前先锁定；</li>
+<li>利用数据库的时间戳CAS判定；</li>
+</ul>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/25/Redis系列1——基础/" rel="prev" title="Redis系列1——基础">
+      <i class="fa fa-chevron-left"></i> Redis系列1——基础
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ank.hao</p>
+  <div class="site-description" itemprop="description">技术、点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.1
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

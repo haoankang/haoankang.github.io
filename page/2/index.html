@@ -147,6 +147,597 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/20/Spring常见问题总结1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/01/20/Spring常见问题总结1/" class="post-title-link" itemprop="url">'Spring常见问题总结1'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-20 13:56:45" itemprop="dateCreated datePublished" datetime="2020-01-20T13:56:45+08:00">2020-01-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-24 09:55:37" itemprop="dateModified" datetime="2020-02-24T09:55:37+08:00">2020-02-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>1.Spring IOC&amp;AOP</strong><br>IOC即依赖注入，是一种设计思想，将类的创建和依赖交给框架通过配置来管理，资源不由使用资源的双方管理而由第三方管理；可以降低耦合度，资源集中管理使得资源可配置和易管理；<br>IOC容器实际上就是个Map，Map中存放了各种对象；Spring IOC的初始化（实现）过程：</p>
+<blockquote>
+<blockquote>
+<p>xml配置–（读取）–&gt;Resource–（解析）–&gt;BeanDefinition–（注册）–&gt;BeanFactory</p>
+</blockquote>
+</blockquote>
+<p>AOP即面向切面编程，可以为业务模块所共用的逻辑（如事务、日志、权限）封装起来，便于减少系统重复代码、降低耦合，有利于扩展和维护；Spring AOP是基于动态代理的，如果代理<br>对象实现了接口，使用jdk动态代理，如果没有实现接口则使用Cglib实现代理；</p>
+<p><strong>2.Spring AOP和AspectJ AOP区别</strong><br>Spring AOP属于运行时增强，AspectJ是编译时增强。Spring AOP基于代理，而AspectJ基于字节码操作；Spring AOP集成了AspectJ，常用的aop注解是AspectJ的；<br>jdk动态代理基于反射生成新的代理类，必须实现接口；</p>
+<p><strong>3.Spring的生命周期</strong><br><img src="http://www.plantuml.com/plantuml/svg/dL9DIm9H5DtxIshH7z08Z0ZQX12qVphNUg3pPDwBi9MHaUKWBan8qBw8SPCfRiQAVetlZQxw2xtvQ4Od9yJLyEuzvvvxpXtAaCPYSTxhZB-gN6zk0r9tKOOHhPWYbAKqaW5AYIO1Lgrl3JuIiRYuDYQFUXJIQfKBmNi6jRQU20b5AlYeFPKof3AC62PgyXHfy8UNL521mO85b-26TyqI3UPepiw1Nz4fJqiF_AwxkeZy541ZnKEKEm7gp1-RxyxmOPTVll11HvGCMPtqBwn6rsxiepmue-Ka2kotv703b9To23YRVU1ZYH2mz9J3Pq4AhfBVmEgHFKcIKLR6xzd2G0-0pU0tqnAq9L5O4ZVom8w98lGhtcl9ccYEnF1spiK_coLjdGMBhNY8g76yDv87vfKsD-m_K5Jg_ER--rDtPSJhCpTDTrzUhydwsAnEsq_JHacydRjStz0EbdeudGClAGMeVOoGRJyYhnsL4gZA3m00"></p>
+<p><strong>4.Spring MVC</strong><br>SpringMVC是一个Web开发框架，把后端项目分层为Model、View、Controller，工作原理如下：<br><img src="/images/spring_4.jpg" alt><br>流程说明：</p>
+<blockquote>
+<ul>
+<li>客户端（浏览器）发送请求，直接请求到DispacterServlet;</li>
+<li>DispacterServlet根据请求信息调用HandlerMapping，解析请求对应的Handler;</li>
+<li>解析到对应的handler后，开始由HandlerAdapter适配器处理;</li>
+<li>HandlerAdapter回根据handler来调用真正的处理器开始处理请求，并处理相应业务逻辑;</li>
+<li>处理器处理完业务后，会返回一个ModelAndView对象;</li>
+<li>ViewResolver会根据逻辑View查找实际的View;</li>
+<li>DispacterServlet把返回的Model传给view;</li>
+<li>view返回给客户端;</li>
+</ul>
+</blockquote>
+<p>重要组件说明：</p>
+<blockquote>
+<ul>
+<li>前端控制器DispacterServlet;</li>
+<li>处理器映射器HandlerMapping;</li>
+<li>处理器适配器HandlerAdapter;</li>
+<li>处理器Handler(Controller);</li>
+<li>视图解析器ViewResolver;</li>
+<li>视图View(jsp,freemarker..);</li>
+</ul>
+</blockquote>
+<p><strong>5.拦截器和过滤器</strong><br>过滤器处于客户端和web资源之间，可以针对request和response做过滤或提前设置参数，然后再传入servlet；拦截器是一种AOP；区别如下：</p>
+<blockquote>
+<p>拦截器是基于java反射机制的，而过滤器是基于函数回调；<br>拦截器不依赖web容器，而过滤器依赖web容器；<br>拦截器作为spring的组件，能通过IOC容器管理，获取spring中各种资源，而过滤器不能；<br>过滤器是在servlet规范中定义的，由servlet容器支持；拦截器是在spring容器内的，由spring框架支持；</p>
+</blockquote>
+<p>拦截顺序：过滤doFilter前–&gt;拦截器preHandle–&gt;action处理–&gt;拦截器postHandle–&gt;过滤doFilter后 </p>
+<p><strong>6.SpringMVC中的异常处理</strong></p>
+<blockquote>
+<ol>
+<li>自定义Exception;</li>
+<li>利用ControllerAdvice和ExceptionHandler全局捕获处理;</li>
+<li>定义一个返回对象，包括状态码、message、data等；</li>
+</ol>
+</blockquote>
+<p><strong>7. Spring中的设计模式</strong></p>
+<blockquote>
+<ul>
+<li>工厂模式：利用BeanFactory和ApplicationContext创建bean对象;</li>
+<li>单例模式：例如bean的作用域为singleton时;</li>
+<li>代理模式：AOP的原理;</li>
+<li>模板方法：例如JdbcTemplete等;</li>
+<li>观察者 ：Sping事件驱动模型;</li>
+<li>适配器 ：AOP的增强或通知时使用了适配器模式，Jpa适配不同数据库；</li>
+</ul>
+</blockquote>
+<p><strong>8. Spring IOC的初始化过程</strong></p>
+<blockquote>
+<ol>
+<li>读取资源配置文件；</li>
+<li>解析并包装成相应的BeanDefinition；</li>
+<li>注册到BeanFactory中；</li>
+</ol>
+</blockquote>
+<p><strong>9. Spring如何解决循环依赖问题</strong><br>首先，需要明确的是spring对循环依赖的处理有三种情况：</p>
+<blockquote>
+<ul>
+<li>构造器的循环依赖：这种依赖spring是处理不了的，直 接抛出BeanCurrentlylnCreationException异常。</li>
+<li>单例模式下的setter循环依赖：通过“三级缓存”处理循环依赖。</li>
+<li>非单例循环依赖：无法处理。</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/07/面试系列二/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/01/07/面试系列二/" class="post-title-link" itemprop="url">'面试系列二'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-07 19:53:42" itemprop="dateCreated datePublished" datetime="2020-01-07T19:53:42+08:00">2020-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-27 15:15:56" itemprop="dateModified" datetime="2020-02-27T15:15:56+08:00">2020-02-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/面试/" itemprop="url" rel="index"><span itemprop="name">面试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>1.系统拆分</strong></p>
+<ol>
+<li><p>为什么要将系统进行拆分？</p>
+<blockquote>
+<p>1.为了提升开发效率，一个大系统多人维护经常会有冲突，系统拆分后，便于职责划分，且模块独立；2.拆分便于扩展，针对不同的模块，<br>性能消耗不一样，可以有针对的扩容等；3.资源隔离，例如拆分后数据库可以独立，从而进行垂直拆分；</p>
+</blockquote>
+</li>
+<li><p>如何进行系统拆分？</p>
+<blockquote>
+<p>也就是拆分原则：功能模块单一职责；拆分粒度适中；考虑团队结构；业务模型驱动；演进式拆分；避免环形依赖和双向依赖；</p>
+</blockquote>
+</li>
+<li><p>分布式和微服务区别？</p>
+<blockquote>
+<p>分布式是一种手段，把不同机器分散在不同地方，机器间相互协作完成业务；微服务是一种特殊的分布式；主要是作用不同：微服务重在<br>解耦，使每个模块相互独立；分布式重在资源共享和提升性能；</p>
+</blockquote>
+</li>
+</ol>
+<p><strong>2.分布式事务</strong></p>
+<blockquote>
+<ul>
+<li>XA方案：两阶段提交，通常由一个事务管理器负责协调多个数据库事务；不常用：一个系统跨多个库不合适，而且数据库要求严格；</li>
+<li>TCC方案：Try、Confirm、Concel；不常用：要自己写回滚或补偿代码，用在对事务严格要求的情况；</li>
+<li>本地消息表：利用数据库表来记录消息处理；不常用：因为依赖数据库管理事务，并发情况不好；</li>
+<li>可靠消息最终一致性方案：常用方案，利用可靠的MQ来保证消息一致性；</li>
+<li>最大努力通知方案：可靠消息最终一致性方案的一种简单版本，如果B执行失败，尽量尝试重试，超过一定次数放弃；</li>
+</ul>
+</blockquote>
+<p><strong>3.高可用系统</strong></p>
+<ol>
+<li>高可用定义.<blockquote>
+<p>高可用描述的是一个系统在大部分时间都是可用的，可以提供服务。高可用代表系统即使在发生硬件故障或系统升级的时候，服务依然可用。</p>
+</blockquote>
+</li>
+<li>判断标准.<blockquote>
+<p>一般情况下，使用多少个9来判断一个系统的可用性。例如99.9999%代表该系统在所有的运行时间中只有0.001%的时间是不可用的。</p>
+</blockquote>
+</li>
+<li>哪些情况会导致系统不可用.<blockquote>
+<ol>
+<li>黑客攻击；</li>
+<li>硬件故障；</li>
+<li>并发量/用户请求激增导致整个服务宕掉或部分服务不可用；</li>
+<li>代码中的坏味道导致内存泄漏或其他问题使程序不可用；</li>
+<li>网络架构某个重要角色如nginx或者数据库突然不可用；</li>
+<li>自然灾害或人为破坏；</li>
+</ol>
+</blockquote>
+</li>
+<li>提高系统可用性方法.<blockquote>
+<ul>
+<li>注意代码质量，测试严格把关；</li>
+<li>使用集群，减少单点故障；</li>
+<li>限流；</li>
+<li>超时和重试机制；</li>
+<li>熔断机制；</li>
+<li>异步调用；</li>
+<li>使用缓存；</li>
+<li>核心应用和服务有限使用更好的硬件；</li>
+<li>监控系统资源使用情况增加报警设置；</li>
+<li>注意备份，必要时回滚；</li>
+<li>灰度发布；</li>
+<li>定期检查硬件；</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+<p><strong>4.集群部署时分布式session如何实现</strong></p>
+<blockquote>
+<ul>
+<li>完全不用session；使用JWT token存储用户信息，然后再从数据库或者cache中获取其他信息；</li>
+<li>tomcat+redis；</li>
+<li>spring session+redis；</li>
+<li></li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/02/Mysql系列4——基础原理3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/01/02/Mysql系列4——基础原理3/" class="post-title-link" itemprop="url">'Mysql系列4——基础原理3'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-02 20:03:19" itemprop="dateCreated datePublished" datetime="2020-01-02T20:03:19+08:00">2020-01-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-01-06 20:54:02" itemprop="dateModified" datetime="2020-01-06T20:54:02+08:00">2020-01-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>1.事务简介</strong><br>事务是作为单个逻辑工作单元执行的一系列操作；Spring事务本质上使用数据库锁，也就是数据库事务，Spring事务只有在方法执行过程中出现<br>异常才会回滚，并且只回滚数据库相关的操作；</p>
+<p>事务特性ACID：原子性（Atomicity）、一致性（Consistency）、隔离性（Isolation）、持久性（Durability）；</p>
+<p>mysql只有InnoDB和NDB存储引擎支持事务；开启事务：’begin;’或者’start transaction;’，显示提交事务就是commit；回滚事务rollback；<br>自动提交事务autocommit;隐式提交事务：当执行一些特殊语句而导致事务提交，例如ddl、隐式使用或修改mysql数据库中的表等等；保存点<br>的概念savepoint [savepointname]；</p>
+<p><strong>2.事务并发执行遇到的问题</strong></p>
+<blockquote>
+<ul>
+<li>脏写：一个事务修改了另一个未提交事务修改过的数据；</li>
+<li>脏读：一个事务读取了另一个未提交事务修改过的数据；</li>
+<li>不可重复读：一个事务两次读取同一行数据，得到不同结果；</li>
+<li>幻读：一个事务中两次读取一个表数据，得到不同结果，或多行或少行；</li>
+</ul>
+</blockquote>
+<p><strong>3.事务隔离级别</strong>（下面只是一种实现方式）</p>
+<blockquote>
+<ul>
+<li>Read Uncommitted: 事务对当前读取的数据不加锁，事务在更新某数据时，必须先对其加行级共享锁直到事务结束；</li>
+<li>Read Committed: 事务对当前被读取的数据加行级共享锁，一旦读完立即释放行级共享锁；事务在更新某数据时先加行级排他锁直到事务结束；</li>
+<li>Repeatable read: 事务在读取数据时先加行级共享锁直到事务结束；事务在更新时先加行级排他锁直到事务结束；</li>
+<li>Serializable: 事务在读取数据时先加表级共享锁直到事务结束；事务在更新时先加表级排他锁直到事务结束；</li>
+</ul>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>隔离级别</th>
+<th>脏读</th>
+<th>不可重复读</th>
+<th>幻读</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>读未提交</td>
+<td>可能</td>
+<td>可能</td>
+<td>可能</td>
+</tr>
+<tr>
+<td>读已提交</td>
+<td>不可能</td>
+<td>可能</td>
+<td>可能</td>
+</tr>
+<tr>
+<td>可重复读</td>
+<td>不可能</td>
+<td>不可能</td>
+<td>可能</td>
+</tr>
+<tr>
+<td>序列化</td>
+<td>不可能</td>
+<td>不可能</td>
+<td>不可能</td>
+</tr>
+</tbody>
+</table>
+<p><strong>4.MVCC</strong><br>multi-version concurrency control，多版本并发控制；因为加锁太消耗性能，MVCC是同一份数据临时保留多版本的一种方式实现并发控制；对于Mysql<br>的InnoDB来说，只有事务隔离级别是Read Committed和Repeatable Read时会使用MVCC保证不同事务的读写操作并发执行，不同点在于生成ReadView的时机<br>不同，Read Committed在每次执行普通select前生成一个，Repeatable read是在第一次进行普通select前生成一个ReadView，之后都是用这个；</p>
+<p>ReadView中比较重要的内容：</p>
+<blockquote>
+<ul>
+<li>m_ids:表示在生成ReadView时当前系统中活跃的读写事务的事务id列表；</li>
+<li>min_trx_id:表示生成ReadView时，当前系统中活跃的读写事务中最小的事务id；</li>
+<li>max_trx_id:同上，最大的事务id；</li>
+<li>creator_trx_id:表示生成该ReadView的事务id；</li>
+</ul>
+</blockquote>
+<p>访问某条记录，按下面步骤判断：</p>
+<blockquote>
+<ul>
+<li>如果被访问版本的trx_id属性值与ReadView中的creator_trx_id值相同，意味着当前事务在访问它自己修改过的记录，所以该版本可以被当前事务访问。</li>
+<li>如果被访问版本的trx_id属性值小于ReadView中的min_trx_id值，表明生成该版本的事务在当前事务生成ReadView前已经提交，所以该版本可以被当前事务访问。</li>
+<li>如果被访问版本的trx_id属性值大于或等于ReadView中的max_trx_id值，表明生成该版本的事务在当前事务生成ReadView后才开启，所以该版本不可以被当前事务访问。</li>
+<li>如果被访问版本的trx_id属性值在ReadView的min_trx_id和max_trx_id之间，那就需要判断一下trx_id属性值是不是在m_ids列表中，如果在，说明创建ReadView时生成该版本的事务还是活跃的，该版本不可以被访问；如果不在，说明创建ReadView时生成该版本的事务已经被提交，该版本可以被访问。</li>
+</ul>
+</blockquote>
+<p><strong>5.锁</strong></p>
+<p><strong>6.redo日志</strong><br>redo日志本质上是记录了事务对数据库做了哪些修改；redo日志会把事务在执行过程中对数据库做的所有修改都记录下来，在之后系统崩溃重启后可以把<br>事务所做的任何修改都恢复过来；</p>
+<p>redo日志也是先放到缓存log buffer中，刷盘时机：</p>
+<blockquote>
+<ul>
+<li>log buffer空间不足时；</li>
+<li>事务提交时；</li>
+<li>后台线程定时刷新；</li>
+<li>正常关闭服务器；</li>
+<li>其他；</li>
+</ul>
+</blockquote>
+<p>redo日志文件组，我们可以修改一些参数：redo日志存放目录、redo日志文件大小、redo日志文件个数；</p>
+<p><strong>7.undo日志</strong><br>undo日志是为了回滚记录；</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/25/Mysql系列3——基础原理2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/12/25/Mysql系列3——基础原理2/" class="post-title-link" itemprop="url">'Mysql系列3——基础原理2'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-25 20:38:12" itemprop="dateCreated datePublished" datetime="2019-12-25T20:38:12+08:00">2019-12-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-01-02 20:02:12" itemprop="dateModified" datetime="2020-01-02T20:02:12+08:00">2020-01-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>1.Mysql数据目录</strong><br>数据终究要存储在磁盘上，因此Mysql数据目录中包含各种文件，例如表空间、表、视图、日志、进程文件等；因此数据库受文件系统的影响：</p>
+<blockquote>
+<ul>
+<li>数据库名称和表名称不得超过文件系统所允许的最大长度</li>
+<li>特殊字符问题</li>
+<li>文件长度受文件系统最大长度限制</li>
+</ul>
+</blockquote>
+<p>mysql中有几个系统数据库：</p>
+<blockquote>
+<ul>
+<li>mysql: 存储了Mysql的用户账户和权限信息，一些存储过程、事件的定义信息，一些日志信息、帮助信息以及时区信息；</li>
+<li>information_schema: 维护所有其他数据库的信息，是一些描述性信息；</li>
+<li>performance_schema: mysql服务器运行过程中的一些状态信息；</li>
+<li>sys: 通过视图形式把information_schema和performance_schema结合起来，可以更方便的了解mysql服务器的一些性能信息；</li>
+</ul>
+</blockquote>
+<p><strong>2.InnoDB表空间</strong><br>表空间中每个也都有一个页号FILE_PAGE_OFFSET，这个页号由4个字节组成，如果页设置大小为默认16kb，则一个表空间最多64TB数据；<br>表空间分为独立表空间和系统表空间；对于16KB的页来说，连续64个页是一个区，默认1MB空间；一个索引会生成2个段，一个叶子节点段，<br>一个非叶子节点段；</p>
+<p><strong>3.表单访问方法</strong></p>
+<blockquote>
+<ul>
+<li>const: 通过主键或者唯一二级索引列与常数的等值比较来定位一条记录的访问方法；</li>
+<li>ref: 搜索条件为二级索引列与常数等值比较，采用二级索引来执行查询的访问方法；</li>
+<li>ref_or_null: 搜索条件为（二级索引列与常数等值比较）or（二级索引列为null）；</li>
+<li>range: 二级索引匹配区间值；</li>
+<li>index: 只需要遍历二级索引记录的访问方法；</li>
+<li>index merge: 使用多个索引来完成一次查询；</li>
+<li>all: 全表扫描；</li>
+</ul>
+</blockquote>
+<p><strong>4.连接</strong><br>连接分为内连接和外连接，区别在于：驱动表中的记录即使在被驱动表没有匹配，是否加入到结果集中；<br><br>驱动表只访问一次，被驱动表可能被访问多次，访问次数取决于对驱动表执行单表查询后的结果集中的记录数，这种连接执行方式称为嵌套循环连接；尽量减少访问被驱动表的次数；</p>
+<p><strong>5.成本</strong><br>mysql中一条查询语句的执行成本是由两个方面组成：IO成本和CPU成本；<br><br>mysql执行查询语句前会先分析所有可用方案的执行成本，对比找出成本最低的方案，也就是执行计划；</p>
+<blockquote>
+<ol>
+<li>根据搜索条件，找出所有可能使用的索引；</li>
+<li>计算全表扫描的代价；</li>
+<li>计算使用不同索引执行查询的代价；</li>
+<li>对比各种执行方案的代价，找出成本最低的那个；</li>
+</ol>
+</blockquote>
+<p>因此需要注意可能存在的索引计算代价花费时间过长造成的负优化，一些成本常数可设置；</p>
+<p><strong>6.统计数据的收集</strong><br>InnoDB默认是以表为单位来收集和存储统计数据的，这些统计数据可用是基于磁盘的永久性统计数据，也可以是基于内存的非永久性统计数据；<br><br>innodb_stats_persistent控制着使用永久性统计数据还是非永久性统计数据；<br><br>innodb_stats_persistent_sample_pages控制着永久性统计数据的采样页面数量；<br><br>innodb_stats_transient_sample_pages控制着非永久性统计数据的采样页面数量；<br><br>innodb_stats_auto_recalc控制着是否自动重新计算统计数据。</p>
+<p>我们可以针对某个具体的表，在创建和修改表时通过指定STATS_PERSISTENT、STATS_AUTO_RECALC、STATS_SAMPLE_PAGES的值来控制相关统计数据属性。</p>
+<p>innodb_stats_method决定着在统计某个索引列不重复值的数量时如何对待NULL值。</p>
+<p><strong>7.查询优化（内部）</strong></p>
+<blockquote>
+<ul>
+<li>条件化简；</li>
+<li>外连接消除；</li>
+<li>子查询优化；</li>
+</ul>
+</blockquote>
+<p><strong>8.Explain执行计划</strong><br>格式：[explain] [format=json] sql;<br>optimizer_trace参数可以启用查看详细的执行优化过程；</p>
+<p><strong>9.Buffer Pool</strong></p>
+<ol>
+<li>磁盘太慢，所以要用内存做缓存；Buffer Pool本质是InnoDB向操作系统申请的一段连续的内存空间，可通过innodb_buffer_pool_size来调整大小；<br></li>
+<li>Buffer Pool向操作系统申请的连续内存由控制块和缓存页组成，InnoDB使用链表来管理Buffer Pool，free链表中每个节点都代表一个空闲的缓存页，为了快速定位页是否被加载到Buffer Pool，使用表空间号+页号作为key，<br>缓存页作为value，建立哈希表；<br></li>
+<li>Buffer Pool中被修改的页被称为脏页，脏页不会立即刷新，而是加入flush链表，待之后的某个时间点同步到磁盘上；LRU链表分为young和old两个区域；<br></li>
+<li>每个buffer pool中都有各自独立的链表，一个buffer pool实例由若干chunk组成；</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/24/Mysql系列2——基础原理/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -497,7 +1088,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-18 10:11:35" itemprop="dateModified" datetime="2020-02-18T10:11:35+08:00">2020-02-18</time>
+                <time title="修改时间：2020-02-25 16:30:44" itemprop="dateModified" datetime="2020-02-25T16:30:44+08:00">2020-02-25</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -554,7 +1145,15 @@
 <li>红黑树通过旋转完成平衡，添加、删除、查找时间复杂度基本都是O(logN)；</li>
 <li>B树属于多叉树（平衡多路查找树），排序也是左小右大；B+树是B树基础上衍生的，区别是：B树根节点包含数据，B+树根节点<br>只能由索引，数据全部在叶子节点；</li>
 </ol>
-<p><strong>5.死锁</strong><br>死锁是什么：</p>
+<p><strong>5.B树和B+树区别</strong></p>
+<blockquote>
+<ol>
+<li>B+树单一节点存储的元素更多，使得查询的IO次数更少，更适合做Mysql的底层数据结构；</li>
+<li>所有的查询都要查询到叶子节点，查询性能是稳定的；</li>
+<li>所有的叶子节点形成一个有序链表，更加便于查找；</li>
+</ol>
+</blockquote>
+<p><strong>6.死锁</strong><br>死锁是什么：</p>
 <blockquote>
 <p>死锁，是指多个进程循环等待他方占有的资源而无限期的僵持下去的局面；</p>
 </blockquote>
@@ -1040,614 +1639,6 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/08/IO二三事1——基础篇/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/11/08/IO二三事1——基础篇/" class="post-title-link" itemprop="url">IO二三事1——基础篇</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-11-08 19:56:58" itemprop="dateCreated datePublished" datetime="2019-11-08T19:56:58+08:00">2019-11-08</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-17 10:27:28" itemprop="dateModified" datetime="2020-02-17T10:27:28+08:00">2020-02-17</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>##1. 前言.<br>I/O是一个大命题，从最基础的入门API操作，到高级的网络IO、NIO、Netty等，软件本质上就是输入输出和处理，<br>因此IO占了很重要一部分，这里不指望涵盖方方面面，但作为自己知识体系的一部分，还是有必要梳理一下的；</p>
-<p>经常碰到的一些面试问题如：</p>
-<ul>
-<li>同步、异步、阻塞、非阻塞之间的关系和区别？</li>
-<li>IO模型有哪些，有什么特点，它们之间有什么区别？</li>
-<li>NIO有哪些优势，netty为什么高效？</li>
-</ul>
-<p>这些问题感觉熟悉又陌生，大部分人知道二三，但是又经不住刨根问底，这篇就先理清基础概念，有助于后续问题分析.</p>
-<p>##2. 基础概念.</p>
-<p>###1. IO过程<br>本地输入操作包含过程：</p>
-<ul>
-<li>等待数据准备好</li>
-<li>从内核向进程复制数据</li>
-</ul>
-<p>网络数据输入包含过程：</p>
-<ul>
-<li>等待数据从网络送达，到达后被复制到内核缓冲区</li>
-<li>把数据从内核缓冲区复制到程序缓冲区</li>
-</ul>
-<p>###2. 阻塞和非阻塞、同步与异步</p>
-<ul>
-<li>同步和异步————消息如何通知(client).</li>
-<li>阻塞和非阻塞————(client)等待消息通知时的状态.<br>简单例子：小明下载文件.</li>
-<li>小明一直干等着下载完成————同步、阻塞</li>
-<li>小明边玩手机边等着下载完成————同步、非阻塞</li>
-<li>软件下载完成有提示，小明一直等着提示音————异步、阻塞</li>
-<li>软件下载完成有提示，小明玩手机看书直到听到提示音————异步、非阻塞</li>
-</ul>
-<p>###3. unix的IO模型<br>unix网络编程把IO模型分为5类，分别如下：</p>
-<ol>
-<li>阻塞I/O：<blockquote>
-<p>在进程空间内调用时，数据传到内核空间并从内核空间复制到用户空间、或者调用<br> 发生错误时才会返回，期间一直阻塞等待；</p>
-</blockquote>
-</li>
-<li>非阻塞I/O：<blockquote>
-<p>在数据到达内核阶段，如果该缓冲区没有数据，则会直接返回错误；非阻塞IO会轮询<br> 这个状态，看内核是否有数据到达；</p>
-</blockquote>
-</li>
-<li>I/O复用：<blockquote>
-<p>linux提供select/poll，进程通过将一个或多个fd传递给select或poll系统调用，<br> 阻塞在select上，这样select/poll可以侦测多个fd是否处于就绪状态；select/poll<br> 使用顺序扫描，并且支持的fd数量有限；linux提供epoll系统调用，使用事件驱动，<br> 当有fd准备就绪时，立即回调，效率更高；</p>
-</blockquote>
-</li>
-<li>信号驱动I/O：<blockquote>
-<p>首先开启套接口信号驱动IO功能，并通过系统调用sigaction执行一个信号处理函数，<br> 当数据准备就绪时，为该进程生成一个信号，通过信号回调通知应用程序；</p>
-</blockquote>
-</li>
-<li>异步I/O：<blockquote>
-<p>告知内核启动某个操作，并在内核操作完成后通知进程；和信号驱动的主要区别是：信号<br> 驱动IO由内核通知我们何时可以操作，异步IO由内核通知我们操作已经完成；</p>
-</blockquote>
-</li>
-</ol>
-<p>区别可以用下面图片概括：<br><img src="/images/IO_1.png" alt></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/10/31/踩坑系列——兼容oracle引发的事件/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/10/31/踩坑系列——兼容oracle引发的事件/" class="post-title-link" itemprop="url">踩坑系列——mybatis兼容oracle引发的事件</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-10-31 10:34:11" itemprop="dateCreated datePublished" datetime="2019-10-31T10:34:11+08:00">2019-10-31</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-04 11:39:37" itemprop="dateModified" datetime="2019-12-04T11:39:37+08:00">2019-12-04</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/踩坑系列/" itemprop="url" rel="index"><span itemprop="name">踩坑系列</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>前两天一个项目要做数据库兼容，本身是mybatis+mysql的，要兼容oracle；这期间为了使项目更好维护，折腾了一两天，<br>也遇到一些坑，学到一些，这里记录一下；</p>
-<p>##1. mybatis-generator插件选择的纠结.<br>   之前使用的是idea插件库中的MyBatisCodeHelper，挺好用的一个插件，mysql时用起来异常顺手，但是本人使用生成oracle时<br>有点问题，再加上不好做定制，而且收费的，因此打算找个更好用的工具；这里说明一下，基本所有的mybatis-generator工具底层<br>都是使用官方的mybatis-generator的，<a href="https://mybatis.org/generator/index.html" target="_blank" rel="noopener">文档地址这里</a><br><br><br>   一般有三种方式：一种是集成到idea等开发工具种的plugin，例如上面的MyBatisCodeHelper，最大优点是方便，<br>简单使用时推荐；第二种是做成单独的应用，可以有界面也可以没界面，典型的是<a href="https://github.com/zouzg/mybatis-generator-gui" target="_blank" rel="noopener">mybatis-generator-gui</a>，<br>优点就是界面不错，也可保存配置，用起来也算方便，但是定制比较麻烦，我甚至没找到配置文件233；第三种就是<br>mybatis-generator-maven-plugin了，集成到maven中的，如果维护多个项目，且数据库设计不统一，那这种挺<br>合适的，毕竟每个项目唯一配置，定制化也比较方便；接下来主要是关于第三种方式的一些踩坑和进阶；</p>
-<p>##2. mybatis-generator-maven-plugin的基本使用方式.</p>
-<ol>
-<li>pom中引入plugin；<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"> &lt;plugin&gt;</span><br><span class="line">    &lt;groupId&gt;org.mybatis.generator&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;mybatis-generator-maven-plugin&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.3.7&lt;/version&gt;</span><br><span class="line">    &lt;configuration&gt;</span><br><span class="line">        &lt;!-- 配置文件 --&gt;</span><br><span class="line">        &lt;!--&lt;configurationFile&gt;src/main/resources/mybatisGenerate/mysql/generatorConfig.xml&lt;/configurationFile&gt;--&gt;</span><br><span class="line">        &lt;configurationFile&gt;src/main/resources/mybatisGenerate/oracle/generatorConfig.xml&lt;/configurationFile&gt;</span><br><span class="line">        &lt;!-- 允许移动和修改 --&gt;</span><br><span class="line">        &lt;verbose&gt;true&lt;/verbose&gt;</span><br><span class="line">        &lt;overwrite&gt;true&lt;/overwrite&gt;</span><br><span class="line">    &lt;/configuration&gt;</span><br><span class="line">    &lt;executions&gt;</span><br><span class="line">        &lt;execution&gt;</span><br><span class="line">            &lt;id&gt;Generate MyBatis Artifacts&lt;/id&gt;</span><br><span class="line">            &lt;phase&gt;deploy&lt;/phase&gt;</span><br><span class="line">            &lt;goals&gt;</span><br><span class="line">                &lt;goal&gt;generate&lt;/goal&gt;</span><br><span class="line">            &lt;/goals&gt;</span><br><span class="line">        &lt;/execution&gt;</span><br><span class="line">    &lt;/executions&gt;</span><br><span class="line">    &lt;dependencies&gt;</span><br><span class="line">        &lt;dependency&gt;</span><br><span class="line">            &lt;groupId&gt;mysql&lt;/groupId&gt;</span><br><span class="line">            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;</span><br><span class="line">            &lt;version&gt;5.1.47&lt;/version&gt;</span><br><span class="line">        &lt;/dependency&gt;</span><br><span class="line">        &lt;dependency&gt;</span><br><span class="line">            &lt;groupId&gt;com.oracle&lt;/groupId&gt;</span><br><span class="line">            &lt;artifactId&gt;ojdbc8&lt;/artifactId&gt;</span><br><span class="line">            &lt;version&gt;12.1.0.1&lt;/version&gt;</span><br><span class="line">        &lt;/dependency&gt;</span><br><span class="line">        &lt;dependency&gt;</span><br><span class="line">            &lt;groupId&gt;org.mybatis.generator&lt;/groupId&gt;</span><br><span class="line">            &lt;artifactId&gt;mybatis-generator-core&lt;/artifactId&gt;</span><br><span class="line">            &lt;version&gt;1.3.7&lt;/version&gt;</span><br><span class="line">        &lt;/dependency&gt;</span><br><span class="line">    &lt;/dependencies&gt;</span><br><span class="line">&lt;/plugin&gt;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-<p>注意mysql和oracle的驱动包要与自己使用的版本对应；</p>
-<ol start="2">
-<li><p>创建对应<configurationfile>配置文件，例如：</configurationfile></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;!DOCTYPE generatorConfiguration</span><br><span class="line">        PUBLIC &quot;-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN&quot;</span><br><span class="line">        &quot;http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd&quot;&gt;</span><br><span class="line">&lt;generatorConfiguration&gt;</span><br><span class="line">    &lt;properties resource=&quot;mybatisGenerate/oracle/generator.properties&quot;/&gt;</span><br><span class="line">    &lt;context id=&quot;scheduler-admin&quot; defaultModelType=&quot;flat&quot; targetRuntime=&quot;MyBatis3&quot;&gt;</span><br><span class="line"></span><br><span class="line">        &lt;plugin type=&quot;org.mybatis.generator.plugins.EqualsHashCodePlugin&quot;/&gt;</span><br><span class="line">        &lt;plugin type=&quot;org.mybatis.generator.plugins.SerializablePlugin&quot;/&gt;</span><br><span class="line">        &lt;plugin type=&quot;org.mybatis.generator.plugins.CaseInsensitiveLikePlugin&quot;/&gt;</span><br><span class="line">        &lt;!--覆盖生成XML文件--&gt;</span><br><span class="line">        &lt;plugin type=&quot;org.mybatis.generator.plugins.UnmergeableXmlMappersPlugin&quot;/&gt;</span><br><span class="line"></span><br><span class="line">        &lt;commentGenerator&gt;</span><br><span class="line">            &lt;property name=&quot;suppressDate&quot; value=&quot;true&quot;/&gt;</span><br><span class="line">            &lt;property name=&quot;suppressAllComments&quot; value=&quot;true&quot;/&gt;</span><br><span class="line">        &lt;/commentGenerator&gt;</span><br><span class="line">        &lt;jdbcConnection driverClass=&quot;$&#123;jdbc.driverClassName&#125;&quot;</span><br><span class="line">                        connectionURL=&quot;$&#123;jdbc.jdbcUrl&#125;&quot;</span><br><span class="line">                        userId=&quot;$&#123;jdbc.username&#125;&quot;</span><br><span class="line">                        password=&quot;$&#123;jdbc.password&#125;&quot;&gt;</span><br><span class="line">        &lt;/jdbcConnection&gt;</span><br><span class="line">        &lt;javaTypeResolver type=&quot;com.mybatis.generator.MyJavaTypeResolver&quot;&gt;</span><br><span class="line">            &lt;property name=&quot;forceBigDecimals&quot; value=&quot;false&quot; /&gt;</span><br><span class="line">        &lt;/javaTypeResolver&gt;</span><br><span class="line">        &lt;javaModelGenerator targetPackage=&quot;xxx.domain&quot; targetProject=&quot;./src/main/java&quot;&gt;</span><br><span class="line">            &lt;property name=&quot;enableSubPackages&quot; value=&quot;true&quot;/&gt;</span><br><span class="line">            &lt;property name=&quot;trimStrings&quot; value=&quot;true&quot;/&gt;</span><br><span class="line">        &lt;/javaModelGenerator&gt;</span><br><span class="line">        &lt;sqlMapGenerator targetPackage=&quot;mapperxml.oracle&quot; targetProject=&quot;./src/main/resources/&quot;&gt;</span><br><span class="line">            &lt;property name=&quot;enableSubPackages&quot; value=&quot;true&quot;/&gt;</span><br><span class="line">        &lt;/sqlMapGenerator&gt;</span><br><span class="line">        &lt;javaClientGenerator type=&quot;XMLMAPPER&quot; targetPackage=&quot;xxx.mapper&quot;</span><br><span class="line">                             targetProject=&quot;./src/main/java&quot;&gt;</span><br><span class="line">            &lt;property name=&quot;enableSubPackages&quot; value=&quot;true&quot;/&gt;</span><br><span class="line">        &lt;/javaClientGenerator&gt;</span><br><span class="line"></span><br><span class="line">        &lt;table tableName=&quot;ml_scheduler_group&quot; domainObjectName=&quot;MlSchedulerGroup&quot;&gt;</span><br><span class="line">            &lt;property name=&quot;ignoreQualifiersAtRuntime&quot; value=&quot;true&quot;/&gt;</span><br><span class="line">            &lt;generatedKey column=&quot;ID&quot; sqlStatement=&quot;JDBC&quot;/&gt;</span><br><span class="line">        &lt;/table&gt;</span><br><span class="line">    &lt;/context&gt;</span><br><span class="line">&lt;/generatorConfiguration&gt;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>创建数据库配置文件generator.properties，内容如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">jdbc.driverClassName=oracle.jdbc.driver.OracleDriver</span><br><span class="line">jdbc.jdbcUrl=jdbc:oracle:thin:@10.100.1.210:2521:xe</span><br><span class="line">jdbc.username=smartlearning_pretest</span><br><span class="line">jdbc.password=123456</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用mvn命令或者idea集成mvn插件生成对应的文件；</p>
-</li>
-</ol>
-<p>##3. 一些细节、坑、进阶.</p>
-<ol>
-<li><p>数据库驱动的版本最好对应上使用的版本，不然会导致无法识别主键；这里说最好，也就是有替代方法：<table><br>标签中指定schema或者catalog等来定位数据库，例如mysql可以指定schema=”yourDataBase”，还有种方法<br>可以参考<a href="https://mybatis.org/generator/usage/mysql.html；但是建议直接使用对应版本的驱动jar，" target="_blank" rel="noopener">https://mybatis.org/generator/usage/mysql.html；但是建议直接使用对应版本的驱动jar，</a><br>免得后续会有一些奇奇怪怪的问题；</table></p>
-</li>
-<li><p>mybatis-generator的核心就是generatorConfig.xml配置文件，这里的配置详解可以参考<a href="https://mybatis.org/generator/index.html" target="_blank" rel="noopener">官网地址</a>，<br>这里就说明一点：主键一般是自动识别的，<generatedkey>可以配置主键生成方式，我这里因为mysql主键是自增的，<br>oracle主键是sequence+trigger自动生成的，因此这里这样配置；如果不配做，在生成的insert等sql中，<br>会需要写入主键导致问题，这里需要看自己采用哪种主键生成方式了；</generatedkey></p>
-</li>
-<li><p>定制化. 这里定制化主要是数据类型的全局定制javaType和jdbcType，当然你可以在每个<table>中使用<columnoverride><br>来定制，但是因为每个table都需要写，如果数据表较多，会很麻烦和臃肿；步骤如下：</columnoverride></table></p>
-</li>
-</ol>
-<ul>
-<li><p>首先自定义MyJavaTypeResolver,最好在一个单独的工具module中，因为要install本地作为mybatis-generator-maven-plugin的依赖包。<br>新建一个工程，pom核心配置如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;artifactId&gt;xxx-common&lt;/artifactId&gt;</span><br><span class="line">&lt;version&gt;1.0-SNASHOT&lt;/version&gt;</span><br><span class="line"></span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.mybatis.generator&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;mybatis-generator-core&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;1.3.7&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>自定义MyJavaTypeResolver如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">public class MyJavaTypeResolver extends JavaTypeResolverDefaultImpl &#123;</span><br><span class="line"></span><br><span class="line">    public MyJavaTypeResolver()&#123;</span><br><span class="line">        super();</span><br><span class="line">        super.typeMap.put(Types.NUMERIC, new JavaTypeResolverDefaultImpl.JdbcTypeInformation(&quot;INTEGER&quot;, new FullyQualifiedJavaType(Integer.class.getName())));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">//    protected FullyQualifiedJavaType calculateBigDecimalReplacement(IntrospectedColumn column, FullyQualifiedJavaType defaultType) &#123;</span><br><span class="line">//        FullyQualifiedJavaType answer;</span><br><span class="line">//        if (column.getScale() &lt;= 0 &amp;&amp; column.getLength() &lt;= 18 &amp;&amp; !this.forceBigDecimals) &#123;</span><br><span class="line">//            if (column.getLength() &gt; 11) &#123;</span><br><span class="line">//                answer = new FullyQualifiedJavaType(Long.class.getName());</span><br><span class="line">//            &#125; else &#123;</span><br><span class="line">//                answer = new FullyQualifiedJavaType(Integer.class.getName());</span><br><span class="line">//            &#125;</span><br><span class="line">//        &#125; else &#123;</span><br><span class="line">//            answer = defaultType;</span><br><span class="line">//        &#125;</span><br><span class="line">//</span><br><span class="line">//        return answer;</span><br><span class="line">//    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>因为oracle数据表使用的数值类型都是Number，mysql中使用的是integer，因此这里这样配置，目的是把所有<br>number类型映射成integer，从而统一；这里顺便介绍下spring boot+mybatis+mysql/oracle方案，mapper和<br>model统一的，sql所在的xml是分开的，spring boot中可以直接用配置文件指定xml位置，自定义sql直接放在mapper<br>目录下通用，所以也需要注意兼容问题；</p>
-<ul>
-<li><p>将xxx-common项目mvn install到本地即可，mybatis-generator-maven-plugin中引入相关依赖包，<br>在generatorConfig.xml中配置：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;javaTypeResolver type=&quot;com.mybatis.generator.MyJavaTypeResolver&quot;&gt;</span><br><span class="line">    &lt;property name=&quot;forceBigDecimals&quot; value=&quot;false&quot; /&gt;</span><br><span class="line">&lt;/javaTypeResolver&gt;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>这样就可以根据需要修改了，而且mvn插件还支持debug功能！</p>
-</li>
-</ul>
-<p>##4. 其他的一些.</p>
-<ol>
-<li><p>pagehelper分页本身是支持mysql和oracle的，配置即可；</p>
-</li>
-<li><p>自定义sql时，注意返回的类型如果是object，默认映射的是原始类型，例如oracle的number返回BigDecimal，<br>这个需要注意判断；</p>
-</li>
-<li><p>mysql和oracle的语法还是有些区别的；例如都是mybatis-generator自动生成的，像select * from<br>T where xx in(list),list.size=1，但是list里是空对象，这种情况下，mysql不会报错，而oracle会<br>报错，而且报错是类型错误；</p>
-</li>
-<li><p>数据库兼容这种，因为数据库不一样，很多报错内容也都没法让我们直观了了解错误，因此需要远程调试；<br>-Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005</p>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/09/10/Zookeeper系列4——Zookeeper的原理/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/09/10/Zookeeper系列4——Zookeeper的原理/" class="post-title-link" itemprop="url">Zookeeper系列4——Zookeeper的原理</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-09-10 10:17:11" itemprop="dateCreated datePublished" datetime="2019-09-10T10:17:11+08:00">2019-09-10</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-17 17:36:47" itemprop="dateModified" datetime="2019-09-17T17:36:47+08:00">2019-09-17</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>##1. 系统模型<br>1.1 数据模型</p>
-<blockquote>
-<p>zookeeper的数据节点ZNode按层次化结构组织，形成一棵树，节点的路径类似于linux文件系统，例如/node1/node2.</p>
-</blockquote>
-<p>1.2 节点特性</p>
-<blockquote>
-<p>节点有两个维度，按照生命周期分为持久节点和临时节点，按照是否有序分为顺序节点和普通节点，组合产生了zookeeper<br>一共有四种节点类型：持久节点(PERSISTENT)、持久顺序节点(PERSISTENT_SEQUENTIAL)、临时节点(EPHEMERAL)、<br>临时顺序节点(EPHEMERAL_SEQUENTIAL),节点的属性如下图所示：<br><img src="/images/zookeeper_1.png" alt="节点属性"></p>
-</blockquote>
-<p>1.3 版本</p>
-<blockquote>
-<p>在zookeeper中，版本主要是用来做乐观锁的操作校验；下面是zookeeper更新前置校验代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">private static int checkAndIncVersion(int currentVersion, int expectedVersion, String path)</span><br><span class="line">        throws KeeperException.BadVersionException &#123;</span><br><span class="line">    if (expectedVersion != -1 &amp;&amp; expectedVersion != currentVersion) &#123;</span><br><span class="line">        throw new KeeperException.BadVersionException(path);</span><br><span class="line">    &#125;</span><br><span class="line">    return currentVersion + 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-</blockquote>
-<p>1.4 watcher机制</p>
-<blockquote>
-<p>所有读取操作可以设置Watch，也就是getData(), getChildren(), and exists();zookeeper的watch定义如下：<br>watch事件是一次性触发器，发送给设置watch的客户端，当设置watch的数据发生更改时发生。重点是三个要点：一次性<br>触发、发送给客户端、watch是谁触发（data watches和child watches）；与此相关的有两个类：WatchedEvent和<br>WatcherEvent，后者实际上是前者的简化用于传输，主要包含三个信息：连接状态、触发事件类型、路径；</p>
-</blockquote>
-<blockquote>
-<p>watch的触发事件分为下面几个：</p>
-<ul>
-<li>NodeCreated: Enabled with a call to exists.</li>
-<li>NodeDeleted: Enabled with a call to exists, getData, and getChildren.</li>
-<li>NodeDataChanged: Enabled with a call to exists and getData.</li>
-<li>NodeChildrenChanged: Enabled with a call to getChildren.</li>
-<li>ChildWatchRemoved: Watcher which was added with a call to getChildren.</li>
-<li>DataWatchRemoved: Watcher which was added with a call to exists or getData.</li>
-</ul>
-</blockquote>
-<blockquote>
-<p>工作机制.<br><br>zookeeper的watcher机制，总的来说分为三个阶段：客户端注册Watcher、服务端处理Watcher、客户端回调Watcher；</p>
-<blockquote>
-<ul>
-<li>客户端注册watcher：客户端watcher经过包装构成了一个WatchRegistration对象，标记request，但最终打包packet发消息时<br>并没有携带此对象（包含两个字段：watcher和clientpath，可以理解成一个映射表），响应成功后，将WatchRegistration对象<br>放到对应的ZKWatchManager中进行管理；</li>
-<li>服务端处理watcher——完成watcher注册：服务端接收到请求后，判断是否有watcher，如果有则将当前的ContextCnxn传递给getData<br>逻辑，因为继承了Watcher，可以看作是一个Watcher，数据节点的节点路径和ContextCnxn最终会被存储在WatchManager<br>的watchTable和watch2Paths中. </li>
-<li>服务端处理watcher——watcher触发：上一步可以看出，实际上相当于服务端也维护了一个映射表，这里注册的是getData()<br>方法，当调用setData(..)或delete(..)时会触发，服务端这类操作会在最后调用dataWatches.triggerWatch(path,event)<br>方法；无论是dataWatches或childWatches，触发执行逻辑是一样的：封装WatchedEvent，查询Watcher，调用process()<br>触发Watcher（组装发送一个通知给客户端）；以上步骤，所以真正的客户端触发回调和业务逻辑执行都在客户端；</li>
-<li>客户端回调Watcher：客户端收到请求后判断这是一个watcher通知，再按照下面逻辑执行：反序列化，处理chrootpath，<br>还原WatchedEvent，回调Watcher. 以上回调过程，注意回调是放到队列中串行执行的；</li>
-</ul>
-</blockquote>
-</blockquote>
-<p>1.5 ACL</p>
-<blockquote>
-<p>ACL(Access control list), Zookeeper的权限模式有三个部分：模式、授权对象和权限，通常使用<br>“scheme:id:permission”来标识一个有效的ACL信息.权限模式常用的有四种：IP、Digest、World、Super；<br>权限有五种：create、read、delete、write、admin.<br><br>自定义权限控制器：实现接口org.apache.zookeeper.server.auth.AuthenticationProvider，再配置<br>authProvider.1=<strong>.</strong>.**（实现接口的类）</p>
-</blockquote>
-<p>##2. 序列化与协议.<br>2.1 zookeeper的序列化协议是jute. 序列化和反序列化步骤如下：</p>
-<blockquote>
-<ul>
-<li>实体类需要实现Record接口的serialize和deserialize方法;</li>
-<li>构建一个序列化器BinaryOutputArchive;</li>
-<li>序列化；</li>
-<li>反序列化；</li>
-</ul>
-</blockquote>
-<p>2.2 zookeeper有自己的通信协议.</p>
-<blockquote>
-<ul>
-<li>为了高效，zookeeper的协议尽可能简洁，包含三部分：length、请求头/响应头、请求体/响应体；请求头包含最<br>基本信息：xid和type，每个操作对应不同的请求体，格式相对固定；响应头包含每个响应最基本信息：xid、zxid和<br>err，不同响应类型对应不同响应体；</li>
-</ul>
-</blockquote>
-<p>##3. 客户端.<br>3.1 客户端核心几个类：</p>
-<blockquote>
-<ul>
-<li>Zookeeper实例：客户端入口；</li>
-<li>ClientWatchManager：客户端watcher管理器；</li>
-<li>HostProvider：客户端地址列表管理器；</li>
-<li>ClientCnxn：客户端核心线程，内部两个线程，SendThread是I/O线程，负责客户端和服务端的所有网络通信，<br>EventThread是事件线程，负责对服务端事件进行处理；<br><img src="/images/zookeeper_2.png" alt="客户端整体结构"></li>
-</ul>
-</blockquote>
-<p>3.2 会话创建过程.</p>
-<blockquote>
-<ol>
-<li>初始化zookeeper对象；</li>
-<li>设置会话默认Watcher；</li>
-<li>构造服务器地址列表管理器HostProvider；</li>
-<li>创建并初始化客户端网络连接器ClientCnxn；</li>
-<li>初始化SendThread和EventThread；以上是初始化阶段；</li>
-<li>启动SendThread和EventThread；</li>
-<li>根据服务器地址列表获取一个地址；</li>
-<li>创建TCP连接,ClientCnxnSocket；</li>
-<li>构造ConnectRequest请求；</li>
-<li>发送请求；以上是会话创建阶段；</li>
-<li>接收服务端响应；</li>
-<li>处理Response；</li>
-<li>连接成功，生成事件：SyncConnected-None；</li>
-<li>查询watcher，处理事件；</li>
-</ol>
-</blockquote>
-<p>3.3 服务器地址列表</p>
-<blockquote>
-<p>创建客户端时，会传入地址列表，通过ConnectStringParser解析器解析：解析chrooPath和保存地址列表；<br>chrooPath就是为每个会话设定单独的根目录（命名空间），例如写入的地址列表是”host1:2181,host2:2181,host3:2181/hak”，<br>当前会话根目录就是/hak；zookeeper获取地址策略类似于Round Robin，先随机打乱组成一个环，以后就顺序<br>遍历这个环，也可以实现自己的路由策略；</p>
-</blockquote>
-<p>3.4 ClientCnxn：网络I/O</p>
-<blockquote>
-<p>ClientCnxn是客户端核心类，内部定义了很多重要的类如：Packet、SendThread和EventThread及其对象用于管理；<br>其中Packet是每次请求的包装类，细节可见源码；还有比较重要的变量是outgoingQueue和pendingQueue，前者是<br>发送请求队列，后者是服务端的响应等待队列；ClientCnxnSocket定义了底层Socket通信接口；</p>
-</blockquote>
-<p>##4. 会话<br>4.1 Zookeeper的连接和会话就是客户端通过实例化Zookeeper对象来实现客户端与服务端创建并保持TCP长连接的过程；</p>
-<blockquote>
-<p>会话状态有Connecting、Connected和Close.</p>
-</blockquote>
-<p>4.2 会话创建</p>
-<blockquote>
-<p>会话Session包含四个属性：SessionId（根据机器标识和当前时间根据一定算法得出），TimeOut、TickTime、isClosing；</p>
-</blockquote>
-<p>##5. 服务器启动<br>5.1 服务器的整体架构如下图：<br><img src="/images/zookeeper_3.png" alt="服务器整体架构"></p>
-<p>5.2 单机版服务器启动流程<br><img src="/images/zookeeper_4.png" alt></p>
-<p>5.3 集群版服务器启动流程<br><img src="/images/zookeeper_5.png" alt></p>
-<p>5.4 集群版Leader和Follower服务器启动期交互过程<br><img src="/images/zookeeper_6.png" alt></p>
-<p>##6. Leader选举<br>6.1 选举是按照投票来选举的，这里先明确投票的内容：</p>
-<blockquote>
-<ul>
-<li>id: 被推举的leader的SID值；</li>
-<li>zxid: 被推举的leader的事务id；</li>
-<li>electionEpoch: 逻辑时钟，用来判断多个投票是否在同一选举周期内；自增序列；</li>
-<li>peerEpoch: 被选举的leader的epoch；</li>
-<li>state: 当前服务器状态:LOOKING\LEADING\FOLLOWING\OBSERVING；</li>
-</ul>
-</blockquote>
-<p>6.2 leader选举流程：两台机器可以互联时，每台试图找到一个leader，于是开始leader选举，过程如下：</p>
-<blockquote>
-<ul>
-<li>每个server会发出一个投票，第一次投票通常都是投自己；</li>
-<li>接收来自各个服务器的投票；</li>
-<li>处理投票：zxid-&gt;id比较选出leader，再次发出投票；</li>
-<li>统计投票；</li>
-<li>改变服务器状态；</li>
-</ul>
-</blockquote>
-<p>##7. 服务器角色<br>zookeeper服务器角色有：Leader、Follower、Observer；其中Observer可以没有，需要指定时在服务器列表中配置，<br>如server.xx=ip:port1:port2:observer；zookeeper的服务器采用责任链模式处理请求；集群间通信消息类型分为<br>四类：数据同步，服务器初始化，请求处理，会话管理；</p>
-<blockquote>
-<ul>
-<li>leader的主要工作：事务请求的唯一调度和处理者，保证集群事务处理的顺序性；集群内部各服务器的调度者；</li>
-<li>follower的工作：处理客户端非事务请求，转发事务请求给leader；参与事务请求的投票；参与leader选举投票；</li>
-<li>observer的工作：observer工作原理和follower一致，唯一不同的是observer不参与任何形式的投票；observer<br>通常用于不影响集群事务处理能力的前提下提升集群的非事务处理能力；</li>
-</ul>
-</blockquote>
-<p>##8. 请求处理<br>zookeeper服务器对会话请求处理，大体有以下阶段：请求接收、会话创建、预处理、事务处理、事务应用和会话响应；</p>
-<blockquote>
-<p>zookeeper的请求主要分为事务请求和非事务请求；需要注意的是：事务请求由leader处理，当follower或<br>observer接收到事务请求时，会在预处理器中转发给leader处理；事务请求例如setData()，主要流程：sync<br>–&gt;proposal–&gt;commit，也就是二阶段提交；非事务请求例如getData()等，要注意watch监听事件的处理；</p>
-</blockquote>
-<p>##9. 数据与存储<br>在zookeeper中，数据存储分为两部分：内存数据存储和磁盘数据存储.</p>
-<p>9.1 内存数据</p>
-<blockquote>
-<p>zookeeper的数据模型是一棵树，DataTree和DataNode，DataTree中有个核心变量:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> /**</span><br><span class="line"> * This hashtable provides a fast lookup to the datanodes. The tree is the</span><br><span class="line"> * source of truth and is where all the locking occurs</span><br><span class="line"> */</span><br><span class="line">private final ConcurrentHashMap&lt;String, DataNode&gt; nodes =</span><br><span class="line">    new ConcurrentHashMap&lt;String, DataNode&gt;();</span><br></pre></td></tr></table></figure></p>
-</blockquote>
-<blockquote>
-<p>这个map存储了zookeeper服务器上所有节点，可以说对于zookeeper数据的所有操作底层都是操作这个map，另外，<br>为了便于实时访问和及时清理，DataTree还单独将临时节点保存起来：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * This hashtable lists the paths of the ephemeral nodes of a session.</span><br><span class="line"> */</span><br><span class="line">private final Map&lt;Long, HashSet&lt;String&gt;&gt; ephemerals =</span><br><span class="line">    new ConcurrentHashMap&lt;Long, HashSet&lt;String&gt;&gt;();</span><br></pre></td></tr></table></figure></p>
-</blockquote>
-<blockquote>
-<p>ZKDatabase中引用了DataTree作为变量，是zookeeper的内存数据库，负责管理zookeeper的所有会话、DataTree<br>存储和事务日志；ZKDatabase会定时向磁盘dump快照数据，并且在启动时，通过磁盘上的事务日志和快照数据文件<br>恢复成一个完整的内存数据库；</p>
-</blockquote>
-<p>9.2 事务日志</p>
-<blockquote>
-<p>事务日志存储：存储路径配置参数dataLogDir目录，事务日志文件名后缀是该日志的第一条zxid；<br>事务日志格式：事务操作时间、客户端会话ID、CXID、ZXID、操作类型、节点路径、节点数据内容；<br>日志截断：当非leader机器上记录的事务ID比leader的大，就需要将非leader机器上记录的大于leader的<br>日志文件；</p>
-</blockquote>
-<p>9.3 数据快照</p>
-<blockquote>
-<p>存储路径dataDir目录，文件名类似于事务日志文件；</p>
-</blockquote>
-<p>9.4 初始化</p>
-<blockquote>
-<p>服务器启动之后，会根据自身配置文件zoo.cfg初始化，数据初始化阶段将存储在磁盘上的数据文件加载到zookeeper<br>服务器内存中；这一阶段会获取该服务器最后的事务ID，用于投票选举leader；</p>
-</blockquote>
-<p>9.5 数据同步</p>
-<blockquote>
-<p>leader选举完成后，需要数据同步leader于learner；数据同步开始时，leader会先获取learner服务器状态，<br>主要是currentEpoch和lastZxid；然后开始数据同步初始化：首先从内存数据库中提取出事务请求对应的提议缓存<br>队列：proposals，同时完成对以下三个zxid的初始化：</p>
-<ul>
-<li>peerLastZxid: 该learner服务器最后处理的zxid；</li>
-<li>minCommitedLog: leader服务器提议缓存队列中的最小zxid；</li>
-<li>maxCommitedLog: leader服务器提议缓存队列中的最大zxid；<br>然后根据三个值的比较，选择合适的数据同步方式：直接差异化同步（DIFF同步）、先回滚再差异化同步（TRUNC+<br>DIFF同步）、仅回滚同步(TRUNC同步)和全量同步（SNAP同步）。</li>
-</ul>
-</blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/08/30/Zookeeper系列3——Zookeeper的使用r的使用和典型应用场景/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/08/30/Zookeeper系列3——Zookeeper的使用r的使用和典型应用场景/" class="post-title-link" itemprop="url">Zookeeper系列3——Zookeeper的使用r的使用和典型应用场景</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-08-30 10:55:01" itemprop="dateCreated datePublished" datetime="2019-08-30T10:55:01+08:00">2019-08-30</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-05 14:58:53" itemprop="dateModified" datetime="2019-09-05T14:58:53+08:00">2019-09-05</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index"><span itemprop="name">zookeeper</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="1-部署和运行"><a href="#1-部署和运行" class="headerlink" title="1.部署和运行"></a>1.部署和运行</h2><p>zookeeper运行有两种模式，集群模式和单机模式，也可以伪集群，核心是配置config/zoo.cfg，修改client.port和server.*，<br>配置datapath和datalogpath，在datapath目录下新建文件myid用来确认机器编号；可以修改启动文件，来启用JMX；</p>
-<h2 id="2-对接、使用方式"><a href="#2-对接、使用方式" class="headerlink" title="2.对接、使用方式"></a>2.对接、使用方式</h2><p>2.1 客户端脚本</p>
-<blockquote>
-<p>服务端使用zkCli.sh，可以以脚本方式执行相关操作，如增删改查等；<br>2.2 java客户端API<br>ZooKeeper客户端API，以及监听Watcher，多次监听需要重复注册；<br>2.3 curator开源客户端<br>建议使用，封装较好，且持续更新社区活跃；maven依赖curator-framework,客户端CuratorFramework由CuratorFrameworkFactory创建，使用Fluent风格<br>编写，可以同步或异步方式.还有一个包curator-recipes中封装了常用的使用场景接口，例如：<br>事件监听–监听器对应节点NodeCache和子节点PathChildrenCache，Master选举，分布式锁，分布式计数器等实用API.</p>
-</blockquote>
-<h2 id="3-典型使用场景及实现"><a href="#3-典型使用场景及实现" class="headerlink" title="3.典型使用场景及实现"></a>3.典型使用场景及实现</h2><p>3.1 数据发布/订阅</p>
-<blockquote>
-<p>数据发布/订阅系统也就是配置中心，可以实现配置信息的集中管理和数据动态更新，发布/订阅一般两种模式，推(push)模式<br>和拉(poll)模式；zookeeper采用推拉结合的方式：客户端向服务端注册自己关注的节点，当节点发生变化，服务端会通知<br>客户端，客户端接收到通知后，再去服务端获取最新数据；</p>
-</blockquote>
-<blockquote>
-<p>zookeeper的实现方式：例如数据库切换，可以在zookeeper上选取一个节点初始化，例如/app/dataconfig，节点保存<br>数据库信息，客户端注册一个watcher监听节点数据变化，如果需要切换变化数据库配置，则利用zk修改数据，同时会自动<br>通知正在监听的客户端；</p>
-</blockquote>
-<p>3.2 负载均衡</p>
-<blockquote>
-<p>负载均衡用来对多个计算机、网络连接、CPU、磁盘驱动器及其他资源进行分配负载，以达到优化资源使用、最大化吞吐率、<br>最小化相应时间和避免过载的目的；其中比较典型的是DNS服务，zookeeper可以实现DDNS；</p>
-</blockquote>
-<blockquote>
-<p>实现方式：创建一个节点进行域名配置，例如/DDNS/app1/server1.com.cn，在这个子节点中写入对应的ip列表，需要RPC<br>时，先从相应节点获取ip列表，自己解析，同时还可以注册监听ip列表变化；</p>
-</blockquote>
-<p>3.3 命名服务</p>
-<blockquote>
-<p>命名服务是分布式系统最基本的公共服务之一，通过使用命名服务，客户端可以根据指定名字获取资源的实体、服务地址和<br>提供者的信息等；核心思想是在分布式环境中，上层应用需要一个全局唯一的id；UUID的缺点是长度过长且业务意义不明；</p>
-</blockquote>
-<blockquote>
-<p>实现方式：zookeeper的API创建顺序节点时会返回这个节点的完整名字，利用zookeeper的顺序节点ID唯一实现命名服务；</p>
-</blockquote>
-<p>3.4 分布式协调/通知</p>
-<blockquote>
-<p>对于一个部署在多台机器上的应用来说，需要一个协调者，控制例如事务处理等，可以解耦从而增强扩展性；</p>
-</blockquote>
-<blockquote>
-<p>实现方式：zookeeper的数据一致性读写和监听可以很方便的实现；分布式系统机器间通信方式有三种类型：心跳检测、<br>工作进度汇报和系统调度；</p>
-</blockquote>
-<p>3.5 分布式锁</p>
-<blockquote>
-<p>分为排他锁和共享锁.</p>
-</blockquote>
-<blockquote>
-<p>排他锁的实现：获取锁————创建一个节点/exclusive_lock，相关业务例如业务一需要一个排他锁，则在此节点下创建临时<br>子节点/exclusive_lock/business_1，利用节点的zookeeper多个机器创建同一节点只有一个创建成功的节点特性，<br>创建成功则获取锁，同时创建失败的监听此节点；释放锁————获取锁的客户端自己删除节点，或者客户端断开连接zookeeper<br>服务端会删除临时节点，监听此节点的客户端会收到通知，执行获取锁的逻辑；</p>
-</blockquote>
-<blockquote>
-<p>共享锁的实现：共享锁又称为读锁，如果事务T1对对象O加了共享锁，则当前事务只能对O进行读操作，其他事务也只能对O<br>加共享锁，直到O对象上的所有共享锁全部释放；定义锁————创建一个节点/shared_lock，事务加锁时可以按照下面格式<br>/shared_lock/business_2/host1-W|R-001，区别读和写；获取锁————需要获取共享锁时，所有客户端都在/shared_lock下创建临时<br>子节点，并且注册监听/shared_lock/business_2的所有子节点；读请求：判断比自己序列小的节点是否有写锁，如果有则等待；<br>写请求：判断是否有比自己序列小的节点；释放锁————和排他锁的释放逻辑一样；</p>
-</blockquote>
-<blockquote>
-<p>共享锁的羊群效应：因为获取共享锁的节点需要监听/shared_lock/business_2节点的所有子节点，例如当一个节点释放<br>锁之后，需要通知大量的其他等待客户端，并且其他客户端需要拉取所有子节点列表判断自己是否可以获取锁；短时间如果<br>有多个节点是否锁，就会引起大量的客户端Watch通知，这就是羊群效应；产生的根本原因是：没有找准客户端的关注点；</p>
-</blockquote>
-<blockquote>
-<p>共享锁的改进：理解了羊群效应产生的根本原因，可以如下改进：读共享锁只监听比自己小的写锁节点，写共享锁只监听比<br>自己小的节点；</p>
-</blockquote>
-<p>3.6 其他应用场景：集群管理、Master选举和分布式队列等.</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
@@ -1718,16 +1709,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

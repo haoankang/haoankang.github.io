@@ -147,6 +147,774 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/26/Redis系列2-还是基础/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/26/Redis系列2-还是基础/" class="post-title-link" itemprop="url">Redis系列2-还是基础</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-26 20:41:54" itemprop="dateCreated datePublished" datetime="2020-02-26T20:41:54+08:00">2020-02-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-27 10:51:11" itemprop="dateModified" datetime="2020-02-27T10:51:11+08:00">2020-02-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>###1. Redis主从架构.<br>Redis主从架构特点：</p>
+<blockquote>
+<ul>
+<li>主服务器负责接收写请求；</li>
+<li>从服务器负责接收读请求；</li>
+<li>从服务器的数据由主服务器复制过去，主从服务器的数据是一致的；</li>
+</ul>
+</blockquote>
+<p>好处：读写分离、高可用、更高并发量；</p>
+<p>复制功能的具体实现：</p>
+<blockquote>
+<p>复制功能分为两个操作：同步（将从服务器数据库状态更新至主服务器的数据库状态）；命令传播（主服务器状态修改，让主从服务器数据库状态重新一致）；</p>
+</blockquote>
+<p>同步时，从服务器向主服务器发送PYSNC命令，主要分为两个场景：完整重同步（初次同步）和部分重同步（断电重连），流程如下：</p>
+<blockquote>
+<p>完整重同步：</p>
+<ul>
+<li>从服务器向主服务器发送PYSNC命令；</li>
+<li>收到PYSNC的主服务器执行BGSAVE命令，在后台生成一个RDB文件，并用缓冲区记录接下来的所有写命令；</li>
+<li>RDB文件写完后，发送给从服务器，从服务器接收和载入RDB文件；</li>
+<li>主服务器将缓存区中的写命令发送给从服务器，从服务器执行这些命令，达到一致性；</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>部分重同步：<br>部分重同步的功能由以下部分组成：主从服务器的复制偏移量、主服务器的复制积压缓冲区、服务器运行的ID；<br>主服务器进行命令传播时，不仅会把命令发送给从服务器，还会把命令写入复制缓冲区；</p>
+</blockquote>
+<p>命令传播：</p>
+<blockquote>
+<p>完成了主从同步之后，就进入命令传播阶段；主服务器只要把写命令发送给从服务器，从服务器执行写命令，即可实现主从同步；<br>命令传播阶段，从服务器默认会以秒为间隔向主服务器发送REPLCONF ACK &lt;复制偏移量&gt;</p>
+</blockquote>
+<p>###2. 哨兵机制保证高可用性</p>
+<blockquote>
+<p>接上节主从机制，如果从服务器挂了，没影响；但是如果写服务器挂了，就没有服务器处理写请求了；这时哨兵系统会从从服务器中选举一个作为主服务器，<br>当主服务器重连之后，将之前的主服务器设置为从服务器，这个过程叫主备切换。（故障转移）</p>
+</blockquote>
+<p>哨兵机制主要功能如下：</p>
+<blockquote>
+<ul>
+<li>不停的监控Redis主从服务器是否正常工作；</li>
+<li>如果某个服务器有故障，哨兵负责同志管理员；</li>
+<li>如果主服务器挂了，会自动选举一个从服务器做主服务器；</li>
+<li>可以作为配置中心，能够提供当前主服务器的信息；</li>
+</ul>
+</blockquote>
+<p>哨兵判断主服务器是否下线：主观下线+客观下线；当一个主服务器被判断客观下线后，哨兵集群会选举一个领头哨兵，选举规则较多，总的来说是先到先得；<br>故障转移具体步骤：</p>
+<blockquote>
+<ul>
+<li>在已下线主服务器属下的从服务器中，挑选一个转换为主服务器</li>
+<li>让已下线主服务器属下的所有从服务器改为复制新的主服务器</li>
+<li>已下线的主服务器重新连接时，让他成为新的主服务器的从服务器</li>
+</ul>
+</blockquote>
+<p>挑选从服务器作为主服务器，规则如下：</p>
+<blockquote>
+<ul>
+<li>跟master断开连接的时长</li>
+<li>slave优先级</li>
+<li>复制偏移量</li>
+<li>run id</li>
+</ul>
+</blockquote>
+<p>###3. 数据丢失<br>即使主从结构+哨兵，redis还是会有数据丢失问题.</p>
+<blockquote>
+<ul>
+<li>主服务器宕机，还没有来得及同步消息；</li>
+<li>脑裂导致的数据丢失；</li>
+</ul>
+</blockquote>
+<p>###4. 缓存与数据库双写一致性<br>应用——缓存——数据库；读操作不会造成一致性问题，只有写操作才可能出现，两种解决方案：</p>
+<blockquote>
+<ul>
+<li>写操作时，先删除缓存，再修改数据库；</li>
+<li>写操作时，写修改数据库，再删除缓存；</li>
+</ul>
+</blockquote>
+<p>为什么删除缓存，而不是更新缓存？</p>
+<blockquote>
+<ol>
+<li>复杂的缓存场景中，缓存可能需要取几张表的数据计算得出；</li>
+<li>更新缓存代价较高；</li>
+</ol>
+</blockquote>
+<p>如果缓存+数据库必须严格一致，可以使用将读写请求串行化到内存队列中；</p>
+<p>###5. 其他问题</p>
+<ol>
+<li><p>RDB原理.</p>
+<blockquote>
+<p>fork和COW.redis通过fork命令创建子进程来进行RDB操作，子进程创建后，父子进程共享数据段，父进程继续提供服务；</p>
+</blockquote>
+</li>
+<li><p>redis基础数据类型使用场景.</p>
+<blockquote>
+<ul>
+<li>string. 缓存功能、计数器、共享session等；</li>
+<li>hash. 一般村结构化数据、对象；</li>
+<li>list. 有序列表，可以做一些列表型的数据，如粉丝列表、文章评论列表；也可以用来实现消息队列；</li>
+<li>set. set主要用于一些去重的场景；</li>
+<li>zset. 排行榜等；</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+<p>###6. redis集群<br>redis cluster，主要针对海量数据+高可用+高并发；介绍：自动将数据进行分片，每个master上存储部分数据；提供内置的高可用支持，当<br>主节点挂掉，从节点替换；</p>
+<p>redis cluster模式下，每个redis要开放两个端口：6379和16379；16379是进行节点间通信的，也就是cluster bus，用的是gossip二进制协议；</p>
+<p>节点间的内部通信机制.</p>
+<blockquote>
+<p>基本通信原理：集群元数据的维护两种方式集中式和gossip协议；</p>
+</blockquote>
+<p>分布式寻址算法.</p>
+<blockquote>
+<ul>
+<li>hash算法；</li>
+<li>一致性hash算法+虚拟节点；</li>
+<li>redis cluster的hash slot算法；</li>
+</ul>
+</blockquote>
+<p>跟哨兵模式对比.</p>
+<blockquote>
+<p>高可用和主备切换与哨兵模式相似，功能更加强大，直接集成了replication和sentinel的功能；</p>
+</blockquote>
+<p>###7. redis的并发竞争问题，以及redis的CAS方案.<br>并发竞争问题，是指多个客户端同时并发写一个key，可能会出问题；</p>
+<p>解决方案：</p>
+<blockquote>
+<ul>
+<li>利用zookeeper的分布式锁，写入前先锁定；</li>
+<li>利用数据库的时间戳CAS判定；</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/25/Redis系列1——基础/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/25/Redis系列1——基础/" class="post-title-link" itemprop="url">Redis系列1——基础</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-25 21:04:00" itemprop="dateCreated datePublished" datetime="2020-02-25T21:04:00+08:00">2020-02-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-27 10:04:27" itemprop="dateModified" datetime="2020-02-27T10:04:27+08:00">2020-02-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>redis简介.</p>
+<blockquote>
+<p>简单来说，redis就是一个基于内存的数据库；因为读写非常快，高性能且高并发，所以被广泛用于缓存方向；redis用多种数据类型来支持不同的业务场景；<br>redis支持事务、持久化、lua脚本、LRU驱动事件、多种集群方案；</p>
+</blockquote>
+<p>###1. redis单线程为什么这么快.</p>
+<blockquote>
+<ol>
+<li>纯内存；</li>
+<li>非阻塞IO；</li>
+<li>单线程避免了线程切换和竞争消耗；</li>
+</ol>
+</blockquote>
+<p>###2. redis特性.</p>
+<blockquote>
+<ul>
+<li>速度快；</li>
+<li>持久化；</li>
+<li>多种数据结构；</li>
+<li>支持多种编程语言；</li>
+<li>功能丰富；</li>
+<li>简单；</li>
+<li>主从复制；</li>
+<li>高可用，分布式；</li>
+</ul>
+</blockquote>
+<p>###3. 应用场景.</p>
+<blockquote>
+<ul>
+<li>缓存系统；</li>
+<li>计数器；</li>
+<li>实时系统；</li>
+<li>排行榜；</li>
+<li>社交网络；</li>
+<li>消息队列系统；</li>
+</ul>
+</blockquote>
+<p>###4. Redis数据结构</p>
+<blockquote>
+<p>Redis支持丰富的数据结构，常用的如string、list、set、zset、hash等；redis使用对象来表示K和V，Redis中的一个<br>键值对，至少需要创建两个对象，一个键对象，一个值对象；</p>
+</blockquote>
+<p>redis底层数据结构：</p>
+<blockquote>
+<p>SDS简单动态字符串：SDS与C字符串的比较：</p>
+<ol>
+<li>获取字符串长度，SDS时间复杂度O(1)，因为内部存储了length；</li>
+<li>SDS不会发生内存溢出问题； 内部动态扩展；</li>
+<li>SDS减少内存分配次数； 会分配额外空闲空间；</li>
+<li>SDS是二进制安全的；</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>链表，redis的链表特性：</p>
+<ol>
+<li>无环双向链表；</li>
+<li>获取表头指针、表尾指针、链表长度O(1)；</li>
+<li>链表使用void*指针保存节点值，可以保存各种不同类型的值；</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>哈希表，也叫字典；redis的哈希表中有两个哈希表，用于渐进式rehash；</p>
+</blockquote>
+<blockquote>
+<p>跳跃表；shiplist；redis的跳表实现由zskiplist和zskiplistNode组成，zskiplist保存跳表的信息（表头、表尾、长度），<br>zskiplistNode表示跳表中的节点；</p>
+</blockquote>
+<blockquote>
+<p>整数集合，set的底层数据结构之一；</p>
+</blockquote>
+<blockquote>
+<p>压缩列表，list和hash的底层实现之一；是由一系列特殊编码的连续内存块组成的顺序性数据结构；</p>
+</blockquote>
+<p>###4. 基本数据类型.</p>
+<blockquote>
+<ul>
+<li>string字符串；可以是字符串、整形、浮点型； SDS字符串；</li>
+<li>list；一个双向链表，链表的每个节点上都包含一个字符串； 快速链表=链表+压缩链表；</li>
+<li>set；包含字符串的无序收集器；</li>
+<li>zset；字符串成员与浮点数分值之间的有序映射，元素的排列顺序由分值的大小确定； 跳表，其实就是多层链表；<blockquote>
+<p>当数据量少时，由一个ziplist实现；当数据量多时，由一个dict+skiplist实现，dict用来查数据到分数的对应关系，<br>而skiplist用来根据分数查询数据；</p>
+</blockquote>
+</li>
+<li>hash；包含键值对的无序散列表； redis是渐进式rehash的；</li>
+</ul>
+</blockquote>
+<p>redis的rehash过程：</p>
+<blockquote>
+<p>在对哈希表进行扩展或者收缩操作时，rehash过程不是一次完成的，因为如果数据量过大时，一次性rehash会有庞大的<br>计算量，这很可能导致服务器一段时间内停止服务；</p>
+</blockquote>
+<blockquote>
+<p>redis的所有数据类型都被封装成对象，hash结构的对象内部有两个哈希表，一个用于存放真实的K-V数据，另一个用于扩容；</p>
+<ol>
+<li>字典内维持一个索引计数器，用于表示是否在进行rehash；</li>
+<li>rehash期间对字典进行增删改查时，除了执行指令外，还会将h[0]中数据rehash到h[1]中；</li>
+<li>字典操作不断进行，最终rehash完时，计数器设为-1；</li>
+<li>渐进式rehash过程中，字典会同时使用两个哈希表，删改查操作会同时在两个哈希表上进行；新增只会在h[1]上新增，<br>查询时，优先查h[0]，如果查不到查询h[1]；</li>
+</ol>
+</blockquote>
+<p>redis对象的一些细节.</p>
+<blockquote>
+<ol>
+<li>服务器在执行某些命令时，会先检查给定的键的类型；</li>
+<li>redis对象系统带有引用计数实现的内存回收机制；‘</li>
+<li>redis会共享0-9999的字符串对象；</li>
+<li>对象会记录自己最后一次被访问时间，这个时间可以用于计算对象的空转时间；</li>
+</ol>
+</blockquote>
+<p>###5. redis线程模型.</p>
+<blockquote>
+<p>redis内部使用文件事件处理器File event handler，这个文件事件处理器是单线程的，所以redis被称为单线程的；它采用IO多路复用机制监听<br>多个socket，根据socket上事件来选择对应的事件处理器进行处理；</p>
+<p>主要有两类事件：文件事件，就是对Socket操作的抽象；时间事件，就是对定时操作的抽象；</p>
+<p>这个文件事件处理器包含4个部分：</p>
+<ul>
+<li>多个socket；</li>
+<li>IO多路复用程序；</li>
+<li>文件事件分派器；</li>
+<li>事件处理器；</li>
+</ul>
+</blockquote>
+<p>###6. redis与Memcached的区别.</p>
+<blockquote>
+<ol>
+<li>redis支持更丰富的数据类型；Memcached只有string类型；</li>
+<li>redis支持持久化；Memcached不支持；</li>
+<li>memcached原生不支持集群，而redis支持集群；</li>
+<li>memcached是多线程、非阻塞IO复用的网络模型，Redis是单线程IO多路复用模型；</li>
+</ol>
+</blockquote>
+<p>###7. redis过期时间和淘汰机制；</p>
+<blockquote>
+<p>redis可以设置expire time过期时间；redis使用定期删除+惰性删除维护key，注意定期删除是随机抽取的；<br>如果定期删除漏掉了很多过期key，也没及时去查（没走惰性删除），大量key堆积导致内存耗尽，此时就需要内存淘汰机制；</p>
+<p>redis内存淘汰机制：</p>
+<ul>
+<li>volatile-lru：从已设置过期时间的数据集（server.db[i].expires）中挑选最近最少使用的数据淘汰；</li>
+<li>volatile-ttl：从已设置过期时间的数据集（server.db[i].expires）中挑选将要过期的数据淘汰；</li>
+<li>volatile-random：从已设置过期时间的数据集（server.db[i].expires）中任意选择数据淘汰；</li>
+<li>allkeys-lru：当内存不足以容纳新写入数据时，在键空间中，移除最近最少使用的key（这个是最常用的）；</li>
+<li>allkeys-random：从数据集（server.db[i].dict）中任意选择数据淘汰；</li>
+<li>no-eviction：禁止驱逐数据，也就是说当内存不足以容纳新写入数据时，新写入操作会报错。一般不用；</li>
+<li>volatile-lfu：从已设置过期时间的数据集(server.db[i].expires)中挑选最不经常使用的数据淘汰；</li>
+<li>allkeys-lfu：当内存不足以容纳新写入数据时，在键空间中，移除最不经常使用的key；</li>
+</ul>
+<p>使用redis时，为了提高缓存命中率，需要保证缓存数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，<br>然后启用allkeys-lru策略；</p>
+</blockquote>
+<p>###8. redis持久化机制.</p>
+<blockquote>
+<ul>
+<li>快照RDB.Redis可以通过创建快照来获得存储在内存里面的数据在某个时间点上的副本。创建快照的几种方式：<blockquote>
+<ul>
+<li>BGSAVE命令； 创建出一个子进程来创建RDB文件，服务器进程可以继续服务；</li>
+<li>SAVE命令； 会阻塞Redis服务器进程，服务器不能接收任何请求，直到RDB文件创建完毕；</li>
+<li>save选项；</li>
+<li>SHUTDOWN命令；</li>
+<li>一个redis服务器连接另一个redis服务器；</li>
+</ul>
+</blockquote>
+</li>
+<li>只追加文件AOF.开启AOF持久化后每执行一条会更改Redis中的数据的命令，Redis就会将该命令写入硬盘中的AOF文件。</li>
+</ul>
+</blockquote>
+<p>重写/压缩AOF.</p>
+<blockquote>
+<p>AOF虽然在某个角度可以将数据丢失降低到最小而且对性能影响也很小，但是极端的情况下，体积不断增大的AOF文件很可能会用完硬盘空间。另外，如果AOF体积过大，那么还原操作执行时间就可能会非常长。<br>为了解决AOF体积过大的问题，用户可以向Redis发送 BGREWRITEAOF命令 ，这个命令会通过移除AOF文件中的冗余命令来重写（rewrite）AOF文件来减小AOF文件的体积。<br>BGREWRITEAOF命令和BGSAVE创建快照原理十分相似，所以AOF文件重写也需要用到子进程，这样会导致性能问题和内存占用问题，和快照持久化一样。更糟糕的是，如果不加以控制的话，AOF文件的体积可能会比快照文件大好几倍。</p>
+</blockquote>
+<p>RDB和AOF对过期键的策略.</p>
+<blockquote>
+<p>执行SAVE或BGSAVE创建RDB文件时，过期键不会保存到RDB文件中；载入RDB文件时，过期的键会被忽略；</p>
+</blockquote>
+<blockquote>
+<p>写入AOF文件时，过期键还没被定期/惰性删除时，不会影响写入AOF；载入AOF文件时，过期的键会被忽略；</p>
+</blockquote>
+<blockquote>
+<p>复制模式下，主服务器来控制从服务器统一删除过期键；</p>
+</blockquote>
+<p>###9. Redis事务.</p>
+<blockquote>
+<p>Redis通过MULTI、EXEC、WATCH等命令实现事务功能；事务通过一次性将多个命令打包，然后一次性、顺序执行；redis事务总是具有ACI特性；</p>
+<p>redis同一个事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚。</p>
+</blockquote>
+<p>###10. 缓存雪崩、缓存穿透、缓存击穿。</p>
+<blockquote>
+<ul>
+<li>缓存雪崩. 缓存同一时间大面积的失效，或者redis挂掉了，后面的请求都会落到数据库上，造成数据库短时间内承受大量请求而崩掉。<br>解决方案.一般用设置随机过期时间；<blockquote>
+<ul>
+<li>事前：实现redis的高可用：主从+哨兵</li>
+<li>事中：利用本地缓存和Hystrix限流；</li>
+<li>事后：redis持久化，快速启动恢复缓存数据；</li>
+</ul>
+</blockquote>
+</li>
+<li>缓存穿透. 大量无效key请求，直接请求数据库，导致数据库崩溃；解决方案：缓存无效key，校验，布隆过滤器；</li>
+<li>缓存击穿. 同一个key大量请求，某个时间点key过期，大量请求会直接到数据库；解决方案：设置热点key永不过期；</li>
+</ul>
+</blockquote>
+<p>###11. Redis常见的性能问题和解决方案.</p>
+<blockquote>
+<ol>
+<li>Master写内存快照，save命令调度rdbSave函数，会阻塞主线程的工作，当快照比较大时对性能影响非常大，会间断性<br>暂停服务，所以Master最好不要写内存快照；</li>
+<li>Master AOF持久化，如果不进行AOF重写，AOF文件会过大而影响Master重启速度；Master不要做任何持久化工作，由<br>某个Slave开启AOF备份数据，策略是每秒一次；</li>
+<li>Redis主从复制的性能问题，为了主从复制的速度和连接的稳定性，Master和Slave最好在同一个局域网中；</li>
+<li>尽量避免在压力很大的主库上增加从库；</li>
+<li>主从复制不要用图状结构，用单向链表结构更稳定；例如Master &lt; Slave1 &lt; Slave2 …这样结构方便解决单点故障<br>问题，实现Slave对Master的替换。如果Master挂了，可以立刻启用Slave1，其他不变；</li>
+</ol>
+</blockquote>
+<p>###12. Redis同步机制.</p>
+<blockquote>
+<p>主从同步。第一次同步时，主节点做一次bgsave，并同时将后续修改操作记录到内存buffer，待完成后将rdb文件全量同步<br>到复制节点，复制节点接受完成后将rdb镜像加载到内存。加载完成后，再通知主节点将期间修改的操作记录同步到复制节点<br>进行重放完成同步过程；</p>
+</blockquote>
+<p>###13. Redis集群.</p>
+<blockquote>
+<ul>
+<li>Redis Sentinel高可用，在master宕机时会自动将slave提升成master，继续提供服务；</li>
+<li>Redis Cluster扩展性，在单个redis内存不足时，使用Cluster进行分片存储；</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/25/Mysql系列5——补充/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/25/Mysql系列5——补充/" class="post-title-link" itemprop="url">'Mysql系列5——补充'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-25 16:41:25" itemprop="dateCreated datePublished" datetime="2020-02-25T16:41:25+08:00">2020-02-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-27 14:39:17" itemprop="dateModified" datetime="2020-02-27T14:39:17+08:00">2020-02-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>##1. 索引.<br>索引的优点.（优点就是要从时间、空间考虑）</p>
+<blockquote>
+<ul>
+<li>大大减少了服务器需要扫描的数据行数；</li>
+<li>帮助服务器避免了进行排序和分组，以及避免创建临时表；</li>
+<li>将随机IO变为顺序IO；</li>
+</ul>
+</blockquote>
+<p>索引为什么可以加快检索速度？</p>
+<blockquote>
+<p>索引使无序的数据变为有序的数据，然后利用算法如二分类的检索；以B+树为例，索引会减少磁盘IO次数；</p>
+</blockquote>
+<p>索引优化.</p>
+<blockquote>
+<ul>
+<li>独立索引.</li>
+<li>多列索引.</li>
+<li>索引列的顺序.让选择性强、即基数大的列放在前面；</li>
+<li>前缀索引.</li>
+<li>覆盖索引.</li>
+</ul>
+</blockquote>
+<p>索引类型.</p>
+<blockquote>
+<p>主键索引(primary key)、唯一索引(unique key)、普通索引(key)、全文索引.</p>
+</blockquote>
+<p>索引失效.</p>
+<blockquote>
+<ul>
+<li>如果优化器分析全表扫描比使用索引快，则不走索引；</li>
+<li>如果条件中有or，则不走索引；</li>
+<li>复合索引，如果不符合最左前缀原则，则不走索引；</li>
+<li>like以%开头；</li>
+<li>其他；</li>
+</ul>
+</blockquote>
+<p>为什么用B+树而不是B树和红黑树做索引？</p>
+<blockquote>
+<p>首先Mysql是以磁盘IO次数衡量查询效率的；B树和B+树层级很少，目的就是为了减少磁盘IO次数，但B树节点存储数据，因此节点较大，磁盘IO一次读取<br>的数据有限，单个数据变大，就需要多次IO，因此更加耗时；B+树数据都在叶子节点，因此可以将所有叶子节点用指针串起来，这样就能顺序IO访问速度<br>更快；</p>
+<p>红黑树层级过多，不适合存储大数据量；</p>
+</blockquote>
+<p>##2. 数据切分.<br>切分类型：</p>
+<blockquote>
+<ul>
+<li>水平切分：将一个表的数据拆分到多个表中，例如将订单按时间每天切分；</li>
+<li>垂直切分：将一个表列切分到多个表中，可以根据列是否经常使用等切分，例如订单号和用户id；</li>
+</ul>
+</blockquote>
+<p>切分策略：</p>
+<blockquote>
+<p>哈希取模（hash(key)%N）、范围、映射表；</p>
+</blockquote>
+<p>切分存在的问题：</p>
+<blockquote>
+<ul>
+<li>分布式事务问题；</li>
+<li>连接；</li>
+<li>ID唯一性；</li>
+</ul>
+</blockquote>
+<p>分库分表中间件：<br>sharding-jdbc：client层方案，优点：不用部署额外中间件，运维成本低，不需要代理曾二次转发请求，性能高；缺点：耦合度高；<br>Mycat：proxy层方案，优点：对于各项目透明；</p>
+<p>分布式ID生成方案：</p>
+<blockquote>
+<ul>
+<li>UUID</li>
+<li>数据库自增ID</li>
+<li>批量生成ID</li>
+<li>Redis生成ID</li>
+<li>Twitter的snowflake算法</li>
+<li>其他分布式ID生成器</li>
+</ul>
+</blockquote>
+<p>##3. 主从复制和读写分离.<br>主从复制.</p>
+<blockquote>
+<p>主要涉及三个线程：</p>
+<ul>
+<li>binlog线程：负责将主数据库上的数据更改写入二进制文件binlog中；</li>
+<li>IO线程：负责从主数据库上读取二进制文件，并写入从服务器的中继日志中；</li>
+<li>SQL线程：负责读取中继日志并重放其中的SQL语句；</li>
+</ul>
+<p>高并发场景下，从库数据一定比主库慢一些，是有延时的；mysql在主从复制这块有两个机制：半同步复制用来解决主库<br>数据丢失，并行复制用来解决主从延时问题；</p>
+<p>主从同步延时问题解决方案：</p>
+<blockquote>
+<ul>
+<li>分库，将一个主库拆分成多个主库，每个主库的并发量就减少了几倍，此时主从延迟可以忽略不计；</li>
+<li>开启Mysql的并行复制机制；</li>
+<li>代码层注意问题；</li>
+<li>严格要求的情况下，就读主库；</li>
+</ul>
+</blockquote>
+</blockquote>
+<p>读写分离.</p>
+<blockquote>
+<p>主服务器用来处理写操作和实时性要求较高的读操作，从服务器处理读请求；可以用动态数据源切换方式实现；</p>
+</blockquote>
+<p>主从不一致：</p>
+<blockquote>
+<p>业务可以接受，系统不优化；<br>强制读主库；<br>在cache中记录发生了哪些写操作，来路由读主库还是从库；</p>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/25/java基础2——线程和并发/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/25/java基础2——线程和并发/" class="post-title-link" itemprop="url">'java基础2——线程和并发'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-02-25 15:23:49 / 修改时间：17:38:33" itemprop="dateCreated datePublished" datetime="2020-02-25T15:23:49+08:00">2020-02-25</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>###1. 使用和创建线程.<br>三种方式：实现Runnable接口、实现Callable接口、继承Thread.</p>
+<p>###2. 基础线程机制.<br>Executor并发框架，有三种基础的Executor：FixedThreadPool、SingleThreadExecutor、CachedThreadPool.</p>
+<p>###3. 锁.<br>synchronized和ReentrantLock比较：</p>
+<blockquote>
+<ul>
+<li>锁的实现：synchronized是jvm实现的，ReentrantLock是jdk实现的；</li>
+<li>性能：新版本synchronized优化了很多，例如锁自旋、锁消除等手段， 性能已经相差不多；</li>
+<li>等待可中断：ReentrantLock可中断，synchronized不可中断；</li>
+<li>公平锁：公平非公平是对获取锁而言，ReentrantLock支持公平锁和非公平锁，synchronized只有非公平锁；</li>
+<li>锁绑定多个条件：ReentrantLock可绑定多个Condition对象.</li>
+</ul>
+</blockquote>
+<p>wait()和sleep()区别：</p>
+<blockquote>
+<ul>
+<li>wait()会释放锁，而sleep()不会；</li>
+<li>sleep()是静态方法，wait()不是；</li>
+<li>wait()需要唤醒，或超时唤醒；</li>
+</ul>
+</blockquote>
+<p>线程状态：<br>新建、可运行、阻塞、无限期等待、限期等待、死亡.</p>
+<p>###4. J.U.C–AQS.<br>AQS：抽象队列同步器，是java.util.concurrent包的核心，是构建并发工具类的框架；用于实现依赖于FIFO等待队列的阻塞锁<br>和相关同步器；</p>
+<blockquote>
+<ul>
+<li>CountDownLatch. 用来控制一个或多个线程等待多个线程；核心方法countDown()、await()；</li>
+<li>CyclicBarrier. 用来控制多个线程互相等待，只有所有多个线程到达后，程序才继续执行；核心方法有await()、reset();<br>与CountDownLatch的区别是：可以通过reset()方法循环调用，所以叫循环屏障；</li>
+<li>Semaphore. 信号量，控制对互斥资源的访问线程数；核心方法acquire()、release()；</li>
+<li>Exchange. 多个线程间交换数据；</li>
+</ul>
+</blockquote>
+<p>###5. Java内存模型.<br>分为主内存和工作内存.</p>
+<p>内存间的交互操作：<br>read、load、use、assign、store、write、lock、unlock.</p>
+<p>###6. 多线程开发实践.</p>
+<blockquote>
+<ol>
+<li>给线程命名，方便debug；</li>
+<li>缩小同步范围，减少锁争用；</li>
+<li>多用同步工具，少用wait()和notify()；</li>
+<li>使用本地变量和不可变类保证线程安全；</li>
+<li>多用并发集合类；</li>
+<li>使用线程池创建线程；</li>
+</ol>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/23/Spring-Cloud常见问题总结/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -679,7 +1447,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-18 10:11:35" itemprop="dateModified" datetime="2020-02-18T10:11:35+08:00">2020-02-18</time>
+                <time title="修改时间：2020-02-25 17:31:43" itemprop="dateModified" datetime="2020-02-25T17:31:43+08:00">2020-02-25</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -782,6 +1550,32 @@
 <p>10.Integer缓冲池</p>
 <blockquote>
 <p>new Integer(112)和Integer.valueOf(112)的区别是：new Integer(112)每次都会产生新的对象，Integer.valueOf(112)<br>会使用缓冲池中的对象，多次调用会返回同一对象；这是因为Integer内部默认有个IntegerCache缓冲池，会缓冲-128~127的对象;</p>
+</blockquote>
+<p>11.异常.<br>相关关键字：try..catch、finally、throw、throws；</p>
+<blockquote>
+<p>finally：必定执行，当try和catch中有return时，finally仍会执行，且finally比return先执行；finally是在return<br>后面的表达式运算后执行的；</p>
+</blockquote>
+<blockquote>
+<p>finally不执行的情况：程序提前终止如调用System.exit，病毒或断电等；</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>异常基类是Throwable，下面分为Error和Exception.</li>
+<li>Error是指程序无法处理的错误，无法恢复也无法catch，Exception是程序可以处理的异常；</li>
+<li>Exception又分为受检查异常和运行时异常；区别在于编译时是否需要处理，受检查异常编译时必须处理,例如IOException；<br>运行时异常可以处理也可以不处理；常见的运行时异常有：NullPointException、ClassCastException、IndexOutOfBoundsException、<br>IllegalArgumentException、NoSuchMethodException.</li>
+</ul>
+</blockquote>
+<p>12.局部变量为什么一定要初始化.</p>
+<blockquote>
+<p>局部变量是指方法内的变量，必须初始化；因为局部变量运行时被分配在栈中，量大且生命周期短，如果虚拟机初始化开销大，但是<br>变量不初始化默认值使用是不安全的，因此出于速度和安全性考虑，局部变量需要初始化；</p>
+</blockquote>
+<p>13.内部类访问局部变量时，为什么变量一定要用final修饰.</p>
+<blockquote>
+<p>因为生命周期不同。局部变量在方法结束后销毁，内部类对象不一定，就会导致内部类引用了一个不存在的变量，所以编译器会在<br>内部类生成一个局部变量的拷贝，但如果其中一个变量修改，就会导致两个变量可能是不同的值，因此编译器要求局部变量加final，<br>保证两个变量值相同；JDK8后不需要局部变量加final，是因为编译器检查时默认加上了final.</p>
+</blockquote>
+<p>14.如何打破ClassLoader的双亲委托机制.</p>
+<blockquote>
+<p>重写loadClass().</p>
 </blockquote>
 
       
@@ -913,588 +1707,6 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/20/Spring常见问题总结1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/01/20/Spring常见问题总结1/" class="post-title-link" itemprop="url">'Spring常见问题总结1'</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-01-20 13:56:45" itemprop="dateCreated datePublished" datetime="2020-01-20T13:56:45+08:00">2020-01-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-24 09:55:37" itemprop="dateModified" datetime="2020-02-24T09:55:37+08:00">2020-02-24</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><strong>1.Spring IOC&amp;AOP</strong><br>IOC即依赖注入，是一种设计思想，将类的创建和依赖交给框架通过配置来管理，资源不由使用资源的双方管理而由第三方管理；可以降低耦合度，资源集中管理使得资源可配置和易管理；<br>IOC容器实际上就是个Map，Map中存放了各种对象；Spring IOC的初始化（实现）过程：</p>
-<blockquote>
-<blockquote>
-<p>xml配置–（读取）–&gt;Resource–（解析）–&gt;BeanDefinition–（注册）–&gt;BeanFactory</p>
-</blockquote>
-</blockquote>
-<p>AOP即面向切面编程，可以为业务模块所共用的逻辑（如事务、日志、权限）封装起来，便于减少系统重复代码、降低耦合，有利于扩展和维护；Spring AOP是基于动态代理的，如果代理<br>对象实现了接口，使用jdk动态代理，如果没有实现接口则使用Cglib实现代理；</p>
-<p><strong>2.Spring AOP和AspectJ AOP区别</strong><br>Spring AOP属于运行时增强，AspectJ是编译时增强。Spring AOP基于代理，而AspectJ基于字节码操作；Spring AOP集成了AspectJ，常用的aop注解是AspectJ的；<br>jdk动态代理基于反射生成新的代理类，必须实现接口；</p>
-<p><strong>3.Spring的生命周期</strong><br><img src="http://www.plantuml.com/plantuml/svg/dL9DIm9H5DtxIshH7z08Z0ZQX12qVphNUg3pPDwBi9MHaUKWBan8qBw8SPCfRiQAVetlZQxw2xtvQ4Od9yJLyEuzvvvxpXtAaCPYSTxhZB-gN6zk0r9tKOOHhPWYbAKqaW5AYIO1Lgrl3JuIiRYuDYQFUXJIQfKBmNi6jRQU20b5AlYeFPKof3AC62PgyXHfy8UNL521mO85b-26TyqI3UPepiw1Nz4fJqiF_AwxkeZy541ZnKEKEm7gp1-RxyxmOPTVll11HvGCMPtqBwn6rsxiepmue-Ka2kotv703b9To23YRVU1ZYH2mz9J3Pq4AhfBVmEgHFKcIKLR6xzd2G0-0pU0tqnAq9L5O4ZVom8w98lGhtcl9ccYEnF1spiK_coLjdGMBhNY8g76yDv87vfKsD-m_K5Jg_ER--rDtPSJhCpTDTrzUhydwsAnEsq_JHacydRjStz0EbdeudGClAGMeVOoGRJyYhnsL4gZA3m00"></p>
-<p><strong>4.Spring MVC</strong><br>SpringMVC是一个Web开发框架，把后端项目分层为Model、View、Controller，工作原理如下：<br><img src="/images/spring_4.jpg" alt><br>流程说明：</p>
-<blockquote>
-<ul>
-<li>客户端（浏览器）发送请求，直接请求到DispacterServlet;</li>
-<li>DispacterServlet根据请求信息调用HandlerMapping，解析请求对应的Handler;</li>
-<li>解析到对应的handler后，开始由HandlerAdapter适配器处理;</li>
-<li>HandlerAdapter回根据handler来调用真正的处理器开始处理请求，并处理相应业务逻辑;</li>
-<li>处理器处理完业务后，会返回一个ModelAndView对象;</li>
-<li>ViewResolver会根据逻辑View查找实际的View;</li>
-<li>DispacterServlet把返回的Model传给view;</li>
-<li>view返回给客户端;</li>
-</ul>
-</blockquote>
-<p>重要组件说明：</p>
-<blockquote>
-<ul>
-<li>前端控制器DispacterServlet;</li>
-<li>处理器映射器HandlerMapping;</li>
-<li>处理器适配器HandlerAdapter;</li>
-<li>处理器Handler(Controller);</li>
-<li>视图解析器ViewResolver;</li>
-<li>视图View(jsp,freemarker..);</li>
-</ul>
-</blockquote>
-<p><strong>5.拦截器和过滤器</strong><br>过滤器处于客户端和web资源之间，可以针对request和response做过滤或提前设置参数，然后再传入servlet；拦截器是一种AOP；区别如下：</p>
-<blockquote>
-<p>拦截器是基于java反射机制的，而过滤器是基于函数回调；<br>拦截器不依赖web容器，而过滤器依赖web容器；<br>拦截器作为spring的组件，能通过IOC容器管理，获取spring中各种资源，而过滤器不能；<br>过滤器是在servlet规范中定义的，由servlet容器支持；拦截器是在spring容器内的，由spring框架支持；</p>
-</blockquote>
-<p>拦截顺序：过滤doFilter前–&gt;拦截器preHandle–&gt;action处理–&gt;拦截器postHandle–&gt;过滤doFilter后 </p>
-<p><strong>6.SpringMVC中的异常处理</strong></p>
-<blockquote>
-<ol>
-<li>自定义Exception;</li>
-<li>利用ControllerAdvice和ExceptionHandler全局捕获处理;</li>
-<li>定义一个返回对象，包括状态码、message、data等；</li>
-</ol>
-</blockquote>
-<p><strong>7. Spring中的设计模式</strong></p>
-<blockquote>
-<ul>
-<li>工厂模式：利用BeanFactory和ApplicationContext创建bean对象;</li>
-<li>单例模式：例如bean的作用域为singleton时;</li>
-<li>代理模式：AOP的原理;</li>
-<li>模板方法：例如JdbcTemplete等;</li>
-<li>观察者 ：Sping事件驱动模型;</li>
-<li>适配器 ：AOP的增强或通知时使用了适配器模式，Jpa适配不同数据库；</li>
-</ul>
-</blockquote>
-<p><strong>8. Spring IOC的初始化过程</strong></p>
-<blockquote>
-<ol>
-<li>读取资源配置文件；</li>
-<li>解析并包装成相应的BeanDefinition；</li>
-<li>注册到BeanFactory中；</li>
-</ol>
-</blockquote>
-<p><strong>9. Spring如何解决循环依赖问题</strong><br>首先，需要明确的是spring对循环依赖的处理有三种情况：</p>
-<blockquote>
-<ul>
-<li>构造器的循环依赖：这种依赖spring是处理不了的，直 接抛出BeanCurrentlylnCreationException异常。</li>
-<li>单例模式下的setter循环依赖：通过“三级缓存”处理循环依赖。</li>
-<li>非单例循环依赖：无法处理。</li>
-</ul>
-</blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/07/面试系列二/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/01/07/面试系列二/" class="post-title-link" itemprop="url">'面试系列二'</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-01-07 19:53:42" itemprop="dateCreated datePublished" datetime="2020-01-07T19:53:42+08:00">2020-01-07</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-20 11:07:31" itemprop="dateModified" datetime="2020-02-20T11:07:31+08:00">2020-02-20</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/面试/" itemprop="url" rel="index"><span itemprop="name">面试</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><strong>1.系统拆分</strong></p>
-<ol>
-<li><p>为什么要将系统进行拆分？</p>
-<blockquote>
-<p>1.为了提升开发效率，一个大系统多人维护经常会有冲突，系统拆分后，便于职责划分，且模块独立；2.拆分便于扩展，针对不同的模块，<br>性能消耗不一样，可以有针对的扩容等；3.资源隔离，例如拆分后数据库可以独立，从而进行垂直拆分；</p>
-</blockquote>
-</li>
-<li><p>如何进行系统拆分？</p>
-<blockquote>
-<p>也就是拆分原则：功能模块单一职责；拆分粒度适中；考虑团队结构；业务模型驱动；演进式拆分；避免环形依赖和双向依赖；</p>
-</blockquote>
-</li>
-<li><p>分布式和微服务区别？</p>
-<blockquote>
-<p>分布式是一种手段，把不同机器分散在不同地方，机器间相互协作完成业务；微服务是一种特殊的分布式；主要是作用不同：微服务重在<br>解耦，使每个模块相互独立；分布式重在资源共享和提升性能；</p>
-</blockquote>
-</li>
-</ol>
-<p><strong>2.分布式事务</strong></p>
-<blockquote>
-<ul>
-<li>XA方案：两阶段提交，通常由一个事务管理器负责协调多个数据库事务；不常用：一个系统跨多个库不合适，而且数据库要求严格；</li>
-<li>TCC方案：Try、Confirm、Concel；不常用：要自己写回滚或补偿代码，用在对事务严格要求的情况；</li>
-<li>本地消息表：利用数据库表来记录消息处理；不常用：因为依赖数据库管理事务，并发情况不好；</li>
-<li>可靠消息最终一致性方案：常用方案，利用可靠的MQ来保证消息一致性；</li>
-<li>最大努力通知方案：可靠消息最终一致性方案的一种简单版本，如果B执行失败，尽量尝试重试，超过一定次数放弃；</li>
-</ul>
-</blockquote>
-<p><strong>3.高可用系统</strong></p>
-<ol>
-<li>高可用定义.<blockquote>
-<p>高可用描述的是一个系统在大部分时间都是可用的，可以提供服务。高可用代表系统即使在发生硬件故障或系统升级的时候，服务依然可用。</p>
-</blockquote>
-</li>
-<li>判断标准.<blockquote>
-<p>一般情况下，使用多少个9来判断一个系统的可用性。例如99.9999%代表该系统在所有的运行时间中只有0.001%的时间是不可用的。</p>
-</blockquote>
-</li>
-<li>哪些情况会导致系统不可用.<blockquote>
-<ol>
-<li>黑客攻击；</li>
-<li>硬件故障；</li>
-<li>并发量/用户请求激增导致整个服务宕掉或部分服务不可用；</li>
-<li>代码中的坏味道导致内存泄漏或其他问题使程序不可用；</li>
-<li>网络架构某个重要角色如nginx或者数据库突然不可用；</li>
-<li>自然灾害或人为破坏；</li>
-</ol>
-</blockquote>
-</li>
-<li>提高系统可用性方法.<blockquote>
-<ul>
-<li>注意代码质量，测试严格把关；</li>
-<li>使用集群，减少单点故障；</li>
-<li>限流；</li>
-<li>超时和重试机制；</li>
-<li>熔断机制；</li>
-<li>异步调用；</li>
-<li>使用缓存；</li>
-<li>核心应用和服务有限使用更好的硬件；</li>
-<li>监控系统资源使用情况增加报警设置；</li>
-<li>注意备份，必要时回滚；</li>
-<li>灰度发布；</li>
-<li>定期检查硬件；</li>
-</ul>
-</blockquote>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/02/Mysql系列4——基础原理3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/01/02/Mysql系列4——基础原理3/" class="post-title-link" itemprop="url">'Mysql系列4——基础原理3'</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-01-02 20:03:19" itemprop="dateCreated datePublished" datetime="2020-01-02T20:03:19+08:00">2020-01-02</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-01-06 20:54:02" itemprop="dateModified" datetime="2020-01-06T20:54:02+08:00">2020-01-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><strong>1.事务简介</strong><br>事务是作为单个逻辑工作单元执行的一系列操作；Spring事务本质上使用数据库锁，也就是数据库事务，Spring事务只有在方法执行过程中出现<br>异常才会回滚，并且只回滚数据库相关的操作；</p>
-<p>事务特性ACID：原子性（Atomicity）、一致性（Consistency）、隔离性（Isolation）、持久性（Durability）；</p>
-<p>mysql只有InnoDB和NDB存储引擎支持事务；开启事务：’begin;’或者’start transaction;’，显示提交事务就是commit；回滚事务rollback；<br>自动提交事务autocommit;隐式提交事务：当执行一些特殊语句而导致事务提交，例如ddl、隐式使用或修改mysql数据库中的表等等；保存点<br>的概念savepoint [savepointname]；</p>
-<p><strong>2.事务并发执行遇到的问题</strong></p>
-<blockquote>
-<ul>
-<li>脏写：一个事务修改了另一个未提交事务修改过的数据；</li>
-<li>脏读：一个事务读取了另一个未提交事务修改过的数据；</li>
-<li>不可重复读：一个事务两次读取同一行数据，得到不同结果；</li>
-<li>幻读：一个事务中两次读取一个表数据，得到不同结果，或多行或少行；</li>
-</ul>
-</blockquote>
-<p><strong>3.事务隔离级别</strong>（下面只是一种实现方式）</p>
-<blockquote>
-<ul>
-<li>Read Uncommitted: 事务对当前读取的数据不加锁，事务在更新某数据时，必须先对其加行级共享锁直到事务结束；</li>
-<li>Read Committed: 事务对当前被读取的数据加行级共享锁，一旦读完立即释放行级共享锁；事务在更新某数据时先加行级排他锁直到事务结束；</li>
-<li>Repeatable read: 事务在读取数据时先加行级共享锁直到事务结束；事务在更新时先加行级排他锁直到事务结束；</li>
-<li>Serializable: 事务在读取数据时先加表级共享锁直到事务结束；事务在更新时先加表级排他锁直到事务结束；</li>
-</ul>
-</blockquote>
-<table>
-<thead>
-<tr>
-<th>隔离级别</th>
-<th>脏读</th>
-<th>不可重复读</th>
-<th>幻读</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>读未提交</td>
-<td>可能</td>
-<td>可能</td>
-<td>可能</td>
-</tr>
-<tr>
-<td>读已提交</td>
-<td>不可能</td>
-<td>可能</td>
-<td>可能</td>
-</tr>
-<tr>
-<td>可重复读</td>
-<td>不可能</td>
-<td>不可能</td>
-<td>可能</td>
-</tr>
-<tr>
-<td>序列化</td>
-<td>不可能</td>
-<td>不可能</td>
-<td>不可能</td>
-</tr>
-</tbody>
-</table>
-<p><strong>4.MVCC</strong><br>multi-version concurrency control，多版本并发控制；因为加锁太消耗性能，MVCC是同一份数据临时保留多版本的一种方式实现并发控制；对于Mysql<br>的InnoDB来说，只有事务隔离级别是Read Committed和Repeatable Read时会使用MVCC保证不同事务的读写操作并发执行，不同点在于生成ReadView的时机<br>不同，Read Committed在每次执行普通select前生成一个，Repeatable read是在第一次进行普通select前生成一个ReadView，之后都是用这个；</p>
-<p>ReadView中比较重要的内容：</p>
-<blockquote>
-<ul>
-<li>m_ids:表示在生成ReadView时当前系统中活跃的读写事务的事务id列表；</li>
-<li>min_trx_id:表示生成ReadView时，当前系统中活跃的读写事务中最小的事务id；</li>
-<li>max_trx_id:同上，最大的事务id；</li>
-<li>creator_trx_id:表示生成该ReadView的事务id；</li>
-</ul>
-</blockquote>
-<p>访问某条记录，按下面步骤判断：</p>
-<blockquote>
-<ul>
-<li>如果被访问版本的trx_id属性值与ReadView中的creator_trx_id值相同，意味着当前事务在访问它自己修改过的记录，所以该版本可以被当前事务访问。</li>
-<li>如果被访问版本的trx_id属性值小于ReadView中的min_trx_id值，表明生成该版本的事务在当前事务生成ReadView前已经提交，所以该版本可以被当前事务访问。</li>
-<li>如果被访问版本的trx_id属性值大于或等于ReadView中的max_trx_id值，表明生成该版本的事务在当前事务生成ReadView后才开启，所以该版本不可以被当前事务访问。</li>
-<li>如果被访问版本的trx_id属性值在ReadView的min_trx_id和max_trx_id之间，那就需要判断一下trx_id属性值是不是在m_ids列表中，如果在，说明创建ReadView时生成该版本的事务还是活跃的，该版本不可以被访问；如果不在，说明创建ReadView时生成该版本的事务已经被提交，该版本可以被访问。</li>
-</ul>
-</blockquote>
-<p><strong>5.锁</strong></p>
-<p><strong>6.redo日志</strong><br>redo日志本质上是记录了事务对数据库做了哪些修改；redo日志会把事务在执行过程中对数据库做的所有修改都记录下来，在之后系统崩溃重启后可以把<br>事务所做的任何修改都恢复过来；</p>
-<p>redo日志也是先放到缓存log buffer中，刷盘时机：</p>
-<blockquote>
-<ul>
-<li>log buffer空间不足时；</li>
-<li>事务提交时；</li>
-<li>后台线程定时刷新；</li>
-<li>正常关闭服务器；</li>
-<li>其他；</li>
-</ul>
-</blockquote>
-<p>redo日志文件组，我们可以修改一些参数：redo日志存放目录、redo日志文件大小、redo日志文件个数；</p>
-<p><strong>7.undo日志</strong><br>undo日志是为了回滚记录；</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/25/Mysql系列3——基础原理2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/12/25/Mysql系列3——基础原理2/" class="post-title-link" itemprop="url">'Mysql系列3——基础原理2'</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-12-25 20:38:12" itemprop="dateCreated datePublished" datetime="2019-12-25T20:38:12+08:00">2019-12-25</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-01-02 20:02:12" itemprop="dateModified" datetime="2020-01-02T20:02:12+08:00">2020-01-02</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><strong>1.Mysql数据目录</strong><br>数据终究要存储在磁盘上，因此Mysql数据目录中包含各种文件，例如表空间、表、视图、日志、进程文件等；因此数据库受文件系统的影响：</p>
-<blockquote>
-<ul>
-<li>数据库名称和表名称不得超过文件系统所允许的最大长度</li>
-<li>特殊字符问题</li>
-<li>文件长度受文件系统最大长度限制</li>
-</ul>
-</blockquote>
-<p>mysql中有几个系统数据库：</p>
-<blockquote>
-<ul>
-<li>mysql: 存储了Mysql的用户账户和权限信息，一些存储过程、事件的定义信息，一些日志信息、帮助信息以及时区信息；</li>
-<li>information_schema: 维护所有其他数据库的信息，是一些描述性信息；</li>
-<li>performance_schema: mysql服务器运行过程中的一些状态信息；</li>
-<li>sys: 通过视图形式把information_schema和performance_schema结合起来，可以更方便的了解mysql服务器的一些性能信息；</li>
-</ul>
-</blockquote>
-<p><strong>2.InnoDB表空间</strong><br>表空间中每个也都有一个页号FILE_PAGE_OFFSET，这个页号由4个字节组成，如果页设置大小为默认16kb，则一个表空间最多64TB数据；<br>表空间分为独立表空间和系统表空间；对于16KB的页来说，连续64个页是一个区，默认1MB空间；一个索引会生成2个段，一个叶子节点段，<br>一个非叶子节点段；</p>
-<p><strong>3.表单访问方法</strong></p>
-<blockquote>
-<ul>
-<li>const: 通过主键或者唯一二级索引列与常数的等值比较来定位一条记录的访问方法；</li>
-<li>ref: 搜索条件为二级索引列与常数等值比较，采用二级索引来执行查询的访问方法；</li>
-<li>ref_or_null: 搜索条件为（二级索引列与常数等值比较）or（二级索引列为null）；</li>
-<li>range: 二级索引匹配区间值；</li>
-<li>index: 只需要遍历二级索引记录的访问方法；</li>
-<li>index merge: 使用多个索引来完成一次查询；</li>
-<li>all: 全表扫描；</li>
-</ul>
-</blockquote>
-<p><strong>4.连接</strong><br>连接分为内连接和外连接，区别在于：驱动表中的记录即使在被驱动表没有匹配，是否加入到结果集中；<br><br>驱动表只访问一次，被驱动表可能被访问多次，访问次数取决于对驱动表执行单表查询后的结果集中的记录数，这种连接执行方式称为嵌套循环连接；尽量减少访问被驱动表的次数；</p>
-<p><strong>5.成本</strong><br>mysql中一条查询语句的执行成本是由两个方面组成：IO成本和CPU成本；<br><br>mysql执行查询语句前会先分析所有可用方案的执行成本，对比找出成本最低的方案，也就是执行计划；</p>
-<blockquote>
-<ol>
-<li>根据搜索条件，找出所有可能使用的索引；</li>
-<li>计算全表扫描的代价；</li>
-<li>计算使用不同索引执行查询的代价；</li>
-<li>对比各种执行方案的代价，找出成本最低的那个；</li>
-</ol>
-</blockquote>
-<p>因此需要注意可能存在的索引计算代价花费时间过长造成的负优化，一些成本常数可设置；</p>
-<p><strong>6.统计数据的收集</strong><br>InnoDB默认是以表为单位来收集和存储统计数据的，这些统计数据可用是基于磁盘的永久性统计数据，也可以是基于内存的非永久性统计数据；<br><br>innodb_stats_persistent控制着使用永久性统计数据还是非永久性统计数据；<br><br>innodb_stats_persistent_sample_pages控制着永久性统计数据的采样页面数量；<br><br>innodb_stats_transient_sample_pages控制着非永久性统计数据的采样页面数量；<br><br>innodb_stats_auto_recalc控制着是否自动重新计算统计数据。</p>
-<p>我们可以针对某个具体的表，在创建和修改表时通过指定STATS_PERSISTENT、STATS_AUTO_RECALC、STATS_SAMPLE_PAGES的值来控制相关统计数据属性。</p>
-<p>innodb_stats_method决定着在统计某个索引列不重复值的数量时如何对待NULL值。</p>
-<p><strong>7.查询优化（内部）</strong></p>
-<blockquote>
-<ul>
-<li>条件化简；</li>
-<li>外连接消除；</li>
-<li>子查询优化；</li>
-</ul>
-</blockquote>
-<p><strong>8.Explain执行计划</strong><br>格式：[explain] [format=json] sql;<br>optimizer_trace参数可以启用查看详细的执行优化过程；</p>
-<p><strong>9.Buffer Pool</strong></p>
-<ol>
-<li>磁盘太慢，所以要用内存做缓存；Buffer Pool本质是InnoDB向操作系统申请的一段连续的内存空间，可通过innodb_buffer_pool_size来调整大小；<br></li>
-<li>Buffer Pool向操作系统申请的连续内存由控制块和缓存页组成，InnoDB使用链表来管理Buffer Pool，free链表中每个节点都代表一个空闲的缓存页，为了快速定位页是否被加载到Buffer Pool，使用表空间号+页号作为key，<br>缓存页作为value，建立哈希表；<br></li>
-<li>Buffer Pool中被修改的页被称为脏页，脏页不会立即刷新，而是加入flush链表，待之后的某个时间点同步到磁盘上；LRU链表分为young和old两个区域；<br></li>
-<li>每个buffer pool中都有各自独立的链表，一个buffer pool实例由若干chunk组成；</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
@@ -1565,16 +1777,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

@@ -147,6 +147,404 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/21/pring-boot与quartz集成的一些问题记录/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/06/21/pring-boot与quartz集成的一些问题记录/" class="post-title-link" itemprop="url">pring-boot与quartz集成的一些问题记录</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-06-21 18:15:44 / 修改时间：18:40:22" itemprop="dateCreated datePublished" datetime="2019-06-21T18:15:44+08:00">2019-06-21</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>#1. quartz问题：This scheduler instance is still active but was recovered by another instance in the cluster. This may cause inconsistent behavior.</p>
+<blockquote>
+<p>今天遇到一个问题，系统环境情况：有一个调度系统，系统内部有自己的数据表，集成了quartz，使用了quartz的持久化方案，<br>也就是JobStoreTX;</p><p><br>问题现象描述：<br></p>
+<blockquote>
+<p>部署了两套环境，配置了两个数据库，假设为A环境-数据库AA，B环境-数据库BB，一套开发环境一套测试环境，是要分开<br>的；在A环境中新增任务，也就是AA中系统表和quartz表新增记录没问题，但是在调度开始后，发现执行调度的记录都新增在BB数据库中，<br>并且日志一直报：This scheduler instance is still active but was recovered by another instance in the cluster. This may cause inconsistent behavior.</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<p>原因和解决办法：</p>
+<blockquote>
+<p>最后查出，是因为B环境quartz的配置文件中配置了AA数据库，导致B环境一直在执行调度任务，并且执行任务中一些系统记录<br>会生成在BB数据库中，因为B环境一直在调度任务，导致A环境报上面提示错误；</p>
+</blockquote>
+</blockquote>
+<p>#2. 在spring boot的配置文件中集成quartz配置参数</p>
+<blockquote>
+<p>spring boot2.0以上版本可以直接在application*.yml中配置quartz.properties中参数了，格式如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">spring:</span><br><span class="line">  application:</span><br><span class="line">    name: xxx</span><br><span class="line">  datasource:</span><br><span class="line">    driver-class-name: com.mysql.jdbc.Driver</span><br><span class="line">    url: jdbc:mysql://xxx:3306/xxx?useSSL=false&amp;useUnicode=true&amp;characterEncoding=UTF-8</span><br><span class="line">    username: xxx</span><br><span class="line">    password: xxx</span><br><span class="line">  quartz:</span><br><span class="line">    properties:</span><br><span class="line">      org:</span><br><span class="line">        quartz:</span><br><span class="line">          scheduler:</span><br><span class="line">            instanceName: smQuartzScheduler</span><br><span class="line">            instanceId: AUTO</span><br><span class="line">            skipUpdateCheck: true</span><br><span class="line">          threadPool:</span><br><span class="line">            class: org.quartz.simpl.SimpleThreadPool</span><br><span class="line">            threadCount: 5</span><br><span class="line">            threadPriority: 5</span><br><span class="line">          jobStore:</span><br><span class="line">            class: org.quartz.impl.jdbcjobstore.JobStoreTX</span><br><span class="line">            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate</span><br><span class="line">            useProperties: true</span><br><span class="line">            tablePrefix: ML_QRTZ_</span><br><span class="line">            isClustered: true</span><br><span class="line">            clusterCheckinInterval: 20000</span><br><span class="line">            misfireThreshold: 60000</span><br><span class="line">            dataSource: sm</span><br><span class="line">          dataSource:</span><br><span class="line">            sm:</span><br><span class="line">              driver: $&#123;spring.datasource.driver-class-name&#125;</span><br><span class="line">              URL: $&#123;spring.datasource.url&#125;</span><br><span class="line">              user: $&#123;spring.datasource.username&#125;</span><br><span class="line">              password: $&#123;spring.datasource.password&#125;</span><br><span class="line">              maxConnections: 5</span><br><span class="line">              validationQuery: select 1 from dual</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>#3. logback中配置环境变量<br>在logback中配置spring的一些变量时，需要使用<springproperty>标签;</springproperty></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/13/xxl-job调度框架分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/06/13/xxl-job调度框架分析/" class="post-title-link" itemprop="url">xxl-job调度框架分析</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-06-13 20:11:15 / 修改时间：20:47:09" itemprop="dateCreated datePublished" datetime="2019-06-13T20:11:15+08:00">2019-06-13</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="xxl-job调度框架分析"><a href="#xxl-job调度框架分析" class="headerlink" title="xxl-job调度框架分析"></a>xxl-job调度框架分析</h2><p>###1. 简介</p>
+<blockquote>
+<p>xxl-job是一个一个开源的轻量级分布式调度平台，主要优点有开发迅速、学习简单、轻量级、易扩展、开箱即用、文档丰富、维护良好；<br>这里主要是分析源码，了解底层细节，也作为借鉴学习；</p>
+</blockquote>
+<p>###2. 架构设计</p>
+<blockquote>
+<p>系统包含两部分：调度中心和执行器；</p><p><br>将调度行为抽象形成”调度中心”公共平台xxl-job-admin，负责发起调度请求，不承担业务逻辑；执行器管理任务，将任务抽象成分散<br>的jobHandler，执行器负责接收调度请求并执行对应的JobHandler中业务逻辑；</p><p><br><a href="http://www.xuxueli.com/xxl-job/#/" target="_blank" rel="noopener">官方文档地址</a> 建议按照官方文档的指导快速入门，架构图如下<br><img src="https://raw.githubusercontent.com/xuxueli/xxl-job/master/doc/images/img_Qohm.png" alt="架构图"></p>
+</blockquote>
+<p>###3. 源码分析</p>
+<p>#####1. 执行器</p>
+<blockquote>
+<p>执行器作为接入部分，先分析执行器中具体做了什么。</p><p><br>执行器中一般要加载配置XxlJobExecutor属性，然后根据不同的接入方式，调用xxlJobExecutor的start()方法;<br>start()方法中的逻辑如下图：<br><img src="http://www.plantuml.com/plantuml/svg/LP2xJW9158Pxde87aCfEZ8cGA1fjWC9sM4PONNStiqEYbWg4EnG4maKYYLmi14oCmd9xcJspKFaApW9HxCwSx_pd_Fze515gsuD177fLOvGqgz5J9U11Sb3215BFY-aK4WEt8WiHGh1CFKWBdoDrtqU9A8Tsx2T_qmVsgz_QYrL54wb2xepXcvFlRp-mHbrJBP4Ze2YKbKOmoRDS2sAjxqa64ZKOwxuLFvOY-0W9bjXI9fwWauPCYPLRC2ylllemYqfAI4Kql8rHy4QK7O8aSfCyn6BmQ1QxvlluqEgxn7lh20_P7u5UvFpYLlAgWXTVOfvAm2wCP5QSyQXeCtycQdJZ_Ry3DeoPXRYfpyrksbgwIhQCPSrfZ-zTKrR-N9O_O90tzDmklBok4bQCONQDhMUXpJkid-UK_pmNhD7sFQWrh1YhItuYXaAOk94a1P1mxGyJZ8B_p2KxYsO6AbrMpqAgoGkdJQEA-WC0"><br>其中逻辑比较复杂的是初始化执行器server，其步骤如下：</p>
+<ul>
+<li>根据一些规则得到当前执行器的地址——ip:port格式;</li>
+<li>初始化netty服务器（默认使用netty-http服务器），将执行处理器ExecutorBiz注入，安全校验;</li>
+<li>netty服务器的请求处理pipeline中添加了NettyHttpServerHandler，这个类主要两个功能：1. 根据请求/services返回所有ExecutorBiz;2. 正常方法调用，采用java反射机制；</li>
+<li>启动ExecutorRegistryThread线程，自动注册服务(写入数据库);<p></p></li>
+</ul>
+</blockquote>
+<blockquote>
+<p>销毁时，注销服务，关闭已启动的线程；</p>
+</blockquote>
+<p>#####2. 调度中心</p>
+<blockquote>
+<p>调度中心是一个web项目，使用spring boot框架，前端采用freemarker框架，2.1.0之前的版本使用quartz的定时调度功能；</p><p><br>调度中心的启动初始化在XxlJobDynamicSchedulerConfig中：配置和启动quartz的SchedulerFactory，调用XxlJobDynamicScheduler的start()方法；<br>初始化I18n，启动执行器注册监控线程（一个执行器可以有多个实例），启动失败日志重试和告警线程，初始化rpc服务；</p><p><br>调度有两种方式：cron定时调度和手动执行调度，最终走同一个接口JobTriggerPoolHelper.trigger(..)，调度有几种方式：手动、cron、parent、失败重试和API，下面是流程图：<br><img src="http://www.plantuml.com/plantuml/svg/PLBRRjf047tdIq2gelOLVg8F_G6KEXGfXSZGTqWAsBKfKWg6b4iWuk8qDJPAHOqD-6EwCxj-uXUwPH61yhBQtJbppfoPoUMJSZuI3migQe-eJjX0frv0JGrd_SrIWU1f_uHR7KiF1r6Tk3uR5q7tG7c2Zacyhs7h7fGc32VWrAYbRfPj65zZhqFS0d5_4D-7BmCMzAXliNa9c_Cthz4QSYPGxh2-1iKvL22k9IhQBDL490xA40rhnxViGsb4ltyM0AXTOyCXRfMu7dtq124RbsdR80iDrEf_ICx6fckwci9mndwDmagLsGtyEH0X8G5AcQgLK-PTua4q4KbVH8_XEonnw-otJUipQXcqCSAMBM3YCvR_86MYUVcJ5ECJk5N0Ng1Tutt2PnFA-alDTsPuinBtH4Iwp4dHJ9QdO7-1rUcHWBhUf-pncVVf2mxUFj5Ou7FZIiwUIxdSEpcTIabozEmizWfAYZ0MjdmOz0JTdqBna9qlmB7jE3zv1U1zGyE1XvxGkCocsDI1LMCxiovCDD2DdTRRf9pyI5Py7ppvwfmvDxHklh2T-E5h2JLZRmaw3dGB_uQtJJon6iVwF6oNUHIyCGa6MBHXCIT15wmMn_FznEO8WYRUZsX74p0OLdYxjstw2m00"><br>核心部分在于调用rpc执行器执行，利用java动态代理机制获取代理类执行；代理类执行实际是通过服务器客户端<br>发送请求，默认使用netty-http客户端;</p>
+</blockquote>
+<p>#####3. 执行器执行过程分析</p>
+<blockquote>
+<p>经过上面分析，我们知道：调度中心实际是调度执行器来执行，<strong>阻塞策略、运行模式和任务超时等参数在执行器中生效</strong>，下面<br>我们来分析执行器具体执行过程：</p>
+<ul>
+<li>根据选择的运行模式，获取JobHandler，如果是Glue模式，则动态加载类，如果是script，则构造相应的执行类；</li>
+<li>创建jobThread执行并注册缓存；</li>
+<li>将执行参数放到执行线程中；jobThread中的执行逻辑分析下：<blockquote>
+<ol>
+<li>先执行jobHandler的init()方法，这里也是作者留的扩展点;</li>
+<li>循环标志toStop（线程一直存在，任务队列放置任务，手动停止），线程超时时间90s没收到请求参数，则关闭当前空闲执行线程；</li>
+<li>设置当前日志logFileName，判断任务是否设置超时时间，执行任务；</li>
+<li>任务执行完（成功或失败）或超时，任务结果回调，修改任务日志状态等;</li>
+<li>调用jobHandler的destory()方法。</li>
+</ol>
+</blockquote>
+</li>
+</ul>
+</blockquote>
+<p>#####4. 一些细节;</p>
+<blockquote>
+<ol>
+<li>任务的超时和失败重试机制：任务执行状态最终会回调记录在log表中，调度中心启动时开启了一个监控线程，从表中<br>不断拉取失败任务，如果有重试次数，则再次调度，直到重试次数用完；且如果设置了告警邮箱，则失败重试时发送告警邮件；</li>
+<li>子任务：任务执行完回调过程中，如果任务执行成功，且存在子任务，则执行子任务；</li>
+<li>任务参数作为JobHandler执行参数可以传递参数变量；</li>
+<li>日志系统：每次任务执行作为一个运行日志，JobHandler需要使用自定义的XxlJobLogger记录日志，分文件记录，<br>从而实现每个任务都有独立的执行日志；</li>
+</ol>
+</blockquote>
+<p>#####5. 优点和总结</p>
+<blockquote>
+<ol>
+<li>框架这种抽取基础公共类单独作为jar包，和spring-core类似，作为框架的常用方案；</li>
+<li>完善的关闭清理机制；</li>
+<li>反射+代理+服务器(netty)做RPC服务，细节值得借鉴；</li>
+<li>功能模块分离思路可以学习；</li>
+<li>DB锁保证一致性和异步可以了解下；</li>
+<li>待续..</li>
+</ol>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/16/swagger-codegen的一些总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/05/16/swagger-codegen的一些总结/" class="post-title-link" itemprop="url">swagger-codegen的一些总结</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-05-16 15:08:02 / 修改时间：17:57:27" itemprop="dateCreated datePublished" datetime="2019-05-16T15:08:02+08:00">2019-05-16</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="1-swagger是什么？"><a href="#1-swagger是什么？" class="headerlink" title="1. swagger是什么？"></a>1. swagger是什么？</h2><p>  swagger是用来设计、构建、文档、合作、管理api的工具，可以生成、描述、调用和可视化Restful风格<br>的web服务，方便前后端分离；早先吾使用来描述api文档，生成文档接口页面展示，后来是先写文档，利用<br>swagger-codegen生成代码；</p>
+<h2 id="2-swagger-codegen的几种使用方式"><a href="#2-swagger-codegen的几种使用方式" class="headerlink" title="2. swagger-codegen的几种使用方式."></a>2. swagger-codegen的几种使用方式.</h2><p>  官方github地址是：<a href="https://github.com/swagger-api/swagger-codegen" target="_blank" rel="noopener">https://github.com/swagger-api/swagger-codegen</a><br>可以看到，主要有四个modules：</p>
+<ul>
+<li>swagger-generator : 用来生成swagger页面，利用相关注释描述.</li>
+<li>swagger-codegen :  利用swagger文档生成接口代码.</li>
+<li>swagger-codegen-cli : swagger-codegen的命令行可执行jar包.</li>
+<li><p>swagger-codegen-maven-plugin ： swagger-codegen的maven插件.<br>swagger-codegen-cli的基本用法，下载jar包，在命令行中如下方式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar swagger-codegen-cli-2.2.3.jar generate -i swagger-api.yml -l spring -o /java --model-package cn.com.controller.model --api-package cn.com.controller.api</span><br></pre></td></tr></table></figure>
+<p>swagger-codegen直接引入maven依赖，可以以工具类的方式生成代码.<br>swagger-codegen-maven-plugin以maven插件方式工作，这里主要介绍这种;</p>
+<h2 id="3-swagger-codegen-maven-plugin的一些坑"><a href="#3-swagger-codegen-maven-plugin的一些坑" class="headerlink" title="3. swagger-codegen-maven-plugin的一些坑."></a>3. swagger-codegen-maven-plugin的一些坑.</h2></li>
+</ul>
+<ol>
+<li><p>在pom中直接引入插件.</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">&lt;plugin&gt;</span><br><span class="line">    &lt;groupId&gt;io.swagger&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;swagger-codegen-maven-plugin&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;2.4.5&lt;/version&gt;</span><br><span class="line">    &lt;executions&gt;</span><br><span class="line">        &lt;execution&gt;</span><br><span class="line">            &lt;goals&gt;</span><br><span class="line">                &lt;goal&gt;generate&lt;/goal&gt;</span><br><span class="line">            &lt;/goals&gt;</span><br><span class="line">            &lt;configuration&gt;</span><br><span class="line">                &lt;inputSpec&gt;$&#123;project.basedir&#125;/src/main/resources/swagger-api.yml&lt;/inputSpec&gt;</span><br><span class="line">                &lt;output&gt;$&#123;project.basedir&#125;&lt;/output&gt;</span><br><span class="line">                &lt;language&gt;spring&lt;/language&gt;</span><br><span class="line">                &lt;library&gt;spring-boot&lt;/library&gt;</span><br><span class="line">                &lt;modelPackage&gt;$&#123;default.package&#125;.model&lt;/modelPackage&gt;</span><br><span class="line">                &lt;apiPackage&gt;$&#123;default.package&#125;.api&lt;/apiPackage&gt;</span><br><span class="line">                &lt;invokerPackage&gt;$&#123;default.package&#125;&lt;/invokerPackage&gt;</span><br><span class="line">                &lt;generateApiTests&gt;false&lt;/generateApiTests&gt;</span><br><span class="line">                &lt;generateModelTests&gt;false&lt;/generateModelTests&gt;</span><br><span class="line">                &lt;generateApiDocumentation&gt;true&lt;/generateApiDocumentation&gt;</span><br><span class="line">                &lt;generateModelDocumentation&gt;true&lt;/generateModelDocumentation&gt;</span><br><span class="line">                &lt;generateSupportingFiles&gt;true&lt;/generateSupportingFiles&gt;</span><br><span class="line">                &lt;configOptions&gt;</span><br><span class="line">                    &lt;interfaceOnly&gt;false&lt;/interfaceOnly&gt;</span><br><span class="line">                    &lt;dateLibrary&gt;joda&lt;/dateLibrary&gt;</span><br><span class="line">                    &lt;java8&gt;true&lt;/java8&gt;</span><br><span class="line">                    &lt;!--&lt;sourceFolder&gt;src/gen/java/main&lt;/sourceFolder&gt;--&gt;</span><br><span class="line">                &lt;/configOptions&gt;</span><br><span class="line">            &lt;/configuration&gt;</span><br><span class="line">        &lt;/execution&gt;</span><br><span class="line">    &lt;/executions&gt;</span><br><span class="line">&lt;/plugin&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>注意需要maven中配置{default.package}变量，然后执行mvn clean compile,生成相应代码;</p>
+</li>
+<li>使用起来比较简单，主要是官方文档匮乏，可配置参数通过下述方式查询帮助：<ul>
+<li>可以直接在idea的命令行中使用”mvn swagger-codegen:help -Ddetail=true”方式;</li>
+<li>可以下载<strong>相应版本</strong>的swagger-codegen-cli.jar包，”java -jar ***.jar config-help -l spring”方式，推荐这种方式，比较方便全</li>
+</ul>
+</li>
+<li>利用好.swagger-codegen-ignore文档，例如pom.xml，因为swagger默认会自动生成覆盖pom.xml，需要在.swagger-codegen-ignore文档中添加<br>过滤，包括之后不想覆盖的ControllerApi也可以在这里添加过滤；</li>
+<li>interfaceOnly参数第一次生成时建议false，可以帮助生成swagger的辅助文件，例如/swagger-ui.html映射；之后建议true，只生成更新api.</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/30/Spring-be源码分析1——bean的加载、解析和注册/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/04/30/Spring-be源码分析1——bean的加载、解析和注册/" class="post-title-link" itemprop="url">Spring源码分析1——bean的加载、解析和注册</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2019-04-30 14:32:06 / 修改时间：14:34:47" itemprop="dateCreated datePublished" datetime="2019-04-30T14:32:06+08:00">2019-04-30</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>##1. 解析Spring源码WWW原则</p>
+<ul>
+<li>what—— spring现在已经算是java开发的基石了，核心是IOC和AOP.</li>
+<li>why—— 1.既然作为基石，需要更加彻底的了解并掌握它，工作中可能用不到太细节的东西，但出了问题<br> 就不好找原因，因此解析源码可以了解一些底层细节；2. Spring作为一个基础框架，可以<br> 通过阅读源码的方式来入门源码解析的门槛，提升自己的各方面能力；</li>
+<li>how—— 源码太多有60w行，但不需要全部去从头到尾阅读，也没必要；这里作为个人阅读的<br>方法：1. 根据实际使用作为入口，来解析主要功能和必要的细节； 2. 带着问题，例如bean<br>的scope，几种方式怎么实现的？spring的xml约束文档DTD和XSD，怎么找到的？等等.<ol start="3">
+<li>从简到繁，spring源码包含20+个module，我们需要从最基本的功能开始解析，这里可以<br>通过观察各module之间的依赖来了解熟悉.</li>
+</ol>
+</li>
+</ul>
+<hr>
+<p>##2. bean的加载、解析和注册</p>
+<ol>
+<li>依赖于spring-core(作为spring的基础工具包).</li>
+<li><p>容器的基本用法：<br>创建一个xml文件，基于XmlBeanFactory(已废弃，官方推荐用DefaultListableBeanFactory+XmlBeanDefinitionReader来替代)去解析，<br>从而获得bean.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();</span><br><span class="line">Resource resource = new ClassPathResource(&quot;spring.xml&quot;);</span><br><span class="line">new XmlBeanDefinitionReader(beanFactory).loadBeanDefinitions(resource);</span><br><span class="line">TestBean testBean = beanFactory.getBean(TestBean.class);</span><br></pre></td></tr></table></figure>
+<p>Bean的加载过程：加载解析静态配置文件，转换成BeanDefinition，基于BeanDefinition创建bean实例;</p>
+</li>
+<li><p>Bean的解析和注册</p>
+<ul>
+<li><p>加载资源Resource,继承InputStreamSource,主要负责资源的加载管理，可以通过实现Resource来实现自己的资源加载；</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">public interface Resource extends InputStreamSource &#123;</span><br><span class="line">    boolean exists();</span><br><span class="line"></span><br><span class="line">    default boolean isReadable() &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    default boolean isOpen() &#123;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    default boolean isFile() &#123;</span><br><span class="line">        return false;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    URL getURL() throws IOException;</span><br><span class="line"></span><br><span class="line">    URI getURI() throws IOException;</span><br><span class="line"></span><br><span class="line">    File getFile() throws IOException;</span><br><span class="line"></span><br><span class="line">    default ReadableByteChannel readableChannel() throws IOException &#123;</span><br><span class="line">        return Channels.newChannel(this.getInputStream());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    long contentLength() throws IOException;</span><br><span class="line"></span><br><span class="line">    long lastModified() throws IOException;</span><br><span class="line"></span><br><span class="line">    Resource createRelative(String var1) throws IOException;</span><br><span class="line"></span><br><span class="line">    @Nullable</span><br><span class="line">    String getFilename();</span><br><span class="line"></span><br><span class="line">    String getDescription();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  一些重要的方法：</p>
+<ul>
+<li>getInputStream(): 找到并打开资源，返回InputStream从资源中读取的内容；每次调用都会返回一个新的InputStream,<pre><code>调用者需要关闭流.
+</code></pre></li>
+<li>exists(): 返回资源是否实际以物理形式存在.</li>
+<li>isOpen(): 返回一个指示资源是否表示具有打开流的句柄。如果true,IputStream不能多次读取，必须只读一次然后关闭<pre><code>以避免资源泄露。false是所有常规资源实现的返回值；这里涉及到jdk1.8的一个新特性：接口中可以有默认方法.
+</code></pre></li>
+</ul>
+<hr>
+<p>  一些内置Resource实现：</p>
+<ul>
+<li>UrlResource: 包装URL并可用于访问通常可通过URL访问的任何对象，例如文件(file:)、http目标(http:)、FTP目标(ftp:)；</li>
+<li>ClassPathResource: 用于从classpath下加载配置文件，使用线程上下文类加载器、给定的类加载器或者给定的类加载.</li>
+<li>FileSystemResource: 是java.io.File和java.nio.file.Path处理的实现，支持作为File和RUL解析.</li>
+<li>ServletContextResource: 作为ServletContext资源的实现，用于web根目录中的相对路径.</li>
+<li>InputStreamResource: InputStream资源是给定InputStream的资源实现。只有在没有特定的资源实现可用时才应该使用它。特别是，尽可能选择ByteArrayResource或任何基于文件的资源实现。<pre><code>与其他资源实现相比，这是对已打开资源的描述符。因此，它从isOpen()返回true。如果需要将资源描述符保存在某个地方，或者需要多次读取流，请不要使用它。
+</code></pre></li>
+<li>ByteArrayResource:  作为一个给定字符数组的资源实现;</li>
+<li>..</li>
+</ul>
+</li>
+<li>利用EncodedResource二次包装Resource，主要是编码格式和字符集的解析,将之前获取的资源包装成InputSource，用于SAX解析配置.</li>
+<li>先判断xml的验证模式.(排除掉注释<!-- -->的影响，检查是否包含DOCTYPE字符串，如果有就是DTD，没有就是XSD，报错就是VALIDATION_AUTO)</li>
+<li>利用jdk的XML解析出Document.(组装DocumentBuilderFactory，根据factory创建DocumentBuilder，然后解析出Document)</li>
+<li>然后就是解析标签注册bean.(以DefaultListableBeanFactory为例，就是放到一个ConcurrentHashMap中)<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> /** Map from dependency type to corresponding autowired value. */</span><br><span class="line">private final Map&lt;Class&lt;?&gt;, Object&gt; resolvableDependencies = new ConcurrentHashMap&lt;&gt;(16);</span><br><span class="line">     </span><br><span class="line">/** Map of bean definition objects, keyed by bean name. */</span><br><span class="line">private final Map&lt;String, BeanDefinition&gt; beanDefinitionMap = new ConcurrentHashMap&lt;&gt;(256);</span><br><span class="line">     </span><br><span class="line">/** Map of singleton and non-singleton bean names, keyed by dependency type. */</span><br><span class="line">private final Map&lt;Class&lt;?&gt;, String[]&gt; allBeanNamesByType = new ConcurrentHashMap&lt;&gt;(64);</span><br><span class="line">     </span><br><span class="line">/** Map of singleton-only bean names, keyed by dependency type. */</span><br><span class="line">private final Map&lt;Class&lt;?&gt;, String[]&gt; singletonBeanNamesByType = new ConcurrentHashMap&lt;&gt;(64);</span><br><span class="line">     </span><br><span class="line">/** List of bean definition names, in registration order. */</span><br><span class="line">private volatile List&lt;String&gt; beanDefinitionNames = new ArrayList&lt;&gt;(256);</span><br><span class="line">     </span><br><span class="line">/** List of names of manually registered singletons, in registration order. */</span><br><span class="line">private volatile Set&lt;String&gt; manualSingletonNames = new LinkedHashSet&lt;&gt;(16);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ol>
+<p>##3. 部分问题和总结</p>
+<pre><code>1. 以上是bean的加载、解析和注册流程；其中采用了多种设计模式，如工厂设计模式、模板设计模式，这两种设计模式在
+   spring中随处可见，可以更好的解耦；核心类是XmlBeanDefinitionReader，bean的解析注册流程也是在这里定义
+   的，然后调用各个模板解耦组装；这里可以注入验证模式等参数以实际控制解析注册过程；
+2. 对不同的验证模式,Spring 使用了不同的解析器解析。这里简单描述一下
+   原理，比如加载 DTD 类型的 BeansDtdResolver 的 resolveEntity 是直接截取 systemld 最后的 xx.dtd
+   然后去当前路径下寻找，而加载载 xsd 类型的 PluggableSchemaResolver 类的 resolveEntity 是默
+   认到 META-INF/Spring.schemas 文件巾找到 systemid 所对应的 XSD 文件并加载。两者其实最终的加载
+   文件路径都是org.springframework.beans.factory.xml包下.
+</code></pre>
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/26/Spring-Spring-5源码编译踩坑/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -384,16 +782,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

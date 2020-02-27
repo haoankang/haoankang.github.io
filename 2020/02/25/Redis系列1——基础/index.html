@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="redis简介.  简单来说，redis就是一个基于内存的数据库；因为读写非常快，高性能且高并发，所以被广泛用于缓存方向；redis用多种数据类型来支持不同的业务场景；redis支持事务、持久化、lua脚本、LRU驱动事件、多种集群方案；  ###1. redis单线程为什么这么快.   纯内存； 非阻塞IO； 单线程避免了线程切换和竞争消耗；   ###2. redis特性.   速度快； 持久">
+<meta name="keywords" content="redis">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis系列1——基础">
+<meta property="og:url" content="http://yoursite.com/2020/02/25/Redis系列1——基础/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="redis简介.  简单来说，redis就是一个基于内存的数据库；因为读写非常快，高性能且高并发，所以被广泛用于缓存方向；redis用多种数据类型来支持不同的业务场景；redis支持事务、持久化、lua脚本、LRU驱动事件、多种集群方案；  ###1. redis单线程为什么这么快.   纯内存； 非阻塞IO； 单线程避免了线程切换和竞争消耗；   ###2. redis特性.   速度快； 持久">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-02-27T02:04:27.090Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis系列1——基础">
+<meta name="twitter:description" content="redis简介.  简单来说，redis就是一个基于内存的数据库；因为读写非常快，高性能且高并发，所以被广泛用于缓存方向；redis用多种数据类型来支持不同的业务场景；redis支持事务、持久化、lua脚本、LRU驱动事件、多种集群方案；  ###1. redis单线程为什么这么快.   纯内存； 非阻塞IO； 单线程避免了线程切换和竞争消耗；   ###2. redis特性.   速度快； 持久">
+
+<link rel="canonical" href="http://yoursite.com/2020/02/25/Redis系列1——基础/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Redis系列1——基础 | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/25/Redis系列1——基础/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis系列1——基础
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-25 21:04:00" itemprop="dateCreated datePublished" datetime="2020-02-25T21:04:00+08:00">2020-02-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-27 10:04:27" itemprop="dateModified" datetime="2020-02-27T10:04:27+08:00">2020-02-27</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/redis/" itemprop="url" rel="index"><span itemprop="name">redis</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>redis简介.</p>
+<blockquote>
+<p>简单来说，redis就是一个基于内存的数据库；因为读写非常快，高性能且高并发，所以被广泛用于缓存方向；redis用多种数据类型来支持不同的业务场景；<br>redis支持事务、持久化、lua脚本、LRU驱动事件、多种集群方案；</p>
+</blockquote>
+<p>###1. redis单线程为什么这么快.</p>
+<blockquote>
+<ol>
+<li>纯内存；</li>
+<li>非阻塞IO；</li>
+<li>单线程避免了线程切换和竞争消耗；</li>
+</ol>
+</blockquote>
+<p>###2. redis特性.</p>
+<blockquote>
+<ul>
+<li>速度快；</li>
+<li>持久化；</li>
+<li>多种数据结构；</li>
+<li>支持多种编程语言；</li>
+<li>功能丰富；</li>
+<li>简单；</li>
+<li>主从复制；</li>
+<li>高可用，分布式；</li>
+</ul>
+</blockquote>
+<p>###3. 应用场景.</p>
+<blockquote>
+<ul>
+<li>缓存系统；</li>
+<li>计数器；</li>
+<li>实时系统；</li>
+<li>排行榜；</li>
+<li>社交网络；</li>
+<li>消息队列系统；</li>
+</ul>
+</blockquote>
+<p>###4. Redis数据结构</p>
+<blockquote>
+<p>Redis支持丰富的数据结构，常用的如string、list、set、zset、hash等；redis使用对象来表示K和V，Redis中的一个<br>键值对，至少需要创建两个对象，一个键对象，一个值对象；</p>
+</blockquote>
+<p>redis底层数据结构：</p>
+<blockquote>
+<p>SDS简单动态字符串：SDS与C字符串的比较：</p>
+<ol>
+<li>获取字符串长度，SDS时间复杂度O(1)，因为内部存储了length；</li>
+<li>SDS不会发生内存溢出问题； 内部动态扩展；</li>
+<li>SDS减少内存分配次数； 会分配额外空闲空间；</li>
+<li>SDS是二进制安全的；</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>链表，redis的链表特性：</p>
+<ol>
+<li>无环双向链表；</li>
+<li>获取表头指针、表尾指针、链表长度O(1)；</li>
+<li>链表使用void*指针保存节点值，可以保存各种不同类型的值；</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>哈希表，也叫字典；redis的哈希表中有两个哈希表，用于渐进式rehash；</p>
+</blockquote>
+<blockquote>
+<p>跳跃表；shiplist；redis的跳表实现由zskiplist和zskiplistNode组成，zskiplist保存跳表的信息（表头、表尾、长度），<br>zskiplistNode表示跳表中的节点；</p>
+</blockquote>
+<blockquote>
+<p>整数集合，set的底层数据结构之一；</p>
+</blockquote>
+<blockquote>
+<p>压缩列表，list和hash的底层实现之一；是由一系列特殊编码的连续内存块组成的顺序性数据结构；</p>
+</blockquote>
+<p>###4. 基本数据类型.</p>
+<blockquote>
+<ul>
+<li>string字符串；可以是字符串、整形、浮点型； SDS字符串；</li>
+<li>list；一个双向链表，链表的每个节点上都包含一个字符串； 快速链表=链表+压缩链表；</li>
+<li>set；包含字符串的无序收集器；</li>
+<li>zset；字符串成员与浮点数分值之间的有序映射，元素的排列顺序由分值的大小确定； 跳表，其实就是多层链表；<blockquote>
+<p>当数据量少时，由一个ziplist实现；当数据量多时，由一个dict+skiplist实现，dict用来查数据到分数的对应关系，<br>而skiplist用来根据分数查询数据；</p>
+</blockquote>
+</li>
+<li>hash；包含键值对的无序散列表； redis是渐进式rehash的；</li>
+</ul>
+</blockquote>
+<p>redis的rehash过程：</p>
+<blockquote>
+<p>在对哈希表进行扩展或者收缩操作时，rehash过程不是一次完成的，因为如果数据量过大时，一次性rehash会有庞大的<br>计算量，这很可能导致服务器一段时间内停止服务；</p>
+</blockquote>
+<blockquote>
+<p>redis的所有数据类型都被封装成对象，hash结构的对象内部有两个哈希表，一个用于存放真实的K-V数据，另一个用于扩容；</p>
+<ol>
+<li>字典内维持一个索引计数器，用于表示是否在进行rehash；</li>
+<li>rehash期间对字典进行增删改查时，除了执行指令外，还会将h[0]中数据rehash到h[1]中；</li>
+<li>字典操作不断进行，最终rehash完时，计数器设为-1；</li>
+<li>渐进式rehash过程中，字典会同时使用两个哈希表，删改查操作会同时在两个哈希表上进行；新增只会在h[1]上新增，<br>查询时，优先查h[0]，如果查不到查询h[1]；</li>
+</ol>
+</blockquote>
+<p>redis对象的一些细节.</p>
+<blockquote>
+<ol>
+<li>服务器在执行某些命令时，会先检查给定的键的类型；</li>
+<li>redis对象系统带有引用计数实现的内存回收机制；‘</li>
+<li>redis会共享0-9999的字符串对象；</li>
+<li>对象会记录自己最后一次被访问时间，这个时间可以用于计算对象的空转时间；</li>
+</ol>
+</blockquote>
+<p>###5. redis线程模型.</p>
+<blockquote>
+<p>redis内部使用文件事件处理器File event handler，这个文件事件处理器是单线程的，所以redis被称为单线程的；它采用IO多路复用机制监听<br>多个socket，根据socket上事件来选择对应的事件处理器进行处理；</p>
+<p>主要有两类事件：文件事件，就是对Socket操作的抽象；时间事件，就是对定时操作的抽象；</p>
+<p>这个文件事件处理器包含4个部分：</p>
+<ul>
+<li>多个socket；</li>
+<li>IO多路复用程序；</li>
+<li>文件事件分派器；</li>
+<li>事件处理器；</li>
+</ul>
+</blockquote>
+<p>###6. redis与Memcached的区别.</p>
+<blockquote>
+<ol>
+<li>redis支持更丰富的数据类型；Memcached只有string类型；</li>
+<li>redis支持持久化；Memcached不支持；</li>
+<li>memcached原生不支持集群，而redis支持集群；</li>
+<li>memcached是多线程、非阻塞IO复用的网络模型，Redis是单线程IO多路复用模型；</li>
+</ol>
+</blockquote>
+<p>###7. redis过期时间和淘汰机制；</p>
+<blockquote>
+<p>redis可以设置expire time过期时间；redis使用定期删除+惰性删除维护key，注意定期删除是随机抽取的；<br>如果定期删除漏掉了很多过期key，也没及时去查（没走惰性删除），大量key堆积导致内存耗尽，此时就需要内存淘汰机制；</p>
+<p>redis内存淘汰机制：</p>
+<ul>
+<li>volatile-lru：从已设置过期时间的数据集（server.db[i].expires）中挑选最近最少使用的数据淘汰；</li>
+<li>volatile-ttl：从已设置过期时间的数据集（server.db[i].expires）中挑选将要过期的数据淘汰；</li>
+<li>volatile-random：从已设置过期时间的数据集（server.db[i].expires）中任意选择数据淘汰；</li>
+<li>allkeys-lru：当内存不足以容纳新写入数据时，在键空间中，移除最近最少使用的key（这个是最常用的）；</li>
+<li>allkeys-random：从数据集（server.db[i].dict）中任意选择数据淘汰；</li>
+<li>no-eviction：禁止驱逐数据，也就是说当内存不足以容纳新写入数据时，新写入操作会报错。一般不用；</li>
+<li>volatile-lfu：从已设置过期时间的数据集(server.db[i].expires)中挑选最不经常使用的数据淘汰；</li>
+<li>allkeys-lfu：当内存不足以容纳新写入数据时，在键空间中，移除最不经常使用的key；</li>
+</ul>
+<p>使用redis时，为了提高缓存命中率，需要保证缓存数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，<br>然后启用allkeys-lru策略；</p>
+</blockquote>
+<p>###8. redis持久化机制.</p>
+<blockquote>
+<ul>
+<li>快照RDB.Redis可以通过创建快照来获得存储在内存里面的数据在某个时间点上的副本。创建快照的几种方式：<blockquote>
+<ul>
+<li>BGSAVE命令； 创建出一个子进程来创建RDB文件，服务器进程可以继续服务；</li>
+<li>SAVE命令； 会阻塞Redis服务器进程，服务器不能接收任何请求，直到RDB文件创建完毕；</li>
+<li>save选项；</li>
+<li>SHUTDOWN命令；</li>
+<li>一个redis服务器连接另一个redis服务器；</li>
+</ul>
+</blockquote>
+</li>
+<li>只追加文件AOF.开启AOF持久化后每执行一条会更改Redis中的数据的命令，Redis就会将该命令写入硬盘中的AOF文件。</li>
+</ul>
+</blockquote>
+<p>重写/压缩AOF.</p>
+<blockquote>
+<p>AOF虽然在某个角度可以将数据丢失降低到最小而且对性能影响也很小，但是极端的情况下，体积不断增大的AOF文件很可能会用完硬盘空间。另外，如果AOF体积过大，那么还原操作执行时间就可能会非常长。<br>为了解决AOF体积过大的问题，用户可以向Redis发送 BGREWRITEAOF命令 ，这个命令会通过移除AOF文件中的冗余命令来重写（rewrite）AOF文件来减小AOF文件的体积。<br>BGREWRITEAOF命令和BGSAVE创建快照原理十分相似，所以AOF文件重写也需要用到子进程，这样会导致性能问题和内存占用问题，和快照持久化一样。更糟糕的是，如果不加以控制的话，AOF文件的体积可能会比快照文件大好几倍。</p>
+</blockquote>
+<p>RDB和AOF对过期键的策略.</p>
+<blockquote>
+<p>执行SAVE或BGSAVE创建RDB文件时，过期键不会保存到RDB文件中；载入RDB文件时，过期的键会被忽略；</p>
+</blockquote>
+<blockquote>
+<p>写入AOF文件时，过期键还没被定期/惰性删除时，不会影响写入AOF；载入AOF文件时，过期的键会被忽略；</p>
+</blockquote>
+<blockquote>
+<p>复制模式下，主服务器来控制从服务器统一删除过期键；</p>
+</blockquote>
+<p>###9. Redis事务.</p>
+<blockquote>
+<p>Redis通过MULTI、EXEC、WATCH等命令实现事务功能；事务通过一次性将多个命令打包，然后一次性、顺序执行；redis事务总是具有ACI特性；</p>
+<p>redis同一个事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚。</p>
+</blockquote>
+<p>###10. 缓存雪崩、缓存穿透、缓存击穿。</p>
+<blockquote>
+<ul>
+<li>缓存雪崩. 缓存同一时间大面积的失效，或者redis挂掉了，后面的请求都会落到数据库上，造成数据库短时间内承受大量请求而崩掉。<br>解决方案.一般用设置随机过期时间；<blockquote>
+<ul>
+<li>事前：实现redis的高可用：主从+哨兵</li>
+<li>事中：利用本地缓存和Hystrix限流；</li>
+<li>事后：redis持久化，快速启动恢复缓存数据；</li>
+</ul>
+</blockquote>
+</li>
+<li>缓存穿透. 大量无效key请求，直接请求数据库，导致数据库崩溃；解决方案：缓存无效key，校验，布隆过滤器；</li>
+<li>缓存击穿. 同一个key大量请求，某个时间点key过期，大量请求会直接到数据库；解决方案：设置热点key永不过期；</li>
+</ul>
+</blockquote>
+<p>###11. Redis常见的性能问题和解决方案.</p>
+<blockquote>
+<ol>
+<li>Master写内存快照，save命令调度rdbSave函数，会阻塞主线程的工作，当快照比较大时对性能影响非常大，会间断性<br>暂停服务，所以Master最好不要写内存快照；</li>
+<li>Master AOF持久化，如果不进行AOF重写，AOF文件会过大而影响Master重启速度；Master不要做任何持久化工作，由<br>某个Slave开启AOF备份数据，策略是每秒一次；</li>
+<li>Redis主从复制的性能问题，为了主从复制的速度和连接的稳定性，Master和Slave最好在同一个局域网中；</li>
+<li>尽量避免在压力很大的主库上增加从库；</li>
+<li>主从复制不要用图状结构，用单向链表结构更稳定；例如Master &lt; Slave1 &lt; Slave2 …这样结构方便解决单点故障<br>问题，实现Slave对Master的替换。如果Master挂了，可以立刻启用Slave1，其他不变；</li>
+</ol>
+</blockquote>
+<p>###12. Redis同步机制.</p>
+<blockquote>
+<p>主从同步。第一次同步时，主节点做一次bgsave，并同时将后续修改操作记录到内存buffer，待完成后将rdb文件全量同步<br>到复制节点，复制节点接受完成后将rdb镜像加载到内存。加载完成后，再通知主节点将期间修改的操作记录同步到复制节点<br>进行重放完成同步过程；</p>
+</blockquote>
+<p>###13. Redis集群.</p>
+<blockquote>
+<ul>
+<li>Redis Sentinel高可用，在master宕机时会自动将slave提升成master，继续提供服务；</li>
+<li>Redis Cluster扩展性，在单个redis内存不足时，使用Cluster进行分片存储；</li>
+</ul>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/redis/" rel="tag"># redis</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/25/Mysql系列5——补充/" rel="prev" title="'Mysql系列5——补充'">
+      <i class="fa fa-chevron-left"></i> 'Mysql系列5——补充'
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/26/Redis系列2-还是基础/" rel="next" title="Redis系列2-还是基础">
+      Redis系列2-还是基础 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ank.hao</p>
+  <div class="site-description" itemprop="description">技术、点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.1
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

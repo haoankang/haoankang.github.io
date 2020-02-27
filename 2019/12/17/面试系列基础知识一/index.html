@@ -28,7 +28,7 @@
 <meta property="og:site_name" content="天蓝的个人笔记">
 <meta property="og:description" content="1.并发问题产生的根源  CPU缓存导致的可见性问题； CPU切换导致的原子性问题； 编译器优化导致的指令重排序问题；  2.HashMap问题  基本数据结构：数组+链表； 数据结构根本目的之一是性能；数组都是有下标的，所以查找速度很快，但插入慢；链表只记录下一个元素的地址，优势是插入较快；因为HashMap的添加、修改和查询操作都比较频繁，因此使用数组+链表数据结构；根据hash算法快速定位数">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-02-18T02:11:35.368Z">
+<meta property="og:updated_time" content="2020-02-25T08:30:44.001Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="&#39;面试系列基础知识一&#39;">
 <meta name="twitter:description" content="1.并发问题产生的根源  CPU缓存导致的可见性问题； CPU切换导致的原子性问题； 编译器优化导致的指令重排序问题；  2.HashMap问题  基本数据结构：数组+链表； 数据结构根本目的之一是性能；数组都是有下标的，所以查找速度很快，但插入慢；链表只记录下一个元素的地址，优势是插入较快；因为HashMap的添加、修改和查询操作都比较频繁，因此使用数组+链表数据结构；根据hash算法快速定位数">
@@ -179,7 +179,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-18 10:11:35" itemprop="dateModified" datetime="2020-02-18T10:11:35+08:00">2020-02-18</time>
+                <time title="修改时间：2020-02-25 16:30:44" itemprop="dateModified" datetime="2020-02-25T16:30:44+08:00">2020-02-25</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -236,7 +236,15 @@
 <li>红黑树通过旋转完成平衡，添加、删除、查找时间复杂度基本都是O(logN)；</li>
 <li>B树属于多叉树（平衡多路查找树），排序也是左小右大；B+树是B树基础上衍生的，区别是：B树根节点包含数据，B+树根节点<br>只能由索引，数据全部在叶子节点；</li>
 </ol>
-<p><strong>5.死锁</strong><br>死锁是什么：</p>
+<p><strong>5.B树和B+树区别</strong></p>
+<blockquote>
+<ol>
+<li>B+树单一节点存储的元素更多，使得查询的IO次数更少，更适合做Mysql的底层数据结构；</li>
+<li>所有的查询都要查询到叶子节点，查询性能是稳定的；</li>
+<li>所有的叶子节点形成一个有序链表，更加便于查找；</li>
+</ol>
+</blockquote>
+<p><strong>6.死锁</strong><br>死锁是什么：</p>
 <blockquote>
 <p>死锁，是指多个进程循环等待他方占有的资源而无限期的僵持下去的局面；</p>
 </blockquote>
@@ -357,16 +365,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

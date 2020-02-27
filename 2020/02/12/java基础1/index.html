@@ -28,7 +28,7 @@
 <meta property="og:site_name" content="天蓝的个人笔记">
 <meta property="og:description" content="面向对象的特点：   封装：将代码及其处理的数据绑定在一起的一种编程机制； 继承：从已有类继承信息创建新的类； 抽象(N): 将一类对象的共同特征抽取出来构造类的过程； 多态：同一种类型的不同对象在调用相同方法时表现出不同的行为；原因是java中的变量拥有两种类型：编译时类型和运行时类型，具体表现在子类重写父类方法，或者相同方法名不同参数(重载)；重载是编译时的多态性，重写是运行时的多态性；">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2020-02-18T02:11:35.338Z">
+<meta property="og:updated_time" content="2020-02-25T09:31:43.993Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java基础1">
 <meta name="twitter:description" content="面向对象的特点：   封装：将代码及其处理的数据绑定在一起的一种编程机制； 继承：从已有类继承信息创建新的类； 抽象(N): 将一类对象的共同特征抽取出来构造类的过程； 多态：同一种类型的不同对象在调用相同方法时表现出不同的行为；原因是java中的变量拥有两种类型：编译时类型和运行时类型，具体表现在子类重写父类方法，或者相同方法名不同参数(重载)；重载是编译时的多态性，重写是运行时的多态性；">
@@ -179,7 +179,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-18 10:11:35" itemprop="dateModified" datetime="2020-02-18T10:11:35+08:00">2020-02-18</time>
+                <time title="修改时间：2020-02-25 17:31:43" itemprop="dateModified" datetime="2020-02-25T17:31:43+08:00">2020-02-25</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -283,6 +283,32 @@
 <blockquote>
 <p>new Integer(112)和Integer.valueOf(112)的区别是：new Integer(112)每次都会产生新的对象，Integer.valueOf(112)<br>会使用缓冲池中的对象，多次调用会返回同一对象；这是因为Integer内部默认有个IntegerCache缓冲池，会缓冲-128~127的对象;</p>
 </blockquote>
+<p>11.异常.<br>相关关键字：try..catch、finally、throw、throws；</p>
+<blockquote>
+<p>finally：必定执行，当try和catch中有return时，finally仍会执行，且finally比return先执行；finally是在return<br>后面的表达式运算后执行的；</p>
+</blockquote>
+<blockquote>
+<p>finally不执行的情况：程序提前终止如调用System.exit，病毒或断电等；</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>异常基类是Throwable，下面分为Error和Exception.</li>
+<li>Error是指程序无法处理的错误，无法恢复也无法catch，Exception是程序可以处理的异常；</li>
+<li>Exception又分为受检查异常和运行时异常；区别在于编译时是否需要处理，受检查异常编译时必须处理,例如IOException；<br>运行时异常可以处理也可以不处理；常见的运行时异常有：NullPointException、ClassCastException、IndexOutOfBoundsException、<br>IllegalArgumentException、NoSuchMethodException.</li>
+</ul>
+</blockquote>
+<p>12.局部变量为什么一定要初始化.</p>
+<blockquote>
+<p>局部变量是指方法内的变量，必须初始化；因为局部变量运行时被分配在栈中，量大且生命周期短，如果虚拟机初始化开销大，但是<br>变量不初始化默认值使用是不安全的，因此出于速度和安全性考虑，局部变量需要初始化；</p>
+</blockquote>
+<p>13.内部类访问局部变量时，为什么变量一定要用final修饰.</p>
+<blockquote>
+<p>因为生命周期不同。局部变量在方法结束后销毁，内部类对象不一定，就会导致内部类引用了一个不存在的变量，所以编译器会在<br>内部类生成一个局部变量的拷贝，但如果其中一个变量修改，就会导致两个变量可能是不同的值，因此编译器要求局部变量加final，<br>保证两个变量值相同；JDK8后不需要局部变量加final，是因为编译器检查时默认加上了final.</p>
+</blockquote>
+<p>14.如何打破ClassLoader的双亲委托机制.</p>
+<blockquote>
+<p>重写loadClass().</p>
+</blockquote>
 
     </div>
 
@@ -380,16 +406,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">32</span>
+          <span class="site-state-item-count">36</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-count">15</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
