@@ -147,6 +147,248 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/02/Hadoop系列1——基础/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/03/02/Hadoop系列1——基础/" class="post-title-link" itemprop="url">'Hadoop系列1——基础'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-02 15:34:13" itemprop="dateCreated datePublished" datetime="2020-03-02T15:34:13+08:00">2020-03-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-03-04 15:58:28" itemprop="dateModified" datetime="2020-03-04T15:58:28+08:00">2020-03-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/hadoop-大数据/" itemprop="url" rel="index"><span itemprop="name">hadoop,大数据</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>###1. HDFS架构.</p>
+<blockquote>
+<p>HDFS采用Master/Slave架构，一个HDFS集群包含一个单独的NameNode节点和多个DataNode节点.</p>
+<p>NameNode负责管理整个分布式系统的元数据，主要包括：目录树结构、文件到数据库Block的映射关系、Block副本及其<br>存储位置等数据管理、DataNode的状态监控；这些数据保存在内存中，同时在磁盘保存两个元数据管理文件：fsimage和<br>editlog；</p>
+<blockquote>
+<ul>
+<li>fsimage：是内存命名空间元数据在外存的镜像文件；</li>
+<li>editlog：各种元数据操作的write-ahead-log文件，在体现到内存数据变化前首先会将操作记录editlog中，以防止<br>数据丢失；这两个文件结合可以构建完整的内存数据；</li>
+</ul>
+</blockquote>
+<p>Secondary NameNode.定期从NameNode拉取fsimage和editlog文件，并对两个文件进行合并，形成新的fsimage文件并<br>传回NameNode，目的是减轻NameNode的压力，本质上是一个提供检查点功能服务的服务点；</p>
+<p>DataNode负责数据块的实际存储和读写工作，Block默认是64MB，当客户端上传一个大文件时，HDFS会自动将其切割成固定<br>大小的Block，为了保证数据可用性，每个Block会以多备份的形式存储，默认是3份；</p>
+</blockquote>
+<p>###2. MapReduce过程.</p>
+<blockquote>
+<p>MapReduce分为两个阶段：Map和Reduce.</p>
+<p>Map阶段：</p>
+<ol>
+<li>input.在进行map计算之前，mapreduce会根据输入文件计算输入分片，每个输入分片针对一个map任务；</li>
+<li>map.就是程序员编写好的map函数了，因此map函数效率较好控制，而且一般map操作都是本地化操作也就是在数据存储<br>节点上进行；</li>
+<li>Partition.需要计算每个map结果需要发送到哪个reduce端，partition数等于reduce数，默认采用HashPartition；</li>
+<li>spill.此阶段分为sort和combine，首先分区过的数据会经过排序之后写入环形内存缓冲区，在达到阈值后守护线程<br>将数据溢出分区文件；</li>
+<li>merge.spill结果会有很多个文件，merge会合并所有本地文件，并且该文件会有一个对应的索引文件；</li>
+</ol>
+<p>Reduce阶段：</p>
+<ol>
+<li>copy.拉取数据，reduce启动数据copy线程，通过http请求对应节点的map task输出文件，copy的数据也会先放到<br>内部缓冲区，之后再溢写，类似map操作；</li>
+<li>merge.合并多个copy的多个map端的数据，在一个reduce端先将多个map端的数据溢写到本地磁盘，之后再将多个文件<br>合并成一个文件，数据经过内存-》磁盘-》磁盘的过程；</li>
+<li>output.merge阶段最后会生成一个文件，并将此文件转移到内存中，shuffle阶段结束；</li>
+<li>reduce.开始执行reduce任务，最后结果保留在hdfs上；</li>
+</ol>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/27/Elasticsearch系列1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/27/Elasticsearch系列1/" class="post-title-link" itemprop="url">'Elasticsearch系列1'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-02-27 17:15:36 / 修改时间：17:58:19" itemprop="dateCreated datePublished" datetime="2020-02-27T17:15:36+08:00">2020-02-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>###1. es的术语</p>
+<blockquote>
+<ul>
+<li>index.</li>
+<li>type.(已废弃)</li>
+<li>mapping.</li>
+<li>document.</li>
+<li>field.</li>
+</ul>
+</blockquote>
+<p>###2. es分布式架构原理.<br>es存储数据的基本单位是索引，索引可以拆分成多个shard，每个shard存储部分数据，shard可备份多个部署在不同节点上；<br>es集群多个节点，会自动选举一个master节点，master负责管理工作，如维护索引元数据、切换shard备份；</p>
+<p>###3. es写入数据过程.（工作原理）</p>
+<blockquote>
+<ol>
+<li>客户端选择一个node发送请求过去，这个node就作为协调节点；</li>
+<li>协调节点对document进行路由，将请求转发给对应的node（有primary shard)；</li>
+<li>处理写入的node，将数据同步给replica shard.</li>
+<li>协调节点将响应结果发给客户端；</li>
+</ol>
+</blockquote>
+<p>###4. es读数据过程.(工作原理)</p>
+<blockquote>
+<ol>
+<li>客户端选择一个node作为协调节点；</li>
+<li>协调服务器对docId进行哈希路由，将请求转发给对应的node；</li>
+<li>接收请求的node返回document给协调服务器；</li>
+<li>协调服务器返回document给客户端；</li>
+</ol>
+</blockquote>
+<p>###5. es搜索数据过程.</p>
+<blockquote>
+<ol>
+<li>客户端选择一个node作为协调节点；</li>
+<li>协调节点将搜索请求转发给所有节点；</li>
+<li>每个shard将自己的搜索结果返回给协调服务器，协调服务器进行数据整合；</li>
+<li>协调节点根据docId去各个节点上拉取实际数据；</li>
+</ol>
+</blockquote>
+<p>###6. 倒排索引.</p>
+<blockquote>
+<p>正序索引是从index到word，倒排索引是从word到文档；</p>
+<ul>
+<li>倒排索引中的所有词对应一个或多个文档；</li>
+<li>倒排索引中的词项根据字典顺序升序排列；</li>
+</ul>
+</blockquote>
+<p>###7. es在数据量很大的情况下（数十亿），如何提升查询效率.</p>
+<blockquote>
+<p>部署建议</p>
+<ul>
+<li>选择合理的硬件配置，尽可能使用SSD；</li>
+<li>给JVM配置机器的一半内存，建议不超过32G；</li>
+<li>规模较大的集群配置专有主节点，避免脑裂问题；</li>
+<li>linux系统调优；</li>
+</ul>
+<p>索引性能优化</p>
+<ul>
+<li>设置合理的索引分片数和副本数；</li>
+<li>使用批量请求；</li>
+<li>通过多线程/多进程发送数据；</li>
+<li>调大refresh interval:</li>
+<li>设计mapping配置合适字段类型；</li>
+</ul>
+<p>查询性能优化</p>
+<ul>
+<li>使用过滤器缓存和分片查询缓存；</li>
+<li>使用路由；</li>
+<li>强制合并只读索引，关闭历史数据索引；</li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/26/Redis系列2-还是基础/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1412,301 +1654,6 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/12/java基础1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/02/12/java基础1/" class="post-title-link" itemprop="url">java基础1</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-02-12 15:06:04" itemprop="dateCreated datePublished" datetime="2020-02-12T15:06:04+08:00">2020-02-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-25 17:31:43" itemprop="dateModified" datetime="2020-02-25T17:31:43+08:00">2020-02-25</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <ol>
-<li><p>面向对象的特点：</p>
-<blockquote>
-<ul>
-<li>封装：将代码及其处理的数据绑定在一起的一种编程机制；</li>
-<li>继承：从已有类继承信息创建新的类；</li>
-<li>抽象(N): 将一类对象的共同特征抽取出来构造类的过程；</li>
-<li>多态：同一种类型的不同对象在调用相同方法时表现出不同的行为；原因是java中的变量拥有两种类型：编译时类型和运行时类型，具体表现在子类<br>重写父类方法，或者相同方法名不同参数(重载)；重载是编译时的多态性，重写是运行时的多态性；</li>
-</ul>
-</blockquote>
-</li>
-<li><p>java中变量、代码块、构造器之间的执行顺序：</p>
-<blockquote>
-<p>原则是先执行静态、父类、变量、代码块、构造器；因此执行顺序如下：</p>
-<ol>
-<li>父类中的静态变量；</li>
-<li>父类中的静态代码块；</li>
-<li>子类中的静态变量；</li>
-<li>子类中的静态代码块；</li>
-<li>父类中的普通成员变量；</li>
-<li>父类中的动态代码块；</li>
-<li>父类中的构造器；</li>
-<li>子类中的普通成员变量；</li>
-<li>子类中的动态代码块；</li>
-<li>子类中的构造器；</li>
-</ol>
-</blockquote>
-</li>
-<li><p>面向对象设计原则：</p>
-<blockquote>
-<ul>
-<li>开闭原则；</li>
-<li>单一职责原则；</li>
-<li>里氏代换原则；</li>
-<li>依赖倒置原则；</li>
-<li>接口隔离原则；</li>
-<li>迪米特原则；</li>
-<li>合成/聚合复用；(Extend)</li>
-</ul>
-</blockquote>
-</li>
-<li><p>String、StringBuffer、StringBuilder区别；</p>
-<blockquote>
-<ul>
-<li>String是不可变对象，任何对string的改变都会生成新的对象；StringBuffer和StringBuilder是可变对象；</li>
-<li>StringBuffer是线程安全的，StringBuilder是线程不安全的，效率上StringBuilder较高；</li>
-</ul>
-</blockquote>
-</li>
-<li><p>hashCode()和equal().</p>
-<blockquote>
-<p>hashCode()和equal()用于判断两个对象是否相等；hashCode()用于快速判断对象是否相等；如果hashCode()相同，equal()不一定true；<br>因为一些集合类存储元素时要判断元素是否相同，因此hashCode()和equal()都需要重写，防止集合由于误判添加重复元素；</p>
-</blockquote>
-</li>
-<li><p>java中的内部类.</p>
-<blockquote>
-<p>java中的内部类分为静态内部类和非静态内部类；</p>
-</blockquote>
-</li>
-</ol>
-<p>7.反射.</p>
-<blockquote>
-<p>java反射是在运行时；对于任意一个已加载的类，都能知道它的所有属性和方法，对于任意的对象，都能调用它的任意方法；这种动态的获取信息和<br>动态的调用对象方法被称为java的反射；</p>
-</blockquote>
-<p>8.元注解.</p>
-<blockquote>
-<ul>
-<li>@Document.是否被javadoc编入文档</li>
-<li>@Target. 标识注解的范围，赋值类型是ElementType.</li>
-<li>@Retention. 定义该注解的生命周期.RetentionPolicy.SOURCE、CLASS、RUNTIME.</li>
-<li>@Inherited. 是否被继承.</li>
-</ul>
-</blockquote>
-<p>9.泛型.</p>
-<blockquote>
-<p>泛型即参数化类型；</p>
-</blockquote>
-<p>10.Integer缓冲池</p>
-<blockquote>
-<p>new Integer(112)和Integer.valueOf(112)的区别是：new Integer(112)每次都会产生新的对象，Integer.valueOf(112)<br>会使用缓冲池中的对象，多次调用会返回同一对象；这是因为Integer内部默认有个IntegerCache缓冲池，会缓冲-128~127的对象;</p>
-</blockquote>
-<p>11.异常.<br>相关关键字：try..catch、finally、throw、throws；</p>
-<blockquote>
-<p>finally：必定执行，当try和catch中有return时，finally仍会执行，且finally比return先执行；finally是在return<br>后面的表达式运算后执行的；</p>
-</blockquote>
-<blockquote>
-<p>finally不执行的情况：程序提前终止如调用System.exit，病毒或断电等；</p>
-</blockquote>
-<blockquote>
-<ul>
-<li>异常基类是Throwable，下面分为Error和Exception.</li>
-<li>Error是指程序无法处理的错误，无法恢复也无法catch，Exception是程序可以处理的异常；</li>
-<li>Exception又分为受检查异常和运行时异常；区别在于编译时是否需要处理，受检查异常编译时必须处理,例如IOException；<br>运行时异常可以处理也可以不处理；常见的运行时异常有：NullPointException、ClassCastException、IndexOutOfBoundsException、<br>IllegalArgumentException、NoSuchMethodException.</li>
-</ul>
-</blockquote>
-<p>12.局部变量为什么一定要初始化.</p>
-<blockquote>
-<p>局部变量是指方法内的变量，必须初始化；因为局部变量运行时被分配在栈中，量大且生命周期短，如果虚拟机初始化开销大，但是<br>变量不初始化默认值使用是不安全的，因此出于速度和安全性考虑，局部变量需要初始化；</p>
-</blockquote>
-<p>13.内部类访问局部变量时，为什么变量一定要用final修饰.</p>
-<blockquote>
-<p>因为生命周期不同。局部变量在方法结束后销毁，内部类对象不一定，就会导致内部类引用了一个不存在的变量，所以编译器会在<br>内部类生成一个局部变量的拷贝，但如果其中一个变量修改，就会导致两个变量可能是不同的值，因此编译器要求局部变量加final，<br>保证两个变量值相同；JDK8后不需要局部变量加final，是因为编译器检查时默认加上了final.</p>
-</blockquote>
-<p>14.如何打破ClassLoader的双亲委托机制.</p>
-<blockquote>
-<p>重写loadClass().</p>
-</blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/22/设计模式/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/01/22/设计模式/" class="post-title-link" itemprop="url">'设计模式'</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-01-22 16:11:30 / 修改时间：17:06:22" itemprop="dateCreated datePublished" datetime="2020-01-22T16:11:30+08:00">2020-01-22</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/设计模式/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p><strong>面向对象设计原则</strong></p>
-<blockquote>
-<ol>
-<li>开闭原则：对扩展开放、对修改关闭;</li>
-<li>里氏代换原则：任何地方子类能替代其父类被调用;</li>
-<li>依赖倒转原则：要依赖于抽象，而不是具体;</li>
-<li>接口隔离原则：使用多个隔离接口，而不是单个接口;</li>
-<li>单一职责原则：接口职责尽量单一;</li>
-<li>迪米特原则： 又称最少原则，一个实体应该极可能少的与其他实体作用;</li>
-<li>合成/聚合复用：尽量使用合成/聚合，而不是继承;</li>
-</ol>
-</blockquote>
-<p><strong>创建型模式</strong></p>
-<blockquote>
-<ol>
-<li>单例：饿汉式（提前定义，线程安全）和懒汉式（用到时创建，需要加锁保证线程安全）；</li>
-<li>原型：将一个对象作为原型，通过复制object.clone()而克隆新实例；</li>
-<li>工厂方法：定义一个用于创建对象的接口；</li>
-<li>抽象工厂：提供一个创建产品族的接口；</li>
-<li>建造者（Builder）：将一个复杂对象分解成多个部分，根据不同需要而创建它们；</li>
-</ol>
-</blockquote>
-<p><strong>结构型模式</strong></p>
-<blockquote>
-<ol>
-<li>代理：为对象提供一种代理访问该对象，从而限制、增强或修改对象的一些属性；</li>
-<li>适配器：将一个接口转换成另外一个接口，从而使原本不兼容的类可以兼容；</li>
-<li>装饰：动态的给对象添加一些额外功能;</li>
-<li>桥接：将抽象与实现分离，使它们独立变化。通过组合来代替继承；</li>
-<li>门面：又称外观模式；对多个复杂的子系统提供一个一致的接口；</li>
-<li>享元：运用共享技术有效的支持大量细粒度对象的调用；</li>
-<li>组合：将对象组合成树状层次结构，使用户对单个对象和组合对象具有一致的访问性；</li>
-</ol>
-</blockquote>
-<p><strong>行为模式</strong></p>
-<blockquote>
-<ol>
-<li>模板方法：定义一个操作中的算法骨架，将实现延迟到子类中，使得子类在不改变算法结构的情况下重新定义算法中的某些步骤；</li>
-<li>策略：定义一些了算法，并将每个算法封装起来，使他们可以相互替换；</li>
-<li>命令：将一个请求封装成一个对象，使发出请求的责任和执行请求的责任分开；</li>
-<li>职责链：把请求从链中的一个对象传到下一个对象，直到请求相应为止，通过这种方式去除对象间的耦合；</li>
-<li>状态：允许一个对象在其内部状态发生改变时改变其行为能力；</li>
-<li>观察者：多个对象间存在一对多关系，当一个对象改变时，把这种改变通知给其他多个对象；</li>
-<li>中介者：定义一个中介对象来简化原有对象之间的交互关系，降低系统中对象间的耦合度，使原有对象之间不必互相了解；</li>
-<li>迭代器：提供一种方法来顺序访问聚合对象中的一系列数据，而不暴露聚合对象的内部表示；</li>
-<li>访问者：在不改变集合元素的前提下，为一个集合中的每个元素提供多种访问方式，即每个元素由多个访问者对象访问；<br>10.备忘录：在不破坏封装性的前提下，获取并保存一个对象的内部状态，以便之后恢复；<br>11.解释器：提供如何定义语言的文法，以及对语言句子的解释方法；</li>
-</ol>
-</blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
@@ -1777,16 +1724,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">38</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-count">22</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

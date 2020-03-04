@@ -147,6 +147,309 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/12/java基础1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/12/java基础1/" class="post-title-link" itemprop="url">java基础1</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-12 15:06:04" itemprop="dateCreated datePublished" datetime="2020-02-12T15:06:04+08:00">2020-02-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-25 17:31:43" itemprop="dateModified" datetime="2020-02-25T17:31:43+08:00">2020-02-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ol>
+<li><p>面向对象的特点：</p>
+<blockquote>
+<ul>
+<li>封装：将代码及其处理的数据绑定在一起的一种编程机制；</li>
+<li>继承：从已有类继承信息创建新的类；</li>
+<li>抽象(N): 将一类对象的共同特征抽取出来构造类的过程；</li>
+<li>多态：同一种类型的不同对象在调用相同方法时表现出不同的行为；原因是java中的变量拥有两种类型：编译时类型和运行时类型，具体表现在子类<br>重写父类方法，或者相同方法名不同参数(重载)；重载是编译时的多态性，重写是运行时的多态性；</li>
+</ul>
+</blockquote>
+</li>
+<li><p>java中变量、代码块、构造器之间的执行顺序：</p>
+<blockquote>
+<p>原则是先执行静态、父类、变量、代码块、构造器；因此执行顺序如下：</p>
+<ol>
+<li>父类中的静态变量；</li>
+<li>父类中的静态代码块；</li>
+<li>子类中的静态变量；</li>
+<li>子类中的静态代码块；</li>
+<li>父类中的普通成员变量；</li>
+<li>父类中的动态代码块；</li>
+<li>父类中的构造器；</li>
+<li>子类中的普通成员变量；</li>
+<li>子类中的动态代码块；</li>
+<li>子类中的构造器；</li>
+</ol>
+</blockquote>
+</li>
+<li><p>面向对象设计原则：</p>
+<blockquote>
+<ul>
+<li>开闭原则；</li>
+<li>单一职责原则；</li>
+<li>里氏代换原则；</li>
+<li>依赖倒置原则；</li>
+<li>接口隔离原则；</li>
+<li>迪米特原则；</li>
+<li>合成/聚合复用；(Extend)</li>
+</ul>
+</blockquote>
+</li>
+<li><p>String、StringBuffer、StringBuilder区别；</p>
+<blockquote>
+<ul>
+<li>String是不可变对象，任何对string的改变都会生成新的对象；StringBuffer和StringBuilder是可变对象；</li>
+<li>StringBuffer是线程安全的，StringBuilder是线程不安全的，效率上StringBuilder较高；</li>
+</ul>
+</blockquote>
+</li>
+<li><p>hashCode()和equal().</p>
+<blockquote>
+<p>hashCode()和equal()用于判断两个对象是否相等；hashCode()用于快速判断对象是否相等；如果hashCode()相同，equal()不一定true；<br>因为一些集合类存储元素时要判断元素是否相同，因此hashCode()和equal()都需要重写，防止集合由于误判添加重复元素；</p>
+</blockquote>
+</li>
+<li><p>java中的内部类.</p>
+<blockquote>
+<p>java中的内部类分为静态内部类和非静态内部类；</p>
+</blockquote>
+</li>
+</ol>
+<p>7.反射.</p>
+<blockquote>
+<p>java反射是在运行时；对于任意一个已加载的类，都能知道它的所有属性和方法，对于任意的对象，都能调用它的任意方法；这种动态的获取信息和<br>动态的调用对象方法被称为java的反射；</p>
+</blockquote>
+<p>8.元注解.</p>
+<blockquote>
+<ul>
+<li>@Document.是否被javadoc编入文档</li>
+<li>@Target. 标识注解的范围，赋值类型是ElementType.</li>
+<li>@Retention. 定义该注解的生命周期.RetentionPolicy.SOURCE、CLASS、RUNTIME.</li>
+<li>@Inherited. 是否被继承.</li>
+</ul>
+</blockquote>
+<p>9.泛型.</p>
+<blockquote>
+<p>泛型即参数化类型；</p>
+</blockquote>
+<p>10.Integer缓冲池</p>
+<blockquote>
+<p>new Integer(112)和Integer.valueOf(112)的区别是：new Integer(112)每次都会产生新的对象，Integer.valueOf(112)<br>会使用缓冲池中的对象，多次调用会返回同一对象；这是因为Integer内部默认有个IntegerCache缓冲池，会缓冲-128~127的对象;</p>
+</blockquote>
+<p>11.异常.<br>相关关键字：try..catch、finally、throw、throws；</p>
+<blockquote>
+<p>finally：必定执行，当try和catch中有return时，finally仍会执行，且finally比return先执行；finally是在return<br>后面的表达式运算后执行的；</p>
+</blockquote>
+<blockquote>
+<p>finally不执行的情况：程序提前终止如调用System.exit，病毒或断电等；</p>
+</blockquote>
+<blockquote>
+<ul>
+<li>异常基类是Throwable，下面分为Error和Exception.</li>
+<li>Error是指程序无法处理的错误，无法恢复也无法catch，Exception是程序可以处理的异常；</li>
+<li>Exception又分为受检查异常和运行时异常；区别在于编译时是否需要处理，受检查异常编译时必须处理,例如IOException；<br>运行时异常可以处理也可以不处理；常见的运行时异常有：NullPointException、ClassCastException、IndexOutOfBoundsException、<br>IllegalArgumentException、NoSuchMethodException.</li>
+</ul>
+</blockquote>
+<p>12.局部变量为什么一定要初始化.</p>
+<blockquote>
+<p>局部变量是指方法内的变量，必须初始化；因为局部变量运行时被分配在栈中，量大且生命周期短，如果虚拟机初始化开销大，但是<br>变量不初始化默认值使用是不安全的，因此出于速度和安全性考虑，局部变量需要初始化；</p>
+</blockquote>
+<p>13.内部类访问局部变量时，为什么变量一定要用final修饰.</p>
+<blockquote>
+<p>因为生命周期不同。局部变量在方法结束后销毁，内部类对象不一定，就会导致内部类引用了一个不存在的变量，所以编译器会在<br>内部类生成一个局部变量的拷贝，但如果其中一个变量修改，就会导致两个变量可能是不同的值，因此编译器要求局部变量加final，<br>保证两个变量值相同；JDK8后不需要局部变量加final，是因为编译器检查时默认加上了final.</p>
+</blockquote>
+<p>14.如何打破ClassLoader的双亲委托机制.</p>
+<blockquote>
+<p>重写loadClass().</p>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/22/设计模式/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/01/22/设计模式/" class="post-title-link" itemprop="url">'设计模式'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-22 16:11:30" itemprop="dateCreated datePublished" datetime="2020-01-22T16:11:30+08:00">2020-01-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-03-04 15:58:04" itemprop="dateModified" datetime="2020-03-04T15:58:04+08:00">2020-03-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/设计模式/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>面向对象设计原则</strong></p>
+<blockquote>
+<ol>
+<li>开闭原则：对扩展开放、对修改关闭;</li>
+<li>里氏代换原则：任何地方子类能替代其父类被调用;</li>
+<li>依赖倒转原则：要依赖于抽象，而不是具体;</li>
+<li>接口隔离原则：使用多个隔离接口，而不是单个接口;</li>
+<li>单一职责原则：接口职责尽量单一;</li>
+<li>迪米特原则： 又称最少原则，一个实体应该极可能少的与其他实体作用;</li>
+<li>合成/聚合复用：尽量使用合成/聚合，而不是继承;</li>
+</ol>
+</blockquote>
+<p><strong>创建型模式</strong><br>创建型模式对类的实例化过程进行了抽象，能够将模块中对象的创建和对象的使用分离；</p>
+<blockquote>
+<ol>
+<li>单例：饿汉式（提前定义，线程安全）和懒汉式（用到时创建，需要加锁保证线程安全）；</li>
+<li>原型：将一个对象作为原型，通过复制object.clone()而克隆新实例；</li>
+<li>工厂方法：定义一个用于创建对象的接口；</li>
+<li>抽象工厂：提供一个创建产品族的接口；</li>
+<li>建造者（Builder）：将一个复杂对象分解成多个部分，根据不同需要而创建它们；</li>
+</ol>
+</blockquote>
+<p><strong>结构型模式</strong><br>结构型模式描述如何将类和对象组合在一起形成更大的结构；</p>
+<blockquote>
+<ol>
+<li>代理：为对象提供一种代理访问该对象，从而限制、增强或修改对象的一些属性；</li>
+<li>适配器：将一个接口转换成另外一个接口，从而使原本不兼容的类可以兼容；</li>
+<li>装饰：动态的给对象添加一些额外功能;</li>
+<li>桥接：将抽象与实现分离，使它们独立变化。通过组合来代替继承；</li>
+<li>门面：又称外观模式；对多个复杂的子系统提供一个一致的接口；</li>
+<li>享元：运用共享技术有效的支持大量细粒度对象的调用；</li>
+<li>组合：将对象组合成树状层次结构，使用户对单个对象和组合对象具有一致的访问性；</li>
+</ol>
+</blockquote>
+<p><strong>行为模式</strong><br>行为型模式是对在不同的对象间划分责任和算法的抽象化；主要关注对象之间的通信；</p>
+<blockquote>
+<ol>
+<li>模板方法：定义一个操作中的算法骨架，将实现延迟到子类中，使得子类在不改变算法结构的情况下重新定义算法中的某些步骤；</li>
+<li>策略：定义一些了算法，并将每个算法封装起来，使他们可以相互替换；</li>
+<li>命令：将一个请求封装成一个对象，使发出请求的责任和执行请求的责任分开；</li>
+<li>职责链：把请求从链中的一个对象传到下一个对象，直到请求相应为止，通过这种方式去除对象间的耦合；</li>
+<li>状态：允许一个对象在其内部状态发生改变时改变其行为能力；</li>
+<li>观察者：多个对象间存在一对多关系，当一个对象改变时，把这种改变通知给其他多个对象；</li>
+<li>中介者：定义一个中介对象来简化原有对象之间的交互关系，降低系统中对象间的耦合度，使原有对象之间不必互相了解；</li>
+<li>迭代器：提供一种方法来顺序访问聚合对象中的一系列数据，而不暴露聚合对象的内部表示；</li>
+<li>访问者：在不改变集合元素的前提下，为一个集合中的每个元素提供多种访问方式，即每个元素由多个访问者对象访问；</li>
+<li>备忘录：在不破坏封装性的前提下，获取并保存一个对象的内部状态，以便之后恢复；</li>
+<li>解释器：提供如何定义语言的文法，以及对语言句子的解释方法；</li>
+</ol>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/01/20/Spring常见问题总结1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1265,380 +1568,6 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/25/Mysql系列1——基础入门/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/11/25/Mysql系列1——基础入门/" class="post-title-link" itemprop="url">Mysql系列1——基础入门</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-11-25 16:06:48" itemprop="dateCreated datePublished" datetime="2019-11-25T16:06:48+08:00">2019-11-25</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-29 14:49:37" itemprop="dateModified" datetime="2019-11-29T14:49:37+08:00">2019-11-29</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>#1. mysql的安装、启动和命令行.</p>
-<blockquote>
-<p>Mysql的安装可以官网下载相应版本，windows可以直接下载免安装解压包，配置环境变量；<br>也可以linux安装或者docker，这些不是本文重点，不再累赘说明；</p>
-</blockquote>
-<blockquote>
-<p>通过mysql客户端工具访问，语法如下：</p>
-<blockquote>
-<ul>
-<li>mysql -h127.0.0.1 -uroot -p123456 -P3306 my-database，这里建议参数间不加空格，<br>因为-p后接密码时不能输入空格，可以直接指定数据库my-database，注意用户必须指定，不然默认<br>用户ODBC;</li>
-<li>查看mysql的版本，可以根据情况使用status(mysql命令行)，或者select version();</li>
-<li>命令行操作时，\G格式化输出,\c取消当前命令操作；可以一次批量操作；</li>
-</ul>
-</blockquote>
-</blockquote>
-<p>#2. mysql的数据类型.</p>
-<blockquote>
-<ul>
-<li>整数类型：tinyInt(1字节)、smallInt(2)、mediumInt(3)、int(4)[别名integer]、bigInt(8).</li>
-<li>浮点数类型：float(4字节)、double(8字节)，对于float(M,N)，表示一共有M个位数，N个小数，<br>计算机是用二进制表示的，<br>9.875=8+1+0.5+0.25+0.125=1<em>2³+0</em>2²+0<em>2¹+1</em>2⁰+1<em>2ˉ¹+1</em>2ˉ²+1*2ˉ³，即1001.111，<br>这种情况0.3这种就没法精确表示，因此浮点数类型是不精确的；</li>
-<li>定点数类型：decimal(M,N)，定点数类型取值和占用字节不固定，思路是对一个有小数的数字而言，<br>可以拆分为整数部分和小数部分，这两部分都用整型表示，即1.3= 1和3；</li>
-<li>无符合数值类型表示：UNSIGNED</li>
-<li>日期和时间类型: year(1字节)、date(3字节)、time(3字节)、datetime(8字节)、timestamp(4字节)；<br>datetime(M)表示精确到M位毫秒，建议用timestamp，可以根据设置的时区显示不同的时间，而且占用空间小，<br>本质是一个int类型；</li>
-<li>字符串类型：char、varchar、tinytext、text、mediumtext、longtext；</li>
-<li>enum类型和set类型；</li>
-<li>二进制类型：bit、binary、varbinary、tinyblob、blob、mediumblob、longblob；</li>
-</ul>
-</blockquote>
-<p>#3. 数据库的基本操作.</p>
-<blockquote>
-<ul>
-<li>create datable (if not exists) xxx;</li>
-<li>drop database (if not exists) xxx;</li>
-<li>show databases;</li>
-<li>use xxx;</li>
-</ul>
-</blockquote>
-<p>#4. 表的基本操作.</p>
-<blockquote>
-<ul>
-<li>show tables;</li>
-<li>create table (if not exists) xxx(schema1 int primary key, schema2 varchar(10));</li>
-<li>drop table (if exists) xxx;</li>
-<li>desc database.xxx;</li>
-<li>show create table database.xxx;</li>
-<li>alter table old_name rename to new_name;/rename old_name to new_name;（也可以用于转移数据库）</li>
-<li>alter table table_name add column schema_name schema_type [schema_param] [first/after schema_name];</li>
-<li>alter table table_name drop column schema_name;</li>
-<li>alter table table_name modify schema_name schema_type [schema_param] [first/after schema_name];;</li>
-</ul>
-</blockquote>
-<p>#5. 列的属性.</p>
-<blockquote>
-<p>常用的列的属性主要有：null、key(primary key、unique、foreign key)、default、extra(例如auto_increment等);<br>primary key和unique key的区别是：</p>
-<blockquote>
-<ul>
-<li>一个表的primary key只能有一个，unique key可以多个；</li>
-<li>primary key修饰的列不能为null，unique修饰的列可以；</li>
-</ul>
-</blockquote>
-</blockquote>
-<p>#6. 简单查询.<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> [<span class="keyword">distinct</span>] 查询列表</span><br><span class="line">[<span class="keyword">from</span> 表名]</span><br><span class="line">[<span class="keyword">where</span> 布尔表达式]</span><br><span class="line">[<span class="keyword">group</span> <span class="keyword">by</span> 分组列表]</span><br><span class="line">[<span class="keyword">having</span> 分组过滤条件]</span><br><span class="line">[<span class="keyword">order</span> <span class="keyword">by</span> 排序列表]</span><br><span class="line">[<span class="keyword">limit</span> 开始行、限制条数]</span><br></pre></td></tr></table></figure></p>
-<blockquote>
-<p>注意查询的顺序，聚集函数一般配合分组使用，且聚集函数不能用在where子句中；</p>
-</blockquote>
-<p>#7. 子查询</p>
-<blockquote>
-<ul>
-<li>简单样式：select * from a where a.name=(select b.name from b);</li>
-<li>子查询括号内的是内层查询，括号外的是外层查询；</li>
-<li>根据查询结果分为：标量子查询、列子查询、行子查询、表子查询；</li>
-<li>其他的概念：exists子查询和not exists子查询，不相干子查询和相关子查询；</li>
-</ul>
-</blockquote>
-<p>#8. 连接查询</p>
-<blockquote>
-<ul>
-<li>连接查询可以查询N张表，连接产生的笛卡儿积数量中间数据；</li>
-<li>连接分为内连接和外连接，区别是：驱动表中的记录即使在被驱动表中没有匹配记录，是否需要<br>加入到结果集；需要是外连接，不需要是内连接；</li>
-<li>内连接两种形式：select <em> from a,b where a.id=b.id;或者:<br>select </em> from a inner join b on a.id=b.id;由于内连接和where子句是等价的，所以<br>内连接不需要强制使用on子句；</li>
-<li>外连接分为左连接left join和右连接right join.</li>
-<li>对于内连接来说，驱动表和被驱动表是可互换的；对外连接来说不可互换；</li>
-<li>如果一个表关联自己查询，被称为自查询；</li>
-</ul>
-</blockquote>
-<p>#9. 组合查询</p>
-<blockquote>
-<p>union和union all查询区别是：union会自动去重，union all会保留重复行.<br>组合查询中可以使用group by和limit.</p>
-</blockquote>
-<p>#10. 增删改的一些细节</p>
-<blockquote>
-<ul>
-<li>insert ignore————对于哪些主键或UNIQUE约束的列或列组合来说，如果表中已存在记录的列中没有与待插入<br>记录在这些列或列组合上重复的值，则插入，否则忽略;</li>
-<li>insert on duplicate key update————同上，如果已存在记录，则更新；</li>
-</ul>
-</blockquote>
-<p>#11. 视图</p>
-<blockquote>
-<ul>
-<li>语法： create view 视图名 as 查询语句</li>
-<li>视图本质是查询语句的别名，不会把结果存储，当查询视图时，会转换成相应的查询语句进行<br>查询操作；例如当更新表后，查询视图结果也会改变；</li>
-<li>一般视图只在查询语句中使用，增删改时最好不要使用视图；</li>
-</ul>
-</blockquote>
-<p>#12. 存储程序</p>
-<blockquote>
-<ul>
-<li>存储程序可以封装一些语句，提供一种简单方式调用存储程序，相当于这些语句的别名；<br>存储程序包括存储例程（存储过程和存储函数）、触发器、事件；</li>
-<li>mysql通过@定义变量，例如@a、@b等；通过delimiter定义语句结束分隔符.</li>
-<li>存储函数.<blockquote>
-<ul>
-<li>本质是一个存储sql语句的函数;</li>
-<li>定义语法：注意如果需要使用;可以提前定义delimiter;<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">function</span> 存储函数名称(【参数列表】)</span><br><span class="line"><span class="keyword">returns</span> 返回值类型</span><br><span class="line"><span class="keyword">begin</span> </span><br><span class="line">    函数主体</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<blockquote>
-<ul>
-<li>使用方式：和内置行数如avg(),count()等一样使用；</li>
-<li>在函数体中定义变量格式： declare 变量1,变量2, … 数据类型 [default 默认值];</li>
-<li>判断语句格式<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">if 表达式 then </span><br><span class="line">    处理语句列表</span><br><span class="line">[elseif 表达式 then </span><br><span class="line">    处理语句列表]</span><br><span class="line">    ...</span><br><span class="line"> [else </span><br><span class="line">    处理语句列表]</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">if</span>;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-</blockquote>
-<blockquote>
-<blockquote>
-<ul>
-<li>循环语句格式<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">while 表达式 <span class="keyword">do</span></span><br><span class="line">    处理语句列表</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">while</span>;</span><br><span class="line"></span><br><span class="line">repeat </span><br><span class="line">    处理语句列表</span><br><span class="line">until 表达式</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">repeat</span>;</span><br><span class="line"></span><br><span class="line">loop </span><br><span class="line">    处理语句列表</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">loop</span>;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-</blockquote>
-<blockquote>
-<ul>
-<li>存储过程<blockquote>
-<ul>
-<li>存储过程和存储函数都属于存储例程；都是对某些语句的封装，存储函数侧重于执行函数<br>并返回一个值，存储过程侧重于单纯的执行；</li>
-<li>语法：<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">procedure</span> 存储过程名称(存储过程参数)</span><br><span class="line"><span class="keyword">begin</span> </span><br><span class="line">    处理语句列表</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<blockquote>
-<ul>
-<li>存储过程的调用： call 存储过程([参数列表])</li>
-<li>删除：mysql中除了删除数据用delete，其他都用drop.</li>
-</ul>
-</blockquote>
-</blockquote>
-<blockquote>
-<ul>
-<li>存储函数和存储过程的不同<blockquote>
-<ul>
-<li>存储函数在定义时需要显示用RETURNS语句标明返回的数据类型，而且在函数体中必须<br>显示RETURN返回值，存储过程不用；</li>
-<li>调用方式不同，存储函数在表达式中调用，存储过程需要call调用；</li>
-<li>存储函数只支持IN参数，存储过程支持IN、OUT、INOUT参数；</li>
-<li>存储函数只能返回一个值，存储过程可以返回多个值；</li>
-</ul>
-</blockquote>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li>游标<blockquote>
-<p>游标用于遍历数据，一般配合存储过程使用，样例如下:</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">delimiter $</span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">procedure</span> cursor_demo2()</span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">	<span class="keyword">declare</span> m_addr <span class="built_in">VARCHAR</span>(<span class="number">30</span>);</span><br><span class="line">	<span class="keyword">declare</span> m_phone <span class="built_in">varchar</span>(<span class="number">30</span>);</span><br><span class="line">	<span class="keyword">declare</span> record_count <span class="built_in">int</span>;</span><br><span class="line">	<span class="keyword">declare</span> i <span class="built_in">int</span> <span class="keyword">default</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">declare</span> t2_record_crusor <span class="keyword">cursor</span> <span class="keyword">for</span> <span class="keyword">select</span> addr, phone <span class="keyword">from</span> student;</span><br><span class="line">	<span class="keyword">select</span> <span class="keyword">count</span>(*) <span class="keyword">from</span> student <span class="keyword">into</span> record_count;</span><br><span class="line"></span><br><span class="line">	open t2_record_crusor;</span><br><span class="line">	while i &lt; record_count DO</span><br><span class="line">		fetch t2_record_crusor into m_addr, m_phone;</span><br><span class="line">		<span class="keyword">select</span> m_addr,m_phone;</span><br><span class="line">		<span class="keyword">set</span> i=i+<span class="number">1</span>;</span><br><span class="line">	<span class="keyword">end</span> <span class="keyword">while</span>;</span><br><span class="line">	close t2_record_crusor;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">$</span><br></pre></td></tr></table></figure>
-</blockquote>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<ul>
-<li>触发器<blockquote>
-<p>触发器是指在对表中记录做增删改前后可以让mysql自动执行一些语句；</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TRIGGER</span> 触发器名</span><br><span class="line">&#123;<span class="keyword">BEFORE</span>|<span class="keyword">AFTER</span>&#125;</span><br><span class="line">&#123;<span class="keyword">INSERT</span>|<span class="keyword">DELETE</span>|<span class="keyword">UPDATE</span>&#125;</span><br><span class="line"><span class="keyword">ON</span> 表名</span><br><span class="line"><span class="keyword">FOR</span> <span class="keyword">EACH</span> <span class="keyword">ROW</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">    触发器内容</span><br><span class="line"><span class="keyword">END</span></span><br></pre></td></tr></table></figure>
-</blockquote>
-</li>
-</ul>
-</blockquote>
-<blockquote>
-<blockquote>
-<p>注意点：1. 触发器内容中不能有输出结果集的语句；2. 触发器中NEW代表记录列的值可以被更改，OLD代表不可更改；</p>
-<ul>
-<li>事件<br>事件可以让mysql服务器在固定时间或每隔一段时间自动执行一些语句，语法如下：<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">EVENT</span> 事件名</span><br><span class="line"><span class="keyword">ON</span> SCHEDULE</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">AT</span> 某个确定的时间点| </span><br><span class="line">    EVERY 期望的时间间隔 [STARTS datetime][<span class="keyword">END</span> datetime]</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">DO</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line">    具体的语句</span><br><span class="line"><span class="keyword">END</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</blockquote>
-</blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/11/11/IO二三事2——NIO/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/11/11/IO二三事2——NIO/" class="post-title-link" itemprop="url">IO二三事2——NIO</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-11-11 20:29:25" itemprop="dateCreated datePublished" datetime="2019-11-11T20:29:25+08:00">2019-11-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-12 14:27:55" itemprop="dateModified" datetime="2019-11-12T14:27:55+08:00">2019-11-12</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h2 id="一些基础"><a href="#一些基础" class="headerlink" title="一些基础"></a>一些基础</h2><ol>
-<li>什么是NIO.<blockquote>
-<p>NIO(Non-blocking I/O,也被称为New I/O),是一种同步非阻塞I/O模型(select/poll)，也是I/O多路复用的基础(epoll)，<br>常用于解决高并发与大量连接的I/O问题；</p>
-</blockquote>
-</li>
-<li><p>NIO的核心概念.</p>
-<blockquote>
-<p>NIO的核心是Buffer、Channel和selector；</p>
-<ul>
-<li>缓冲区Buffer是一个数组对象，NIO库中，所有数据都是用缓冲区处理的；因此熟悉缓冲区的api和特性<br>至关重要；</li>
-<li>通道Channel是双向的，网络数据通过Channel读取和写入，分为两大类：用于网络读写的SelectableChannel和用于文件操作的FileChannel；</li>
-<li>多路复用器Selector，提供选择已就绪任务的能力；多路复用器的底层系统调用有select/poll/epoll，<br>epoll的优点：没有最大1024的连接句柄限制，事件驱动方式，mmap映射内存更高效；</li>
-</ul>
-</blockquote>
-</li>
-<li><p>NIO服务端的简单示例.</p>
- <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NioServerBetter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String ip;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> port;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> AtomicBoolean flag = <span class="keyword">new</span> AtomicBoolean(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setFlag</span><span class="params">(Boolean flg)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.flag.set(flg);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">NioServerBetter</span><span class="params">(String ip, <span class="keyword">int</span> port)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.ip = ip;</span><br><span class="line">        <span class="keyword">this</span>.port = port;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">run</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();</span><br><span class="line">            serverSocketChannel.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">            serverSocketChannel.bind(<span class="keyword">new</span> InetSocketAddress(port));</span><br><span class="line">            Selector selector = Selector.open();</span><br><span class="line">            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span>(flag.get())&#123;</span><br><span class="line">                selector.select(<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">                Set&lt;SelectionKey&gt; selectionKeySet = selector.selectedKeys();</span><br><span class="line">                Iterator&lt;SelectionKey&gt; iterator = selectionKeySet.iterator();</span><br><span class="line">                <span class="keyword">while</span>(iterator.hasNext())&#123;</span><br><span class="line">                    SelectionKey selectionKey = iterator.next();</span><br><span class="line">                    iterator.remove();</span><br><span class="line">                    handleKey(selectionKey,selector);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">handleKey</span><span class="params">(SelectionKey selectionKey,Selector selector)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(selectionKey.isValid())&#123;</span><br><span class="line">            <span class="keyword">if</span>(selectionKey.isAcceptable())&#123;</span><br><span class="line">                System.out.println(<span class="string">"server accept key: "</span>+selectionKey.toString());</span><br><span class="line">                ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();</span><br><span class="line">                SocketChannel socketChannel = serverSocketChannel.accept();</span><br><span class="line">                socketChannel.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">                socketChannel.register(selector, SelectionKey.OP_READ);</span><br><span class="line">            &#125;<span class="keyword">else</span> <span class="keyword">if</span>(selectionKey.isReadable())&#123;</span><br><span class="line">                SocketChannel socketChannel = (SocketChannel) selectionKey.channel();</span><br><span class="line">                System.out.println(<span class="string">"server read ready: "</span>+socketChannel);</span><br><span class="line">                ByteBuffer byteBuffer = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">while</span>(socketChannel.read(byteBuffer)&gt;<span class="number">0</span>)&#123;</span><br><span class="line">                    byteBuffer.flip();</span><br><span class="line">                    System.out.println(<span class="keyword">new</span> String(byteBuffer.array(),<span class="number">0</span>,byteBuffer.limit(), StandardCharsets.UTF_8));</span><br><span class="line">                &#125;</span><br><span class="line">                socketChannel.register(selector, SelectionKey.OP_WRITE);</span><br><span class="line">            &#125;<span class="keyword">else</span> <span class="keyword">if</span>(selectionKey.isWritable())&#123;</span><br><span class="line">                SocketChannel socketChannel = (SocketChannel) selectionKey.channel();</span><br><span class="line">                System.out.println(<span class="string">"server write ready: "</span>+socketChannel);</span><br><span class="line">                ByteBuffer byteBuffer = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line">                byteBuffer.put(<span class="string">"服务端反馈信息"</span>.getBytes(StandardCharsets.UTF_8));</span><br><span class="line">                byteBuffer.flip();</span><br><span class="line">                socketChannel.write(byteBuffer);</span><br><span class="line">                socketChannel.register(selector, SelectionKey.OP_READ);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">new</span> NioServerBetter(<span class="string">"localhost"</span>, <span class="number">9931</span>).run();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>NIO客户端的简单示例.</p>
- <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NioClientBetter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> port;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">boolean</span> flag = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">NioClientBetter</span><span class="params">(<span class="keyword">int</span> port)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.port = port;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setFlag</span><span class="params">(<span class="keyword">boolean</span> flag)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.flag = flag;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            SocketChannel socketChannel = SocketChannel.open();</span><br><span class="line">            socketChannel.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">            Selector selector = Selector.open();</span><br><span class="line">            <span class="keyword">if</span>(socketChannel.connect(<span class="keyword">new</span> InetSocketAddress(port)))&#123;</span><br><span class="line">                socketChannel.finishConnect();</span><br><span class="line">                socketChannel.register(selector, SelectionKey.OP_WRITE);</span><br><span class="line">            &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">                socketChannel.register(selector, SelectionKey.OP_CONNECT);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">while</span>(flag)&#123;</span><br><span class="line">                selector.select(<span class="number">1000</span>);</span><br><span class="line">                Set&lt;SelectionKey&gt; selectionKeys = selector.selectedKeys();</span><br><span class="line">                Iterator&lt;SelectionKey&gt; iterator = selectionKeys.iterator();</span><br><span class="line">                SelectionKey selectionKey = <span class="keyword">null</span>;</span><br><span class="line">                <span class="keyword">while</span>(iterator.hasNext())&#123;</span><br><span class="line">                    selectionKey = iterator.next();</span><br><span class="line">                    iterator.remove();</span><br><span class="line">                    handleClient(selectionKey, selector);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">handleClient</span><span class="params">(SelectionKey selectionKey, Selector selector)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(selectionKey.isValid())&#123;</span><br><span class="line">            <span class="keyword">if</span>(selectionKey.isConnectable())&#123;</span><br><span class="line">                System.out.println(<span class="string">"client connect key: "</span>+selectionKey.toString());</span><br><span class="line">                SocketChannel socketChannel = (SocketChannel) selectionKey.channel();</span><br><span class="line">                socketChannel.finishConnect();</span><br><span class="line">                socketChannel.register(selector, SelectionKey.OP_WRITE);</span><br><span class="line">            &#125;<span class="keyword">else</span> <span class="keyword">if</span>(selectionKey.isWritable())&#123;</span><br><span class="line">                SocketChannel socketChannel = (SocketChannel) selectionKey.channel();</span><br><span class="line">                System.out.println(<span class="string">"client write ready: "</span>+socketChannel);</span><br><span class="line">                ByteBuffer byteBuffer = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line">                byteBuffer.put(<span class="string">"只是第一个测试."</span>.getBytes(StandardCharsets.UTF_8));</span><br><span class="line">                byteBuffer.flip();</span><br><span class="line">                socketChannel.write(byteBuffer);</span><br><span class="line">                socketChannel.register(selector, SelectionKey.OP_READ);</span><br><span class="line">            &#125;<span class="keyword">else</span> <span class="keyword">if</span>(selectionKey.isReadable())&#123;</span><br><span class="line">                SocketChannel socketChannel = (SocketChannel) selectionKey.channel();</span><br><span class="line">                System.out.println(<span class="string">"client read ready: "</span>+socketChannel);</span><br><span class="line">                ByteBuffer byteBuffer = ByteBuffer.allocate(<span class="number">1024</span>);</span><br><span class="line">                <span class="keyword">while</span>(socketChannel.read(byteBuffer)&gt;<span class="number">0</span>)&#123;</span><br><span class="line">                    byteBuffer.flip();</span><br><span class="line">                    System.out.println(<span class="keyword">new</span> String(byteBuffer.array(),<span class="number">0</span>,byteBuffer.limit(), StandardCharsets.UTF_8));</span><br><span class="line">                &#125;</span><br><span class="line">                socketChannel.register(selector, SelectionKey.OP_WRITE);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    TimeUnit.SECONDS.sleep(<span class="number">10</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                &#125;</span><br><span class="line">                flag = <span class="keyword">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">new</span> NioClientBetter(<span class="number">9931</span>).execute();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>一些说明.</p>
-<blockquote>
-<ul>
-<li>channel使用selector监听时，一定要配置成非阻塞的；</li>
-<li>从示例可以看出，服务端和客户端代码逻辑类似，核心逻辑就是把channel注册到selector，且不同的channel注册到不同的selector<br>会返回SelectionKey，是唯一的，以此来定位channel；</li>
-<li>每次事件处理后需要重新注册到selector上；</li>
-<li>注意遍历侦听的SelectionKey时，要把处理过的key及时清除，否则会重复消费；此处注意处理的逻辑不要新开线程处理，<br>会导致消息还没处理完又被下次侦听接收引发错误；</li>
-</ul>
-</blockquote>
-</li>
-<li><p>NIO的缺点.</p>
-<blockquote>
-<ul>
-<li>NIO的类库和API繁杂，写出高质量的NIO程序需要掌握大量技能；</li>
-<li>可靠性能力补齐工作量和难度较大，如断连重连、网络闪断、半包读写、失败缓存等；</li>
-<li>Java NIO的一些自身bug；</li>
-</ul>
-</blockquote>
-</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
@@ -1709,16 +1638,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">38</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-count">17</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-count">22</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>

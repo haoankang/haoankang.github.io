@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.8.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Muse","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="###1. es的术语   index. type.(已废弃) mapping. document. field.   ###2. es分布式架构原理.es存储数据的基本单位是索引，索引可以拆分成多个shard，每个shard存储部分数据，shard可备份多个部署在不同节点上；es集群多个节点，会自动选举一个master节点，master负责管理工作，如维护索引元数据、切换shard备份； ###">
+<meta name="keywords" content="es">
+<meta property="og:type" content="article">
+<meta property="og:title" content="&#39;Elasticsearch系列1&#39;">
+<meta property="og:url" content="http://yoursite.com/2020/02/27/Elasticsearch系列1/index.html">
+<meta property="og:site_name" content="天蓝的个人笔记">
+<meta property="og:description" content="###1. es的术语   index. type.(已废弃) mapping. document. field.   ###2. es分布式架构原理.es存储数据的基本单位是索引，索引可以拆分成多个shard，每个shard存储部分数据，shard可备份多个部署在不同节点上；es集群多个节点，会自动选举一个master节点，master负责管理工作，如维护索引元数据、切换shard备份； ###">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-02-27T09:58:19.898Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="&#39;Elasticsearch系列1&#39;">
+<meta name="twitter:description" content="###1. es的术语   index. type.(已废弃) mapping. document. field.   ###2. es分布式架构原理.es存储数据的基本单位是索引，索引可以拆分成多个shard，每个shard存储部分数据，shard可备份多个部署在不同节点上；es集群多个节点，会自动选举一个master节点，master负责管理工作，如维护索引元数据、切换shard备份； ###">
+
+<link rel="canonical" href="http://yoursite.com/2020/02/27/Elasticsearch系列1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>'Elasticsearch系列1' | 天蓝的个人笔记</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天蓝的个人笔记</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/27/Elasticsearch系列1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          'Elasticsearch系列1'
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-02-27 17:15:36 / 修改时间：17:58:19" itemprop="dateCreated datePublished" datetime="2020-02-27T17:15:36+08:00">2020-02-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/es/" itemprop="url" rel="index"><span itemprop="name">es</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>###1. es的术语</p>
+<blockquote>
+<ul>
+<li>index.</li>
+<li>type.(已废弃)</li>
+<li>mapping.</li>
+<li>document.</li>
+<li>field.</li>
+</ul>
+</blockquote>
+<p>###2. es分布式架构原理.<br>es存储数据的基本单位是索引，索引可以拆分成多个shard，每个shard存储部分数据，shard可备份多个部署在不同节点上；<br>es集群多个节点，会自动选举一个master节点，master负责管理工作，如维护索引元数据、切换shard备份；</p>
+<p>###3. es写入数据过程.（工作原理）</p>
+<blockquote>
+<ol>
+<li>客户端选择一个node发送请求过去，这个node就作为协调节点；</li>
+<li>协调节点对document进行路由，将请求转发给对应的node（有primary shard)；</li>
+<li>处理写入的node，将数据同步给replica shard.</li>
+<li>协调节点将响应结果发给客户端；</li>
+</ol>
+</blockquote>
+<p>###4. es读数据过程.(工作原理)</p>
+<blockquote>
+<ol>
+<li>客户端选择一个node作为协调节点；</li>
+<li>协调服务器对docId进行哈希路由，将请求转发给对应的node；</li>
+<li>接收请求的node返回document给协调服务器；</li>
+<li>协调服务器返回document给客户端；</li>
+</ol>
+</blockquote>
+<p>###5. es搜索数据过程.</p>
+<blockquote>
+<ol>
+<li>客户端选择一个node作为协调节点；</li>
+<li>协调节点将搜索请求转发给所有节点；</li>
+<li>每个shard将自己的搜索结果返回给协调服务器，协调服务器进行数据整合；</li>
+<li>协调节点根据docId去各个节点上拉取实际数据；</li>
+</ol>
+</blockquote>
+<p>###6. 倒排索引.</p>
+<blockquote>
+<p>正序索引是从index到word，倒排索引是从word到文档；</p>
+<ul>
+<li>倒排索引中的所有词对应一个或多个文档；</li>
+<li>倒排索引中的词项根据字典顺序升序排列；</li>
+</ul>
+</blockquote>
+<p>###7. es在数据量很大的情况下（数十亿），如何提升查询效率.</p>
+<blockquote>
+<p>部署建议</p>
+<ul>
+<li>选择合理的硬件配置，尽可能使用SSD；</li>
+<li>给JVM配置机器的一半内存，建议不超过32G；</li>
+<li>规模较大的集群配置专有主节点，避免脑裂问题；</li>
+<li>linux系统调优；</li>
+</ul>
+<p>索引性能优化</p>
+<ul>
+<li>设置合理的索引分片数和副本数；</li>
+<li>使用批量请求；</li>
+<li>通过多线程/多进程发送数据；</li>
+<li>调大refresh interval:</li>
+<li>设计mapping配置合适字段类型；</li>
+</ul>
+<p>查询性能优化</p>
+<ul>
+<li>使用过滤器缓存和分片查询缓存；</li>
+<li>使用路由；</li>
+<li>强制合并只读索引，关闭历史数据索引；</li>
+</ul>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/es/" rel="tag"># es</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/26/Redis系列2-还是基础/" rel="prev" title="Redis系列2-还是基础">
+      <i class="fa fa-chevron-left"></i> Redis系列2-还是基础
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/03/02/Hadoop系列1——基础/" rel="next" title="'Hadoop系列1——基础'">
+      'Hadoop系列1——基础' <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ank.hao</p>
+  <div class="site-description" itemprop="description">技术、点滴</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ank.hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.8.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.1
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
