@@ -147,6 +147,135 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/18/jvm详解/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ank.hao">
+      <meta itemprop="description" content="技术、点滴">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天蓝的个人笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/18/jvm详解/" class="post-title-link" itemprop="url">'jvm详解'</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-18 15:20:04" itemprop="dateCreated datePublished" datetime="2020-02-18T15:20:04+08:00">2020-02-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-20 12:30:20" itemprop="dateModified" datetime="2020-02-20T12:30:20+08:00">2020-02-20</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/jvm/" itemprop="url" rel="index"><span itemprop="name">jvm</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><strong>1.基本问题</strong></p>
+<blockquote>
+<ul>
+<li>java内存区域（运行时数据区）</li>
+<li>java对象创建过程</li>
+<li>对象的访问定位两种方式（句柄和直接指针）</li>
+<li>String类和常量池</li>
+</ul>
+</blockquote>
+<p><strong>2.运行时数据区</strong></p>
+<blockquote>
+<p>jdk1.8之前分为程序计数器、虚拟机栈、本地方法栈、堆、方法区（运行时常量池）、直接内存；<br>jdk1.8之后分为程序计数器、虚拟机栈、本地方法栈、堆、直接内存（元空间）；<br>以下详细说明：</p>
+<ul>
+<li>程序计数器：线程私有的较小内存空间，是当前线程执行字节码的信号指示器。字节码解释器工作时通过改变这个计数器的值来<br>选取下一条需要执行的字节码指令；生命周期与线程相关，不会出现异常；</li>
+<li>java虚拟机栈：线程私有，描述的是java方法执行的内存模型，每次方法调用的数据都是栈传递的，由一个个栈帧组成，每个栈帧<br>都拥有：局部变量表、操作数栈、动态链接、方法出口信息； 局部变量表主要存放了编译器可知的各种基本数据类型和对象引用；<br>生命周期与线程相关，由StackOverFlowError和OutOfMemoryError两种错误；</li>
+<li>本地方法栈：线程私有，和虚拟机栈作用类似，区别是：虚拟机栈为虚拟机执行java方法服务，而本地方法栈为虚拟机使用到的Native<br>方法服务，本地方法被执行时，本地方法栈会创建一个栈帧，用于存放本地方法的局部变量表、操作数栈、动态链接、出口信息，方法执行<br>完毕后相应的栈帧出栈并释放内存空间，会抛出错误；</li>
+<li>堆：线程共享，虚拟机启动时创建，此区域唯一目的是存放实例对象，几乎所有对象实例和数组都是在这里分配内存；通过-Xms和-Xmx<br>调节；</li>
+<li>方法区：线程共享，用于存储已被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等；通过-XX:PermSize和-XX:MaxPermSize<br>调节，永久代是方法区的一种实现方式。jdk1.8之后被移除，取而代之的是元空间，使用直接内存，用-XX:MetaspaceSize和-XX:MaxMetaspaceSize<br>调节；</li>
+<li>运行时常量池：是方法区的异步返，用于存储类中的常量池信息；jdk1.7之后在java堆中开辟了一块内存区域用于存放运行时常量池；</li>
+<li>直接内存：直接内存不是虚拟机运行时数据区的一部分，也不是虚拟机规范中定义的内存区域，但NIO等使用到，也会有OutOfMemoryError错误；</li>
+</ul>
+</blockquote>
+<p><strong>3.对象创建过程</strong></p>
+<blockquote>
+<ol>
+<li>类加载检查：虚拟机遇到new指令时，首先会检查这个指令的参数是否在常量池中定位到这个类的符号引用，并且检查符号引用代表的类是否已被<br>加载过、解析和初始化。如果没有，必须先执行相应的类加载过程；</li>
+<li>分配内存：类加载检查通过后，虚拟机会为新生对象分配内存。对象所需内存大小在类加载完成后可确定；java堆中分配方式有指针碰撞和空闲列表<br>两种，选择方式由java堆是否规整决定，而java堆是否规整由垃圾收集器是否有压缩整理功能决定；</li>
+<li>初始化零值；</li>
+<li>设置对象头；</li>
+<li>执行init方法；也就是初始化对象；</li>
+</ol>
+</blockquote>
+<p><strong>4.对象的内存布局</strong></p>
+<blockquote>
+<p>Hotspot虚拟机中，对象在内存中分为三个区域：对象头、实例数据和对齐填充；<br>对象头包含两部分信息：对象自身的运行时数据（哈希码、GC分代年龄、锁状态标志）和类型指针（指向它的类元数据的指针）；<br>实例数据部分是对象真正存储的有效信息；<br>对齐填充不是必然存在的，仅仅起占位作用；</p>
+</blockquote>
+<p><strong>5.对象的访问定位</strong></p>
+<blockquote>
+<p>建立对象是为了使用，java程序通过栈上的引用数据类操作堆上具体对象，对象访问方式由虚拟机实现而定，主要有两种：使用句柄和直接指针；</p>
+<ul>
+<li>句柄：java堆中会划出一块内存作为句柄池，reference中存储的是对象的句柄地址，句柄中包含了对象实例数据与类型数据各自的具体地址信息；</li>
+<li>直接指针：对象实例数据中需要包含到对象类型的指针信息；</li>
+<li>句柄好处是reference中存储的是稳定的句柄地址，对象移动时reference本身不改变；直接指针好处是快；</li>
+</ul>
+</blockquote>
+<p><strong>6.类加载过程</strong></p>
+<blockquote>
+<p>类加载class类型文件主要三步：加载——&gt;连接（验证、准备、解析）——&gt;初始化</p>
+<ul>
+<li>加载：1.通过全类名获取定义此类的二进制字节流；2.将字节流所代表的静态存储结构转换为方法区的运行时数据结构；3.在内存中生成一个代表该<br>类的CLASS对象，作为方法区这些数据的访问入口；</li>
+<li>验证：文件格式验证、元数据验证、字节码验证、符号引用验证；</li>
+<li>准备：正式为类变量分配内存并设置类变量初始值的阶段；</li>
+<li>解析：虚拟机将常量池内的符号引用替换为直接引用的过程；</li>
+<li>初始化：执行类构造器<clinit>()方法的过程；</clinit></li>
+</ul>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/12/java基础1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -627,7 +756,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-02-27 15:15:56" itemprop="dateModified" datetime="2020-02-27T15:15:56+08:00">2020-02-27</time>
+                <time title="修改时间：2020-03-04 17:21:26" itemprop="dateModified" datetime="2020-03-04T17:21:26+08:00">2020-03-04</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -723,7 +852,15 @@
 <li>完全不用session；使用JWT token存储用户信息，然后再从数据库或者cache中获取其他信息；</li>
 <li>tomcat+redis；</li>
 <li>spring session+redis；</li>
-<li></li>
+</ul>
+</blockquote>
+<p><strong>5.分布式锁</strong><br>分布式锁是为了解决分布式架构中，对资源的并发访问可能带来的问题；<br><br>常见的分布锁实现方式：</p>
+<blockquote>
+<ul>
+<li>数据库的唯一索引.</li>
+<li>redis的setnxex.</li>
+<li>redlock.</li>
+<li>zookeeper实现.</li>
 </ul>
 </blockquote>
 
@@ -1495,79 +1632,6 @@
   
   
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/04/踩坑系列——JSONArray引发的并发问题/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="ank.hao">
-      <meta itemprop="description" content="技术、点滴">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="天蓝的个人笔记">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/12/04/踩坑系列——JSONArray引发的并发问题/" class="post-title-link" itemprop="url">踩坑系列——JSONArray引发的并发问题</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2019-12-04 11:40:33 / 修改时间：14:30:49" itemprop="dateCreated datePublished" datetime="2019-12-04T11:40:33+08:00">2019-12-04</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/踩坑系列/" itemprop="url" rel="index"><span itemprop="name">踩坑系列</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>##1.问题描述<br>最近开发一个造数功能模块，因为有递增和递减，所以需要生成的数据有序；这里用到多线程，多线程相关的核心逻辑如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//造数逻辑</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> JSONArray <span class="title">buildDataCore</span><span class="params">(JSONArray datalogic, Integer num)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    JSONObject result = <span class="keyword">new</span> JSONObject();</span><br><span class="line">    JSONArray columns = <span class="keyword">new</span> JSONArray();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//每次造数num条记录</span></span><br><span class="line">    JSONArray data = <span class="keyword">new</span> JSONArray(num);</span><br><span class="line">    <span class="keyword">long</span> beginTime = System.currentTimeMillis();</span><br><span class="line">    <span class="keyword">final</span> CountDownLatch countDownLatch = <span class="keyword">new</span> CountDownLatch(num);</span><br><span class="line">    AtomicInteger count = <span class="keyword">new</span> AtomicInteger(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    CopyOnWriteArrayList list = <span class="keyword">new</span> CopyOnWriteArrayList(<span class="keyword">new</span> Object[num]);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(count.intValue()&lt;num)&#123;</span><br><span class="line">        BaseService.executor.execute(<span class="keyword">new</span> BuildDataThread(count.intValue(), datalogic, list, columns, countDownLatch));</span><br><span class="line">        count.incrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    countDownLatch.await();</span><br><span class="line">    <span class="keyword">long</span> endTime = System.currentTimeMillis();</span><br><span class="line">    data.addAll(list);</span><br><span class="line">    log.info(<span class="string">"造数时间："</span>+(endTime-beginTime));</span><br><span class="line">    <span class="keyword">return</span> data;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BuildDataThread</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line">        <span class="keyword">private</span> JSONArray datalogic;</span><br><span class="line">        <span class="keyword">private</span> CopyOnWriteArrayList data;</span><br><span class="line">        <span class="keyword">private</span> JSONArray columns;</span><br><span class="line">        <span class="keyword">private</span> CountDownLatch countDownLatch;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">BuildDataThread</span><span class="params">(<span class="keyword">int</span> count, JSONArray datalogic, CopyOnWriteArrayList data, JSONArray columns, CountDownLatch countDownLatch)</span></span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.count = count;</span><br><span class="line">            <span class="keyword">this</span>.datalogic = datalogic;</span><br><span class="line">            <span class="keyword">this</span>.data = data;</span><br><span class="line">            <span class="keyword">this</span>.columns = columns;</span><br><span class="line">            <span class="keyword">this</span>.countDownLatch = countDownLatch;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            JSONObject data_child = <span class="keyword">new</span> JSONObject();</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> n=<span class="number">0</span>;n&lt;datalogic.size();n++)&#123;</span><br><span class="line">                JSONObject jsonObject = datalogic.getJSONObject(n);</span><br><span class="line">                DataType dateType = DataType.getDateType(jsonObject.getString(<span class="string">"type"</span>));</span><br><span class="line">                Object object = <span class="keyword">null</span>;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    object = BuildDataUtil.buildData(jsonObject.getJSONObject(<span class="string">"logic"</span>), dateType, count);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    log.error(<span class="string">"造数出错："</span>,e);</span><br><span class="line">                &#125;</span><br><span class="line"><span class="comment">//                if(count==0)&#123;</span></span><br><span class="line"><span class="comment">//                    columns.add(jsonObject.getString("name"));</span></span><br><span class="line"><span class="comment">//                &#125;</span></span><br><span class="line"></span><br><span class="line">                data_child.put(jsonObject.getString(<span class="string">"name"</span>),object);</span><br><span class="line">            &#125;</span><br><span class="line">            data.set(count,data_child);</span><br><span class="line"></span><br><span class="line">            countDownLatch.countDown();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
-<p>一开始是把JSONArray直接作为入参，希望通过jsonArray.set(index, object)合并结果，当数据量<br>比较大时，必定会出现一些结果是null的情况，且不会报错，通过打印日志也可以确定造数逻辑没问题，每次必定返回结果，<br>不会生成null；</p>
-<p>##2. 问题分析.<br>程序没有报错且造数方法每次返回正常结果，所以可以确认程序没问题，JSONArray的set方法单线程下也可以确认没问题，<br>可以得到我们期望的执行结果；所以这里问题就可以定位到是多线程环境下JSONArray的set方法出问题了；源码如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">JSONArray</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.list = <span class="keyword">new</span> ArrayList();</span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">set</span><span class="params">(<span class="keyword">int</span> index, Object element)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (index == -<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">this</span>.list.add(element);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">this</span>.list.size() &gt; index) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.list.set(index, element);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="keyword">this</span>.list.size(); i &lt; index; ++i) &#123;</span><br><span class="line">            <span class="keyword">this</span>.list.add((Object)<span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.list.add(element);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>JSONArray底层默认用ArrayList，list的size只能通过增删个体改变，无法指定，虽然ArrayList有默认构造方法<br>public ArrayList(int initialCapacity)，但是这个是容器长度，用于扩容等，并不是size；因此，当调用<br>ArrayList.set(index, object)这个方法时，假如有线程1填充JSONArray[1]和线程2填充JSONArray[2]，线程1<br>执行到this.list.add(element)这部分了，线程2正好执行到else{…}子句，就会把线程1的结果覆盖为null；</p>
-<p>##3. 解决方案及问题衍生.<br>解决思路就如前面代码所示，用一个线程安全的CopyOnWriteArrayList代替JSONArray；</p>
-<p>一般并发编程时，一定要注意使用的使用的集合和变量是否有线程安全问题；</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
   </div>
 
   
@@ -1638,16 +1702,16 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">38</span>
+          <span class="site-state-item-count">39</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-count">23</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
